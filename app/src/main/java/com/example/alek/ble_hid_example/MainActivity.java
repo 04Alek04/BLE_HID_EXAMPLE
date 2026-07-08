@@ -25,10 +25,15 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.LinearLayout;
@@ -214,6 +219,8 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
 
+        checkPermissions();
+
         pagerAdapter = new PagerAdapter(getSupportFragmentManager());
         pager = (CustomViewPager) findViewById(R.id.viewPager);
         pager.setAdapter(pagerAdapter);
@@ -227,6 +234,22 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         ApplicationConfiguration.initializeConfiguration(getApplicationContext());
         threadHandler.post(deviceFieldUpdate);
         threadHandler.post(deviceLayoutUpdate);
+    }
+
+    private void checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADVERTISE) != PackageManager.PERMISSION_GRANTED) {
+                
+                ActivityCompat.requestPermissions(this,
+                        new String[]{
+                                Manifest.permission.BLUETOOTH_SCAN,
+                                Manifest.permission.BLUETOOTH_CONNECT,
+                                Manifest.permission.BLUETOOTH_ADVERTISE
+                        }, 1);
+            }
+        }
     }
 
     @Override

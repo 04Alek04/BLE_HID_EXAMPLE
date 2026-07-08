@@ -2,10 +2,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.alek.ble_hid_example">
 
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <!-- Permissions for Bluetooth -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+
+    <!-- New Bluetooth permissions for Android 12+ -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
     <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED"/>
-    <!--<uses-feature android:name="android.hardware.bluetooth" android:required="true"/>-->
+
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
 
     <application
@@ -15,12 +22,15 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <service android:name="com.example.alek.ble_hid_example.HidBleService" />
+        <service
+            android:name="com.example.alek.ble_hid_example.HidBleService"
+            android:exported="false" />
 
-        <activity android:name="com.example.alek.ble_hid_example.MainActivity">
+        <activity
+            android:name="com.example.alek.ble_hid_example.MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
