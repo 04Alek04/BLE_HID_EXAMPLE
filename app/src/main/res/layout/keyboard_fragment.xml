@@ -122,6 +122,138 @@
                     android:textColor="?attr/colorOnSurface"
                     app:strokeColor="?attr/colorOnSurface" />
             </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Shortcuts (CTRL+)"
+                android:textAlignment="center"
+                android:textColor="?android:attr/textColorSecondary" />
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="3"
+                android:paddingTop="8dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/kb_short_undo"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="Undo (Z)"
+                    android:textSize="10sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:strokeColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/kb_short_redo"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="Redo (Y)"
+                    android:textSize="10sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:strokeColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/kb_short_save"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="Save (S)"
+                    android:textSize="10sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:strokeColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/kb_short_paste"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="Paste (V)"
+                    android:textSize="10sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:strokeColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/kb_short_cut"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="Cut (X)"
+                    android:textSize="10sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:strokeColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/kb_short_copy"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="Copy (C)"
+                    android:textSize="10sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:strokeColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/kb_short_all"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="All (A)"
+                    android:textSize="10sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:strokeColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/kb_short_find"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="Find (F)"
+                    android:textSize="10sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:strokeColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/kb_short_replace"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="Replace (H)"
+                    android:textSize="10sp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:strokeColor="?attr/colorOnSurface" />
+            </GridLayout>
         </LinearLayout>
     </ScrollView>
 
