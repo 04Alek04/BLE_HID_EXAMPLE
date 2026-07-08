@@ -193,6 +193,7 @@ public class HidBleService extends Service {
     private final IBinder mBinder = new LocalBinder();
     private final ArrayList<BluetoothDevice> devices = new ArrayList<>();
     private final ArrayList<NotificationData> pendingNotifications = new ArrayList<>();
+    private final ArrayList<BluetoothGattService> servicesToAdd = new ArrayList<>();
     /* Call proper methods on some BLE events  */
     private MainActivity mainActivity;
     private BluetoothGattServerCallback mGattServerCallback;
@@ -340,28 +341,43 @@ public class HidBleService extends Service {
     private void startAdvertising() {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED ||
+                androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_ADVERTISE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                Log.e("BLE", "Missing permissions for advertising");
+                return;
+            }
+        }
+
         String currentName = bluetoothAdapter.getName();
         if (currentName != null && !currentName.endsWith(" (HID)")) {
             bluetoothAdapter.setName(currentName + " (HID)");
         }
 
         BluetoothLeAdvertiser advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
+        if (advertiser == null) {
+            Log.e("BLE", "BluetoothLeAdvertiser is null");
+            return;
+        }
         AdvertiseSettings settings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
                 .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
                 .setConnectable(true)
                 .build();
+
+        // Split data to avoid ADVERTISE_FAILED_DATA_TOO_LARGE (error 1)
         AdvertiseData advData = new AdvertiseData.Builder()
                 .setIncludeDeviceName(true)
-                // Human Interface Device Service's UUID
                 .addServiceUuid(new ParcelUuid(UUID.fromString(SERVICE_HID)))
-                // Device Information Service's UUID
+                .build();
+
+        AdvertiseData scanResponse = new AdvertiseData.Builder()
                 .addServiceUuid(new ParcelUuid(UUID.fromString(SERVICE_DIS)))
-                // Battery Service's UUID
                 .addServiceUuid(new ParcelUuid(UUID.fromString(SERVICE_BAS)))
                 .build();
 
-        advertiser.startAdvertising(settings, advData, advertisingCallback);
+        advertiser.stopAdvertising(advertisingCallback);
+        advertiser.startAdvertising(settings, advData, scanResponse, advertisingCallback);
     }
 
     private void createGattDatabase(BluetoothGattServer gattServer, int level, int features) {
@@ -633,7 +649,6 @@ public class HidBleService extends Service {
         serviceHid.addCharacteristic(charHidInformation);
         serviceHid.addCharacteristic(charHidControlPoint);
         serviceHid.addCharacteristic(charReport1);
-        gattServer.addService(serviceHid);
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Device Information Service
         //                          -> PnP ID
@@ -648,7 +663,6 @@ public class HidBleService extends Service {
 
         charPnpId.setValue("\2\0\0\0\0\0\0".getBytes());
         serviceDIS.addCharacteristic(charPnpId);
-        gattServer.addService(serviceDIS);
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Battery Service
         //               -> Battery Level
@@ -663,7 +677,16 @@ public class HidBleService extends Service {
 
         charBatteryLevel.setValue(new byte[]{readBatteryLevel()});
         serviceBAS.addCharacteristic(charBatteryLevel);
-        gattServer.addService(serviceBAS);
+
+        servicesToAdd.clear();
+        servicesToAdd.add(serviceHid);
+        servicesToAdd.add(serviceDIS);
+        servicesToAdd.add(serviceBAS);
+
+        gattServer.clearServices();
+        if (!servicesToAdd.isEmpty()) {
+            gattServer.addService(servicesToAdd.remove(0));
+        }
     }
 
     private void gattServerCbInit() {
@@ -784,6 +807,16 @@ public class HidBleService extends Service {
                     notificationPossible = true;
                 }
             }
+
+            @Override
+            public void onServiceAdded(int status, BluetoothGattService service) {
+                Log.i("BLE", "onServiceAdded: " + service.getUuid().toString() + " status: " + status);
+                if (!servicesToAdd.isEmpty()) {
+                    gattServer.addService(servicesToAdd.remove(0));
+                } else {
+                    startAdvertising();
+                }
+            }
         };
     }
 
@@ -800,14 +833,10 @@ public class HidBleService extends Service {
         BluetoothManager mManager;
         int features = 0;
 
-        if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
-            BluetoothAdapter.getDefaultAdapter().enable();
-            while (true) {
-                if (BluetoothAdapter.getDefaultAdapter().isEnabled()) {
-                    break;
-                }
-            }
-            //TODO: Add timeout
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+            Log.e("BLE", "Bluetooth is not enabled or not supported");
+            return;
         }
 
         if (ApplicationConfiguration.getConfigurationField(getApplicationContext(),
@@ -833,10 +862,12 @@ public class HidBleService extends Service {
         ReportField.updateValues(features);
         gattServerCbInit();
         mManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        if (gattServer != null) {
+            gattServer.close();
+        }
         gattServer = mManager.openGattServer(getBaseContext(), mGattServerCallback);
         createGattDatabase(gattServer, SecurityLevel.SECURITY_LEVEL_2.ordinal(), features);
         pendingNotifications.clear();
-        startAdvertising();
     }
 
     @Override
