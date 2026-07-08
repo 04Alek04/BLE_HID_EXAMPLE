@@ -50,96 +50,76 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
     public PagerAdapter pagerAdapter = null;
     private volatile List<BluetoothDevice> devices = new ArrayList<>();
     private final Runnable deviceLayoutUpdate = new Runnable() {
-        volatile List<BluetoothDevice> devices_copy = new ArrayList<>();
+        private List<BluetoothDevice> lastDevices = new ArrayList<>();
 
         public void run() {
             final long refreshLayoutPeriodMs = 300;
+            final List<BluetoothDevice> currentDevices = new ArrayList<>(devices);
+
             final LinearLayout ll = (LinearLayout) findViewById(R.id.conf_linear_layout_devices);
-
-            devices_copy = new ArrayList<>(devices);
-
-            if (ll == null) {
+            
+            // If view is not ready yet or list hasn't changed, just wait
+            if (ll == null || currentDevices.equals(lastDevices)) {
                 threadHandler.postDelayed(this, refreshLayoutPeriodMs);
                 return;
             }
+
+            lastDevices = currentDevices;
 
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     ll.removeAllViews();
-                }
-            });
-
-            if (devices_copy == null) {
-                threadHandler.postDelayed(this, refreshLayoutPeriodMs);
-                return;
-            }
-
-            for (int k = 0; k < devices_copy.size(); k++) {
-                BluetoothDevice bd;
-                final TextView textView = new TextView(getApplicationContext());
-
-                try {
-                    bd = devices_copy.get(k);
-                } catch (IndexOutOfBoundsException e) {
-                    break;
-                }
-
-                textView.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
-                textView.setWidth(ll.getWidth());
-                textView.setBackgroundColor(0xff2546e9);
-                textView.setTextColor(Color.WHITE);
-                textView.setText("" + bd.getName() + "  (" + bd.getAddress() + ")");
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
+                    for (BluetoothDevice bd : currentDevices) {
+                        TextView textView = new TextView(getApplicationContext());
+                        textView.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
+                        textView.setLayoutParams(new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT));
+                        textView.setBackgroundColor(0xff2546e9);
+                        textView.setTextColor(Color.WHITE);
+                        String name = bd.getName() != null ? bd.getName() : "Unknown Device";
+                        textView.setText(name + "  (" + bd.getAddress() + ")");
                         ll.addView(textView);
                     }
-                });
-            }
+                }
+            });
 
             threadHandler.postDelayed(this, refreshLayoutPeriodMs);
         }
     };
     private final Runnable deviceFieldUpdate = new Runnable() {
-        volatile List<BluetoothDevice> devices_copy = new ArrayList<>();
         private int i = 0;
 
         public void run() {
             final long refreshTextViewPeriodMs = 1200;
+            final List<BluetoothDevice> currentDevices = new ArrayList<>(devices);
+            
             String text;
             int text_color;
             int bg_color;
 
-            devices_copy = new ArrayList<>(devices);
+            if (!currentDevices.isEmpty()) {
+                if (i >= currentDevices.size()) i = 0;
+                BluetoothDevice d = currentDevices.get(i);
 
-            if (devices_copy != null && devices_copy.size() > 0) {
-                BluetoothDevice d;
-
-                try {
-                    d = devices_copy.get(i);
-                } catch (IndexOutOfBoundsException e) {
-                    i = 0;
-                    threadHandler.postDelayed(this, refreshTextViewPeriodMs);
-                    return;
-                }
-
-                text = "" + d.getName() + "  (" + d.getAddress() + ")";
+                String name = d.getName() != null ? d.getName() : "Unknown Device";
+                text = name + "  (" + d.getAddress() + ")";
                 text_color = Color.WHITE;
                 bg_color = 0xff2546e9;
 
-                if (devices_copy.size() > 1) {
-                    text += " [" + i + " / " + (devices_copy.size() - 1) + "]";
+                if (currentDevices.size() > 1) {
+                    text += " [" + (i + 1) + " / " + currentDevices.size() + "]";
                 }
+                i = (i + 1) % currentDevices.size();
             } else {
                 text = "Device not connected ";
                 text_color = Color.BLACK;
                 bg_color = Color.GRAY;
+                i = 0;
             }
 
             updateDeviceInfoField(text, text_color, bg_color);
-            i = (devices_copy == null || devices_copy.size() == 0) ? 0 : (i + 1) % devices_copy.size();
             threadHandler.postDelayed(this, refreshTextViewPeriodMs);
         }
     };
@@ -334,6 +314,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
 
         unbindService(mConnection);
         threadHandler.removeCallbacks(deviceFieldUpdate);
+        threadHandler.removeCallbacks(deviceLayoutUpdate);
     }
 
     @Override
