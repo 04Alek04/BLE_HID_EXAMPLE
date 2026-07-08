@@ -18,19 +18,14 @@ package com.example.alek.ble_hid_example;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.core.view.VelocityTrackerCompat;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
-import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 
 public class MouseFragment extends Fragment implements View.OnTouchListener {
-    private int i = 0;
-    private float x = 0.0f;
-    private float y = 0.0f;
 
     public static MouseFragment newInstance() {
         return new MouseFragment();
@@ -76,54 +71,54 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
                             return super.onDoubleTap(e);
                         }
                     });
-            private VelocityTracker mVelocityTracker = null;
+            private float lastX, lastY;
+            private float remainderX, remainderY;
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 CustomViewPager pager = (CustomViewPager) getActivity().findViewById(R.id.viewPager);
 
-                int index = event.getActionIndex();
                 int action = event.getActionMasked();
-                int pointerId = event.getPointerId(index);
 
                 switch (action) {
                     case MotionEvent.ACTION_DOWN:
                         pager.swipePossible(false);
-
-                        if (mVelocityTracker == null) {
-                            mVelocityTracker = VelocityTracker.obtain();
-                        } else {
-                            mVelocityTracker.clear();
-                        }
-
-                        mVelocityTracker.addMovement(event);
+                        lastX = event.getX();
+                        lastY = event.getY();
+                        remainderX = 0;
+                        remainderY = 0;
                         break;
                     case MotionEvent.ACTION_MOVE:
-                        mVelocityTracker.addMovement(event);
-                        mVelocityTracker.computeCurrentVelocity(10000);
+                        float currentX = event.getX();
+                        float currentY = event.getY();
+                        float dx = currentX - lastX;
+                        float dy = currentY - lastY;
+                        lastX = currentX;
+                        lastY = currentY;
 
-                        if ((++i >= 3)) {
-                            x /= 150 * 3;
-                            y /= 150 * 3;
+                        float sensitivity = 1.5f; // Adjust sensitivity for better feel
+                        float moveX = dx * sensitivity + remainderX;
+                        float moveY = dy * sensitivity + remainderY;
 
-                            byte _x = (byte) (x > 127 ? 127 : (x < -127 ? -127 : x));
-                            byte _y = (byte) (y > 127 ? 127 : (y < -127 ? -127 : y));
-                            int toSend = _x | (((short) _y) << 8);
+                        int intX = Math.round(moveX);
+                        int intY = Math.round(moveY);
+
+                        if (intX != 0 || intY != 0) {
+                            remainderX = moveX - intX;
+                            remainderY = moveY - intY;
+
+                            byte _x = (byte) Math.max(-128, Math.min(127, intX));
+                            byte _y = (byte) Math.max(-128, Math.min(127, intY));
+                            int toSend = (_x & 0xFF) | ((_y & 0xFF) << 8);
 
                             activity.sendNotification(ReportField.REPORT_FIELD_MOUSE_XY, toSend);
-                            i = 0;
-                            x = 0.0f;
-                            y = 0.0f;
                         } else {
-                            x += VelocityTrackerCompat.getXVelocity(mVelocityTracker, pointerId);
-                            y += VelocityTrackerCompat.getYVelocity(mVelocityTracker, pointerId);
+                            remainderX = moveX;
+                            remainderY = moveY;
                         }
-
                         break;
                     case MotionEvent.ACTION_UP:
                         pager.swipePossible(true);
-                        mVelocityTracker.recycle();
-                        mVelocityTracker = null;
                         break;
                 }
 

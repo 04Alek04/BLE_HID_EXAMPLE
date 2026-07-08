@@ -214,24 +214,47 @@ public class HidBleService extends Service {
             }
         }
 
-        synchronized (devices) {
-            switch (st) {
-                case SEND_TO_FIRST:
-                    if (!devices.isEmpty()) {
-                        pendingNotifications.add(new NotificationData(devices.get(0), report, array));
+        synchronized (pendingNotifications) {
+            List<BluetoothDevice> targetDevices = new ArrayList<>();
+            synchronized (devices) {
+                switch (st) {
+                    case SEND_TO_FIRST:
+                        if (!devices.isEmpty()) targetDevices.add(devices.get(0));
+                        break;
+                    case SEND_TO_LAST:
+                        if (!devices.isEmpty()) targetDevices.add(devices.get(devices.size() - 1));
+                        break;
+                    case SEND_TO_ALL:
+                        targetDevices.addAll(devices);
+                        break;
+                }
+            }
+
+            for (BluetoothDevice device : targetDevices) {
+                boolean merged = false;
+                if (rf == ReportField.REPORT_FIELD_MOUSE_XY) {
+                    // Try to merge with an existing pending mouse move for this device
+                    for (int i = pendingNotifications.size() - 1; i >= 0; i--) {
+                        NotificationData data = pendingNotifications.get(i);
+                        if (data.device.equals(device) && data.characteristic == report) {
+                            // Merge X and Y deltas.
+                            // X is at offset 1, Y is at offset 2 in the mouse report [buttons, x, y, scroll]
+                            int existingX = data.value[1];
+                            int existingY = data.value[2];
+                            int newX = array[1];
+                            int newY = array[2];
+
+                            data.value[1] = (byte) Math.max(-128, Math.min(127, existingX + newX));
+                            data.value[2] = (byte) Math.max(-128, Math.min(127, existingY + newY));
+                            merged = true;
+                            break;
+                        }
                     }
-                    break;
-                case SEND_TO_LAST:
-                    if (!devices.isEmpty()) {
-                        pendingNotifications.add(new NotificationData(devices.get(devices.size() - 1),
-                                report, array));
-                    }
-                    break;
-                case SEND_TO_ALL:
-                    for (BluetoothDevice device : devices) {
-                        pendingNotifications.add(new NotificationData(device, report, array));
-                    }
-                    break;
+                }
+
+                if (!merged) {
+                    pendingNotifications.add(new NotificationData(device, report, array));
+                }
             }
         }
 
@@ -725,7 +748,6 @@ public class HidBleService extends Service {
 
             @Override
             public void onNotificationSent(BluetoothDevice device, int status) {
-                Log.e("BLE", "onNotificationSent - left: " + pendingNotifications.size());
                 notificationPossible = true;
                 processNotificationQueue();
             }
