@@ -34,6 +34,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class KeyboardFragment extends Fragment implements Button.OnTouchListener,
@@ -55,12 +57,17 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         getActivity().findViewById(R.id.keyboard_button_send).setOnClickListener(this);
 
         // Keyboard character spinner configuration
+        List<String> kbList = new ArrayList<>();
+        kbList.add("SELECT VALUE");
+        kbList.addAll(KeyboardUsage.getUsageNames());
+
         Spinner spinner_kb = (Spinner) getActivity().findViewById(R.id.keyboard_spinner_character);
         spinner_kb.setOnItemSelectedListener(this);
         ArrayAdapter<String> dataAdapter_kb = new ArrayAdapter<>(getContext(),
-                android.R.layout.simple_spinner_item, KeyboardUsage.getUsageNames());
-        dataAdapter_kb.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                R.layout.spinner_item, kbList);
+        dataAdapter_kb.setDropDownViewResource(R.layout.spinner_dropdown_item);
         spinner_kb.setAdapter(dataAdapter_kb);
+        spinner_kb.setSelection(0);
 
         ((ToggleButton) getActivity().findViewById(R.id.keyboard_toggle_kb)).setOnCheckedChangeListener(
                 new CompoundButton.OnCheckedChangeListener() {
@@ -131,6 +138,10 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         super.onPause();
 
         ((ToggleButton) getActivity().findViewById(R.id.keyboard_toggle_kb)).setChecked(false);
+        Spinner spinner_kb = (Spinner) getActivity().findViewById(R.id.keyboard_spinner_character);
+        if (spinner_kb != null) {
+            spinner_kb.setSelection(0);
+        }
     }
 
     @Override
@@ -166,8 +177,13 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
             ((TextView) parent.getChildAt(0)).setTextColor(Color.WHITE);
 
             if (parent.getId() == R.id.keyboard_spinner_character) {
+                if (position == 0) {
+                    /* Dummy item */
+                    return;
+                }
+                String selectedDescription = parent.getItemAtPosition(position).toString();
                 for (int i = 0; i < KeyboardUsage.KEYBOARD_USAGES.length; i++) {
-                    if (Objects.equals(parent.getItemAtPosition(position).toString(),
+                    if (Objects.equals(selectedDescription,
                             KeyboardUsage.KEYBOARD_USAGES[i].description)) {
                         value = KeyboardUsage.KEYBOARD_USAGES[i].meta;
                         value += (short) (KeyboardUsage.KEYBOARD_USAGES[i].usage << 8);
