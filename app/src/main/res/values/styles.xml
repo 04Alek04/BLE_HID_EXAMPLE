@@ -17,8 +17,4 @@
         <item name="android:windowFullscreen">true</item>
     </style>
 
-    <style name="SwitchTheme" parent="Theme.AppCompat.Light">
-        <item name="android:colorControlActivated">#ff2546e9</item>
-    </style>
-
 </resources>
