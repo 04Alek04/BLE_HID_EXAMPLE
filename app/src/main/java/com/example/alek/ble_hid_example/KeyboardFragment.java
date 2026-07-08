@@ -34,6 +34,9 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -41,7 +44,7 @@ import java.util.Objects;
 public class KeyboardFragment extends Fragment implements Button.OnTouchListener,
         AdapterView.OnItemSelectedListener, View.OnClickListener {
 
-    private ToggleButton numLockBtn, capsLockBtn, scrollLockBtn;
+    private MaterialButton numLockBtn, capsLockBtn, scrollLockBtn;
 
     public static KeyboardFragment newInstance() {
         return new KeyboardFragment();
@@ -69,9 +72,11 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         spinner_kb.setAdapter(dataAdapter_kb);
         spinner_kb.setSelection(0);
 
-        ((ToggleButton) getActivity().findViewById(R.id.keyboard_toggle_kb)).setOnCheckedChangeListener(
-                new CompoundButton.OnCheckedChangeListener() {
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        ((MaterialButton) getActivity().findViewById(R.id.keyboard_toggle_kb)).addOnCheckedChangeListener(
+                new MaterialButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(MaterialButton buttonView, boolean isChecked) {
+                        buttonView.setText(isChecked ? R.string.keyboard_on : R.string.keyboard_off);
                         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(
                                 Context.INPUT_METHOD_SERVICE);
                         if (!isChecked) {
@@ -84,9 +89,9 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
                     }
                 });
 
-        numLockBtn = (ToggleButton) getActivity().findViewById(R.id.keyboard_lock_num);
-        capsLockBtn = (ToggleButton) getActivity().findViewById(R.id.keyboard_lock_caps);
-        scrollLockBtn = (ToggleButton) getActivity().findViewById(R.id.keyboard_lock_scroll);
+        numLockBtn = (MaterialButton) getActivity().findViewById(R.id.keyboard_lock_num);
+        capsLockBtn = (MaterialButton) getActivity().findViewById(R.id.keyboard_lock_caps);
+        scrollLockBtn = (MaterialButton) getActivity().findViewById(R.id.keyboard_lock_scroll);
 
         View.OnClickListener lockClickListener = new View.OnClickListener() {
             @Override
@@ -137,7 +142,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
     public void onPause() {
         super.onPause();
 
-        ((ToggleButton) getActivity().findViewById(R.id.keyboard_toggle_kb)).setChecked(false);
+        ((MaterialButton) getActivity().findViewById(R.id.keyboard_toggle_kb)).setChecked(false);
         Spinner spinner_kb = (Spinner) getActivity().findViewById(R.id.keyboard_spinner_character);
         if (spinner_kb != null) {
             spinner_kb.setSelection(0);
@@ -207,7 +212,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         MainActivity activity = (MainActivity) getActivity();
 
         if (v.getId() == R.id.keyboard_button_send) {
-            activity.sendNotification(((EditText) getActivity().findViewById(
+            activity.sendNotification(((TextInputEditText) getActivity().findViewById(
                     R.id.keyboard_edit_text)).getText().toString());
         }
     }

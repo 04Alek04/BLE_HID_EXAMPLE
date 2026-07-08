@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
@@ -32,46 +33,54 @@
                 android:padding="@dimen/activity_vertical_margin"
                 android:text="@string/keyboard"
                 android:textAlignment="center"
-                android:textColor="@color/colorPrimaryDark"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="@dimen/activity_text_big" />
 
-            <EditText
-                android:id="@+id/keyboard_edit_text"
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/colorGrey"
-                android:hint="@string/enter_text"
-                android:nextFocusLeft="@id/keyboard_edit_text"
-                android:nextFocusUp="@id/keyboard_edit_text"
-                android:textColor="@color/colorWhite" />
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-            <Button
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/keyboard_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/enter_text"
+                    android:nextFocusLeft="@id/keyboard_edit_text"
+                    android:nextFocusUp="@id/keyboard_edit_text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/keyboard_button_send"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:text="@string/send_text" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:text="@string/send_single_character"
                 android:textAlignment="center"
-                android:textColor="@android:color/white" />
+                android:textColor="?android:attr/textColorSecondary" />
 
             <Spinner
                 android:id="@+id/keyboard_spinner_character"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:spinnerMode="dialog"
-                android:textColor="@color/colorWhite" />
+                android:spinnerMode="dialog" />
 
-            <ToggleButton
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/keyboard_toggle_kb"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:checked="false"
-                android:textOff="@string/keyboard_off"
-                android:textOn="@string/keyboard_on" />
+                android:layout_marginTop="8dp"
+                android:checkable="true"
+                android:text="@string/keyboard_off"
+                android:textColor="?attr/colorOnSurface"
+                app:strokeColor="?attr/colorOnSurface" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -80,29 +89,38 @@
                 android:weightSum="3"
                 android:paddingTop="10dp">
 
-                <ToggleButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/keyboard_lock_num"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textOff="NUM"
-                    android:textOn="NUM" />
+                    android:checkable="true"
+                    android:text="NUM"
+                    android:textColor="?attr/colorOnSurface"
+                    app:strokeColor="?attr/colorOnSurface" />
 
-                <ToggleButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/keyboard_lock_caps"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textOff="CAPS"
-                    android:textOn="CAPS" />
+                    android:checkable="true"
+                    android:text="CAPS"
+                    android:textColor="?attr/colorOnSurface"
+                    app:strokeColor="?attr/colorOnSurface" />
 
-                <ToggleButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/keyboard_lock_scroll"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textOff="SCRL"
-                    android:textOn="SCRL" />
+                    android:checkable="true"
+                    android:text="SCRL"
+                    android:textColor="?attr/colorOnSurface"
+                    app:strokeColor="?attr/colorOnSurface" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
@@ -112,8 +130,8 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="20"
-        android:background="#FF888888"
+        android:background="?attr/colorSurface"
         android:text="@string/device_not_connected"
         android:textAlignment="center"
-        android:textColor="#FF000000" />
+        android:textColor="?attr/colorOnSurface" />
 </LinearLayout>

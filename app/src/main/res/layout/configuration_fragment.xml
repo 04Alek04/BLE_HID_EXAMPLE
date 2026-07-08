@@ -21,10 +21,10 @@
             android:padding="@dimen/activity_vertical_margin"
             android:text="@string/configuration"
             android:textAlignment="center"
-            android:textColor="@color/colorPrimaryDark"
+            android:textColor="?attr/colorPrimary"
             android:textSize="@dimen/activity_text_big" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/conf_reboot_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -35,7 +35,7 @@
             android:layout_height="match_parent"
             android:text="@string/list_of_connected_devices"
             android:textAlignment="center"
-            android:textColor="#FFFFFF"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="@dimen/activity_text_medium" />
 
         <ScrollView

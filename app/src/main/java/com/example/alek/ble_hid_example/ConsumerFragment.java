@@ -47,7 +47,7 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
 
             if (v instanceof LinearLayout) {
                 setOnTouchListenerForEach((LinearLayout) v);
-            } else if (v instanceof ImageButton) {
+            } else if (v instanceof Button || v instanceof ImageButton) {
                 v.setOnTouchListener(this);
             }
         }

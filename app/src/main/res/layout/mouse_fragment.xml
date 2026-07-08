@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
@@ -27,7 +28,7 @@
                 android:padding="@dimen/activity_vertical_margin"
                 android:text="@string/mouse"
                 android:textAlignment="center"
-                android:textColor="@color/colorPrimaryDark"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="@dimen/activity_text_big" />
 
             <LinearLayout
@@ -35,21 +36,31 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <ImageButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/mouse_button_mouse_1"
-                    android:layout_width="match_parent"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_looks_one_black_24dp" />
+                    app:icon="@drawable/ic_looks_one_black_24dp"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="32dp"
+                    app:iconTint="?attr/colorOnSurface"
+                    app:strokeColor="?attr/colorOnSurface" />
 
-                <ImageButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/mouse_button_mouse_2"
-                    android:layout_width="match_parent"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_looks_two_black_24dp" />
+                    app:icon="@drawable/ic_looks_two_black_24dp"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="32dp"
+                    app:iconTint="?attr/colorOnSurface"
+                    app:strokeColor="?attr/colorOnSurface" />
             </LinearLayout>
 
             <LinearLayout
@@ -57,29 +68,44 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <ImageButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/mouse_button_mouse_3"
-                    android:layout_width="match_parent"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_looks_3_black_24dp" />
+                    app:icon="@drawable/ic_looks_3_black_24dp"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="32dp"
+                    app:iconTint="?attr/colorOnSurface"
+                    app:strokeColor="?attr/colorOnSurface" />
 
-                <ImageButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/mouse_button_mouse_4"
-                    android:layout_width="match_parent"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_looks_4_black_24dp" />
+                    app:icon="@drawable/ic_looks_4_black_24dp"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="32dp"
+                    app:iconTint="?attr/colorOnSurface"
+                    app:strokeColor="?attr/colorOnSurface" />
 
-                <ImageButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/mouse_button_mouse_5"
-                    android:layout_width="match_parent"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_looks_5_black_24dp" />
+                    app:icon="@drawable/ic_looks_5_black_24dp"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="32dp"
+                    app:iconTint="?attr/colorOnSurface"
+                    app:strokeColor="?attr/colorOnSurface" />
             </LinearLayout>
 
             <View
@@ -87,7 +113,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_margin="@dimen/activity_vertical_margin_x1_5"
-                android:background="@color/colorPrimaryDark" />
+                android:background="?attr/colorPrimary" />
         </LinearLayout>
     </ScrollView>
 
@@ -96,8 +122,8 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="20"
-        android:background="#FF888888"
+        android:background="?attr/colorSurface"
         android:text="@string/device_not_connected"
         android:textAlignment="center"
-        android:textColor="#FF000000" />
+        android:textColor="?attr/colorOnSurface" />
 </LinearLayout>
