@@ -263,8 +263,13 @@ public class HidBleService extends Service {
     }
 
     private synchronized void processNotificationQueue() {
-        if (notificationPossible && !pendingNotifications.isEmpty() && gattServer != null) {
+        if (!notificationPossible || gattServer == null) {
+            return;
+        }
+
+        while (!pendingNotifications.isEmpty()) {
             NotificationData toSend = pendingNotifications.remove(0);
+
             if (devices.contains(toSend.device)) {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                     if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -272,21 +277,21 @@ public class HidBleService extends Service {
                         return;
                     }
                 }
+
                 toSend.characteristic.setValue(toSend.value);
                 boolean success = gattServer.notifyCharacteristicChanged(toSend.device, toSend.characteristic,
                         toSend.responseNeeded);
+
                 if (success) {
                     notificationPossible = false;
+                    // Exit loop, wait for onNotificationSent to set notificationPossible = true
+                    break;
                 } else {
-                    Log.e("BLE", "Failed to queue notification, will retry on next trigger");
-                    // If it failed to queue, we don't set notificationPossible to false,
-                    // so we can try the next one or retry this one later.
-                    // For now, let's keep it simple.
+                    Log.e("BLE", "Failed to queue notification, skipping this one");
+                    // Continue to next item in queue
                 }
-            } else {
-                // Device disconnected, try next one
-                processNotificationQueue();
             }
+            // If device was disconnected, the loop continues to the next pending notification
         }
     }
 
