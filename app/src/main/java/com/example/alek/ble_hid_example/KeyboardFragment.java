@@ -22,6 +22,9 @@ import android.graphics.Color;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -30,11 +33,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -74,24 +74,66 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         spinner_kb.setAdapter(dataAdapter_kb);
         spinner_kb.setSelection(0);
 
-        ((MaterialButton) getActivity().findViewById(R.id.keyboard_toggle_kb)).addOnCheckedChangeListener(
+        final TextInputEditText editText = (TextInputEditText) getActivity().findViewById(R.id.keyboard_edit_text);
+        final MaterialButton toggleBtn = (MaterialButton) getActivity().findViewById(R.id.keyboard_toggle_kb);
+
+        toggleBtn.addOnCheckedChangeListener(
                 new MaterialButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(MaterialButton buttonView, boolean isChecked) {
                         buttonView.setText(isChecked ? R.string.keyboard_on : R.string.keyboard_off);
                         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(
                                 Context.INPUT_METHOD_SERVICE);
-                        View viewToFocus = getActivity().findViewById(R.id.keyboard_edit_text);
-                        if (viewToFocus == null) return;
-
+                        
                         if (isChecked) {
-                            viewToFocus.requestFocus();
-                            imm.showSoftInput(viewToFocus, InputMethodManager.SHOW_IMPLICIT);
+                            editText.requestFocus();
+                            imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
                         } else {
-                            imm.hideSoftInputFromWindow(viewToFocus.getWindowToken(), 0);
+                            imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
                         }
                     }
                 });
+
+        // Live typing logic
+        editText.addTextChangedListener(new TextWatcher() {
+            private boolean isInternalChange = false;
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (isInternalChange) return;
+                if (toggleBtn.isChecked() && count > before) {
+                    String added = s.subSequence(start, start + count).toString();
+                    MainActivity activity = (MainActivity) getActivity();
+                    if (activity != null) {
+                        activity.sendNotification(added);
+                        isInternalChange = true;
+                        editText.setText(""); // Clear for next character
+                        isInternalChange = false;
+                    }
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        // Handle backspace in live mode
+        editText.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (toggleBtn.isChecked() && event.getAction() == KeyEvent.ACTION_DOWN) {
+                    if (keyCode == KeyEvent.KEYCODE_DEL) {
+                        MainActivity activity = (MainActivity) getActivity();
+                        if (activity != null) {
+                            activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0x2a << 8);
+                            activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        });
 
         numLockBtn = (MaterialButton) getActivity().findViewById(R.id.keyboard_lock_num);
         capsLockBtn = (MaterialButton) getActivity().findViewById(R.id.keyboard_lock_caps);
@@ -265,8 +307,11 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         MainActivity activity = (MainActivity) getActivity();
 
         if (v.getId() == R.id.keyboard_button_send) {
-            activity.sendNotification(((TextInputEditText) getActivity().findViewById(
-                    R.id.keyboard_edit_text)).getText().toString());
+            TextInputEditText editText = (TextInputEditText) getActivity().findViewById(R.id.keyboard_edit_text);
+            if (editText != null && editText.getText() != null) {
+                activity.sendNotification(editText.getText().toString());
+                editText.setText(""); // Clear field after sending
+            }
         }
     }
 }
