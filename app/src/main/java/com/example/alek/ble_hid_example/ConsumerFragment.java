@@ -103,8 +103,8 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
         Spinner spinner_al = (Spinner) getActivity().findViewById(R.id.cons_spinner_al);
         spinner_al.setOnItemSelectedListener(this);
         ArrayAdapter<String> dataAdapter_al = new ArrayAdapter<>(getContext(),
-                android.R.layout.simple_spinner_item, lal);
-        dataAdapter_al.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                R.layout.spinner_item, lal);
+        dataAdapter_al.setDropDownViewResource(R.layout.spinner_dropdown_item);
         spinner_al.setAdapter(dataAdapter_al);
         spinner_al.setSelection(0);
 
@@ -116,8 +116,8 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
         Spinner spinner_ac = (Spinner) getActivity().findViewById(R.id.cons_spinner_ac);
         spinner_ac.setOnItemSelectedListener(this);
         ArrayAdapter<String> dataAdapter_ac = new ArrayAdapter<>(getContext(),
-                android.R.layout.simple_spinner_item, lac);
-        dataAdapter_ac.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                R.layout.spinner_item, lac);
+        dataAdapter_ac.setDropDownViewResource(R.layout.spinner_dropdown_item);
         spinner_ac.setAdapter(dataAdapter_ac);
         spinner_ac.setSelection(0);
     }
