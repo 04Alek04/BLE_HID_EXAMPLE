@@ -241,7 +241,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED ||
                 ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED ||
                 ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADVERTISE) != PackageManager.PERMISSION_GRANTED) {
-                
+
                 ActivityCompat.requestPermissions(this,
                         new String[]{
                                 Manifest.permission.BLUETOOTH_SCAN,

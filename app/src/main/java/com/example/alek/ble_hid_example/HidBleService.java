@@ -339,6 +339,12 @@ public class HidBleService extends Service {
 
     private void startAdvertising() {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        String currentName = bluetoothAdapter.getName();
+        if (currentName != null && !currentName.endsWith(" (HID)")) {
+            bluetoothAdapter.setName(currentName + " (HID)");
+        }
+
         BluetoothLeAdvertiser advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
         AdvertiseSettings settings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
@@ -355,7 +361,6 @@ public class HidBleService extends Service {
                 .addServiceUuid(new ParcelUuid(UUID.fromString(SERVICE_BAS)))
                 .build();
 
-        //bluetoothAdapter.setName(deviceName);
         advertiser.startAdvertising(settings, advData, advertisingCallback);
     }
 
