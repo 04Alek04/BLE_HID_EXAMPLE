@@ -200,6 +200,7 @@ public class HidBleService extends Service {
     private boolean notificationPossible;
     private BluetoothGattServer gattServer;
     private Thread check_thread = null;
+    private String mOriginalName = null;
     private final AdvertiseCallback advertisingCallback = new AdvertiseCallback() {
         @Override
         public void onStartSuccess(AdvertiseSettings settingsInEffect) {
@@ -349,9 +350,26 @@ public class HidBleService extends Service {
             }
         }
 
-        String currentName = bluetoothAdapter.getName();
-        if (currentName != null && !currentName.endsWith(" (HID)")) {
-            bluetoothAdapter.setName(currentName + " (HID)");
+        // Configure a short name starting with (HID)
+        String originalName = bluetoothAdapter.getName();
+        if (mOriginalName == null && originalName != null && !originalName.startsWith("(HID) ")) {
+            mOriginalName = originalName;
+        }
+
+        if (originalName == null) originalName = "Device";
+
+        String prefix = "(HID) ";
+        String newName;
+        if (originalName.startsWith(prefix)) {
+            newName = originalName;
+        } else {
+            String shortName = originalName.length() > 10 ? originalName.substring(0, 10) : originalName;
+            newName = prefix + shortName;
+        }
+
+        if (!newName.equals(originalName)) {
+            Log.i("BLE", "Setting device name to: " + newName);
+            bluetoothAdapter.setName(newName);
         }
 
         BluetoothLeAdvertiser advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
@@ -875,6 +893,30 @@ public class HidBleService extends Service {
         super.onCreate();
 
         initializeLE();
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mOriginalName != null) {
+            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            if (bluetoothAdapter != null) {
+                Log.i("BLE", "Restoring original device name: " + mOriginalName);
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                        bluetoothAdapter.setName(mOriginalName);
+                    }
+                } else {
+                    bluetoothAdapter.setName(mOriginalName);
+                }
+            }
+        }
+
+        if (gattServer != null) {
+            gattServer.close();
+            gattServer = null;
+        }
+
+        super.onDestroy();
     }
 
     @Override
