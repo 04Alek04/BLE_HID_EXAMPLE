@@ -40,7 +40,7 @@ public class ConfigurationFragment extends Fragment implements
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        getActivity().findViewById(R.id.conf_reboot_button).setOnClickListener(this);
+        view.findViewById(R.id.conf_reboot_button).setOnClickListener(this);
     }
 
     @Override

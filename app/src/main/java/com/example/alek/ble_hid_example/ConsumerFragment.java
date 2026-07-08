@@ -93,14 +93,19 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        setOnTouchListenerForEach((LinearLayout) getActivity().findViewById(R.id.cons_sub_main_layout));
+        super.onViewCreated(view, savedInstanceState);
+        
+        View subMainLayout = view.findViewById(R.id.cons_sub_main_layout);
+        if (subMainLayout instanceof LinearLayout) {
+            setOnTouchListenerForEach((LinearLayout) subMainLayout);
+        }
 
         // Application launch spinner configuration
         List<String> lal = new ArrayList<>();
         lal.add("SELECT VALUE");
         lal.addAll(ApplicationLaunchButtonsUsage.getUsageNames());
 
-        Spinner spinner_al = (Spinner) getActivity().findViewById(R.id.cons_spinner_al);
+        Spinner spinner_al = (Spinner) view.findViewById(R.id.cons_spinner_al);
         spinner_al.setOnItemSelectedListener(this);
         ArrayAdapter<String> dataAdapter_al = new ArrayAdapter<>(getContext(),
                 R.layout.spinner_item, lal);
@@ -113,7 +118,7 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
         lac.add("SELECT VALUE");
         lac.addAll(ApplicationControlUsage.getUsageNames());
 
-        Spinner spinner_ac = (Spinner) getActivity().findViewById(R.id.cons_spinner_ac);
+        Spinner spinner_ac = (Spinner) view.findViewById(R.id.cons_spinner_ac);
         spinner_ac.setOnItemSelectedListener(this);
         ArrayAdapter<String> dataAdapter_ac = new ArrayAdapter<>(getContext(),
                 R.layout.spinner_item, lac);
@@ -126,11 +131,14 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
     public void onPause() {
         super.onPause();
 
-        Spinner spinner_al = (Spinner) getActivity().findViewById(R.id.cons_spinner_al);
-        Spinner spinner_ac = (Spinner) getActivity().findViewById(R.id.cons_spinner_ac);
+        View v = getView();
+        if (v != null) {
+            Spinner spinner_al = (Spinner) v.findViewById(R.id.cons_spinner_al);
+            Spinner spinner_ac = (Spinner) v.findViewById(R.id.cons_spinner_ac);
 
-        spinner_al.setSelection(0);
-        spinner_ac.setSelection(0);
+            if (spinner_al != null) spinner_al.setSelection(0);
+            if (spinner_ac != null) spinner_ac.setSelection(0);
+        }
     }
 
     @Override
