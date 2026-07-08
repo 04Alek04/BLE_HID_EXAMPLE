@@ -50,10 +50,12 @@ import static android.bluetooth.BluetoothGattCharacteristic.PERMISSION_READ_ENCR
 import static android.bluetooth.BluetoothGattCharacteristic.PERMISSION_WRITE;
 import static android.bluetooth.BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED;
 import static android.bluetooth.BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED_MITM;
+import static com.example.alek.ble_hid_example.UUIDs.CHAR_APPEARANCE;
 import static com.example.alek.ble_hid_example.UUIDs.CHAR_BATTERY_LEVEL;
 import static com.example.alek.ble_hid_example.UUIDs.CHAR_HID_CONTROL_POINT;
 import static com.example.alek.ble_hid_example.UUIDs.CHAR_HID_INFORMATION;
 import static com.example.alek.ble_hid_example.UUIDs.CHAR_PNP_ID;
+import static com.example.alek.ble_hid_example.UUIDs.CHAR_PROTOCOL_MODE;
 import static com.example.alek.ble_hid_example.UUIDs.CHAR_REPORT;
 import static com.example.alek.ble_hid_example.UUIDs.CHAR_REPORT_MAP;
 import static com.example.alek.ble_hid_example.UUIDs.DESC_CCC;
@@ -640,6 +642,13 @@ public class HidBleService extends Service {
 
         charHidControlPoint.setValue("\0".getBytes());
 
+        // Protocol Mode characteristic
+        BluetoothGattCharacteristic charProtocolMode = new BluetoothGattCharacteristic(
+                UUID.fromString(CHAR_PROTOCOL_MODE),
+                BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
+                PERM_READ_WRITE);
+        charProtocolMode.setValue(new byte[]{0x01}); // 0x01 = Report Protocol Mode
+
         // Report characteristic
         BluetoothGattCharacteristic charReport1 = new BluetoothGattCharacteristic(
                 UUID.fromString(CHAR_REPORT),
@@ -666,6 +675,7 @@ public class HidBleService extends Service {
         serviceHid.addCharacteristic(charReportMap);
         serviceHid.addCharacteristic(charHidInformation);
         serviceHid.addCharacteristic(charHidControlPoint);
+        serviceHid.addCharacteristic(charProtocolMode);
         serviceHid.addCharacteristic(charReport1);
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Device Information Service
@@ -681,6 +691,17 @@ public class HidBleService extends Service {
 
         charPnpId.setValue("\2\0\0\0\0\0\0".getBytes());
         serviceDIS.addCharacteristic(charPnpId);
+
+        // Appearance characteristic (Generic HID = 0x03C0)
+        // NOTE: According to Bluetooth spec, this should be in the Generic Access Service (0x1800).
+        // However, on Android, the 0x1800 service is restricted and adding it manually often fails.
+        // We include it here in the Device Information Service as a fallback so hosts can still discover it.
+        BluetoothGattCharacteristic charApp = new BluetoothGattCharacteristic(
+                UUID.fromString(CHAR_APPEARANCE),
+                BluetoothGattCharacteristic.PROPERTY_READ, PERM_READ);
+        charApp.setValue(new byte[]{(byte) 0xC0, (byte) 0x03});
+        serviceDIS.addCharacteristic(charApp);
+        
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Battery Service
         //               -> Battery Level

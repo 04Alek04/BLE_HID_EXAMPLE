@@ -22,12 +22,14 @@ final class UUIDs {
     public static final String CHAR_REPORT_MAP = "00002A4B-0000-1000-8000-00805F9B34FB";
     public static final String CHAR_HID_INFORMATION = "00002A4A-0000-1000-8000-00805F9B34FB";
     public static final String CHAR_HID_CONTROL_POINT = "00002A4C-0000-1000-8000-00805F9B34FB";
+    public static final String CHAR_PROTOCOL_MODE = "00002A4E-0000-1000-8000-00805F9B34FB";
     public static final String DESC_REPORT_REFERENCE = "00002908-0000-1000-8000-00805F9B34FB";
     public static final String DESC_CCC = "00002902-0000-1000-8000-00805F9B34FB";
 
     // DIS related UUIDs
     public static final String SERVICE_DIS = "0000180A-0000-1000-8000-00805F9B34FB";
     public static final String CHAR_PNP_ID = "00002A50-0000-1000-8000-00805F9B34FB";
+    public static final String CHAR_APPEARANCE = "00002A01-0000-1000-8000-00805F9B34FB";
 
     // BAS related UUIDs
     public static final String SERVICE_BAS = "0000180F-0000-1000-8000-00805F9B34FB";
