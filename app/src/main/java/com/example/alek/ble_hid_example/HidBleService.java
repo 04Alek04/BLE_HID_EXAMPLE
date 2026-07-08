@@ -682,6 +682,9 @@ public class HidBleService extends Service {
                     if (devices.size() == 1) {
                         notificationPossible = true;
                     }
+                    
+                    // Resume advertising to allow more devices to connect
+                    startAdvertising();
                 } else if (newState == STATE_DISCONNECTED) {
                     if (devices.contains(device)) {
                         // If some notification waiting for this device then they will be removed in
@@ -692,6 +695,9 @@ public class HidBleService extends Service {
                     if (devices.size() == 0) {
                         notificationPossible = false;
                     }
+
+                    // Resume advertising to allow new connections
+                    startAdvertising();
                 }
 
                 if (mainActivity != null) {
