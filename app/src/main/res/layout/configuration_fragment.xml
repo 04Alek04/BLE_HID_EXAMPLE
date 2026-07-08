@@ -24,59 +24,6 @@
             android:textColor="@color/colorPrimaryDark"
             android:textSize="@dimen/activity_text_big" />
 
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:background="@drawable/border"
-            android:orientation="horizontal"
-            android:padding="@dimen/activity_horizontal_margin_0_25">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="@string/force_pairing"
-                android:textAlignment="center"
-                android:textColor="#FFFFFF"
-                android:textSize="@dimen/activity_text_medium" />
-
-            <Switch
-                android:id="@+id/conf_pair_switch"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:theme="@style/SwitchTheme" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:background="@drawable/border"
-            android:orientation="horizontal"
-            android:padding="@dimen/activity_horizontal_margin_0_25">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="@string/basic_mode"
-                android:textAlignment="center"
-                android:textColor="#FFFFFF"
-                android:textSize="@dimen/activity_text_medium" />
-
-            <Switch
-                android:id="@+id/conf_basic_switch"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:theme="@style/SwitchTheme" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/conf_feat_text"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="@string/consumer"
-            android:textAlignment="center"
-            android:textColor="#FFFFFF"
-            android:textSize="@dimen/activity_text_medium" />
-
         <Button
             android:id="@+id/conf_reboot_button"
             android:layout_width="match_parent"

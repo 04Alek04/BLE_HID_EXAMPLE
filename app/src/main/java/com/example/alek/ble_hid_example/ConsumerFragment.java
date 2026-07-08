@@ -34,8 +34,6 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.view.View.INVISIBLE;
-
 public class ConsumerFragment extends Fragment implements Button.OnTouchListener,
         AdapterView.OnItemSelectedListener {
 
@@ -102,7 +100,7 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
         lal.add("SELECT VALUE");
         lal.addAll(ApplicationLaunchButtonsUsage.getUsageNames());
 
-        Spinner spinner_al = (Spinner) getActivity().findViewById(R.id.cons_spinner_al_hidden);
+        Spinner spinner_al = (Spinner) getActivity().findViewById(R.id.cons_spinner_al);
         spinner_al.setOnItemSelectedListener(this);
         ArrayAdapter<String> dataAdapter_al = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_spinner_item, lal);
@@ -115,31 +113,21 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
         lac.add("SELECT VALUE");
         lac.addAll(ApplicationControlUsage.getUsageNames());
 
-        Spinner spinner_ac = (Spinner) getActivity().findViewById(R.id.cons_spinner_ac_hidden);
+        Spinner spinner_ac = (Spinner) getActivity().findViewById(R.id.cons_spinner_ac);
         spinner_ac.setOnItemSelectedListener(this);
         ArrayAdapter<String> dataAdapter_ac = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_spinner_item, lac);
         dataAdapter_ac.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner_ac.setAdapter(dataAdapter_ac);
         spinner_ac.setSelection(0);
-
-        if (ApplicationConfiguration.getConfigurationField(getContext(),
-                ApplicationConfiguration.BASIC_FEAT)) {
-            getActivity().findViewById(R.id.cons_system_text_hidden).setVisibility(INVISIBLE);
-            getActivity().findViewById(R.id.cons_system_button_layout_hidden).setVisibility(INVISIBLE);
-            getActivity().findViewById(R.id.cons_launch_text_hidden).setVisibility(INVISIBLE);
-            getActivity().findViewById(R.id.cons_control_text_hidden).setVisibility(INVISIBLE);
-            getActivity().findViewById(R.id.cons_spinner_al_hidden).setVisibility(INVISIBLE);
-            getActivity().findViewById(R.id.cons_spinner_ac_hidden).setVisibility(INVISIBLE);
-        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
 
-        Spinner spinner_al = (Spinner) getActivity().findViewById(R.id.cons_spinner_al_hidden);
-        Spinner spinner_ac = (Spinner) getActivity().findViewById(R.id.cons_spinner_ac_hidden);
+        Spinner spinner_al = (Spinner) getActivity().findViewById(R.id.cons_spinner_al);
+        Spinner spinner_ac = (Spinner) getActivity().findViewById(R.id.cons_spinner_ac);
 
         spinner_al.setSelection(0);
         spinner_ac.setSelection(0);
@@ -178,7 +166,7 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
             ((TextView) parent.getChildAt(0)).setTextColor(Color.WHITE);
 
             int parentId = parent.getId();
-            if (parentId == R.id.cons_spinner_al_hidden) {
+            if (parentId == R.id.cons_spinner_al) {
                 if (position == 0) {
                     /* Dummy item */
                     return;
@@ -187,7 +175,7 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
                 value = ApplicationLaunchButtonsUsage.AL_USAGES[position - 1].usage;
                 activity.sendNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, (int) value);
                 activity.sendNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, 0);
-            } else if (parentId == R.id.cons_spinner_ac_hidden) {
+            } else if (parentId == R.id.cons_spinner_ac) {
                 if (position == 0) {
                     /* Dummy item */
                     return;

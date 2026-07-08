@@ -173,7 +173,7 @@
 
 
             <TextView
-                android:id="@+id/cons_system_text_hidden"
+                android:id="@+id/cons_system_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/system_control"
@@ -181,7 +181,7 @@
                 android:textColor="@android:color/white" />
 
             <LinearLayout
-                android:id="@+id/cons_system_button_layout_hidden"
+                android:id="@+id/cons_system_button_layout"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
@@ -220,7 +220,7 @@
             </LinearLayout>
 
             <TextView
-                android:id="@+id/cons_launch_text_hidden"
+                android:id="@+id/cons_launch_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/application_launch"
@@ -228,13 +228,13 @@
                 android:textColor="@android:color/white" />
 
             <Spinner
-                android:id="@+id/cons_spinner_al_hidden"
+                android:id="@+id/cons_spinner_al"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:spinnerMode="dialog" />
 
             <TextView
-                android:id="@+id/cons_control_text_hidden"
+                android:id="@+id/cons_control_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/application_control"
@@ -242,7 +242,7 @@
                 android:textColor="@android:color/white" />
 
             <Spinner
-                android:id="@+id/cons_spinner_ac_hidden"
+                android:id="@+id/cons_spinner_ac"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:spinnerMode="dialog"

@@ -98,7 +98,6 @@ enum ReportField {
     final static public int REP_CONSUMER = 0x01;
     final static public int REP_MOUSE = 0x02;
     final static public int REP_KEYBOARD = 0x04;
-    final static public int REP_BASIC = 0x08;
     public final int byte_size;
     public int byte_offset;
 
@@ -381,164 +380,123 @@ public class HidBleService extends Service {
         //                   -> Report Reference
         //           ... (another Report characteristics and their descriptors)
         ////////////////////////////////////////////////////////////////////////////////////////////
-        // Report Map - for basic mode
-        final byte REPORT_MAP_BASIC[] = {
-                (byte) 0x05, (byte) 0x0C, /*        Usage Page (Consumer Devices)       */
-                (byte) 0x09, (byte) 0x01, /*        Usage (Consumer Control)            */
-                (byte) 0xA1, (byte) 0x01, /*        Collection (Application)            */
-                (byte) 0x85, (byte) 0x03, /*        Report ID=3                         */
-                (byte) 0x05, (byte) 0x0C, /*        Usage Page (Consumer Devices)       */
-                (byte) 0x15, (byte) 0x00, /*        Logical Minimum (0)                 */
-                (byte) 0x25, (byte) 0x01, /*        Logical Maximum (1)                 */
-                (byte) 0x75, (byte) 0x01, /*        Report Size (1)                     */
-                (byte) 0x95, (byte) 0x0B, /*        Report Count (11)                   */
+        byte REPORT_MAP[] = new byte[]{
+                // --- CONSUMER (ID 3) - 6 bytes ---
+                (byte) 0x05, (byte) 0x0C, /* Usage Page (Consumer Devices) */
+                (byte) 0x09, (byte) 0x01, /* Usage (Consumer Control) */
+                (byte) 0xA1, (byte) 0x01, /* Collection (Application) */
+                (byte) 0x85, (byte) 0x03, /* Report ID (3) */
 
-                (byte) 0x09, (byte) 0x6F, /* 1       Usage (Bright Up)                  */
-                (byte) 0x09, (byte) 0x70, /* 2       Usage (Bright Down)                */
+                // Block 1: Consumer Page (11 bits)
+                (byte) 0x05, (byte) 0x0C, /* Usage Page (Consumer Devices) */
+                (byte) 0x15, (byte) 0x00, /* Logical Minimum (0) */
+                (byte) 0x25, (byte) 0x01, /* Logical Maximum (1) */
+                (byte) 0x75, (byte) 0x01, /* Report Size (1) */
+                (byte) 0x95, (byte) 0x0B, /* Report Count (11) */
+                (byte) 0x09, 0x6F, /* Bright Up */
+                (byte) 0x09, 0x70, /* Bright Down */
+                (byte) 0x09, (byte) 0xB5, /* Scan Next Track */
+                (byte) 0x09, (byte) 0xB6, /* Scan Previous Track */
+                (byte) 0x09, (byte) 0xB7, /* Stop */
+                (byte) 0x09, (byte) 0xCD, /* Play / Pause */
+                (byte) 0x09, (byte) 0xE2, /* Mute */
+                (byte) 0x09, (byte) 0xE9, /* Volume Up */
+                (byte) 0x09, (byte) 0xEA, /* Volume Down */
+                (byte) 0x09, (byte) 0xB8, /* Eject */
+                (byte) 0x09, (byte) 0x65, /* Snapshot */
+                (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) */
 
-                (byte) 0x09, (byte) 0xB5, /* 3       Usage (Scan Next Track)            */
-                (byte) 0x09, (byte) 0xB6, /* 4       Usage (Scan Previous Track)        */
-                (byte) 0x09, (byte) 0xB7, /* 5       Usage (Stop)                       */
-                (byte) 0x09, (byte) 0xCD, /* 6       Usage (Play / Pause)               */
+                // Block 2: Generic Desktop Page (5 bits)
+                (byte) 0x05, (byte) 0x01, /* Usage Page (Generic Desktop) */
+                (byte) 0x95, (byte) 0x05, /* Report Count (5) */
+                (byte) 0x09, (byte) 0x82, /* System Sleep */
+                (byte) 0x09, (byte) 0xA8, /* System Hibernate */
+                (byte) 0x09, (byte) 0x81, /* System Power Down */
+                (byte) 0x09, (byte) 0x8E, /* System Cold Restart */
+                (byte) 0x09, (byte) 0x8F, /* System Warm Restart */
+                (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) */
 
-                (byte) 0x09, (byte) 0xE2, /* 7       Usage (Mute)                       */
-                (byte) 0x09, (byte) 0xE9, /* 8       Usage (Volume Up)                  */
-                (byte) 0x09, (byte) 0xEA, /* 9       Usage (Volume Down)                */
+                // Block 3: Launchers (16 bits)
+                (byte) 0x05, (byte) 0x0C, /* Usage Page (Consumer Devices) */
+                (byte) 0x95, (byte) 0x01, /* Report Count (1) */
+                (byte) 0x75, (byte) 0x10, /* Report Size (16) */
+                (byte) 0x16, (byte) 0x81, (byte) 0x01, /* Logical Minimum (385) */
+                (byte) 0x26, (byte) 0xC7, (byte) 0x01, /* Logical Maximum (455) */
+                (byte) 0x1A, (byte) 0x81, (byte) 0x01, /* Usage Minimum (385) */
+                (byte) 0x2A, (byte) 0xC7, (byte) 0x01, /* Usage Maximum (455) */
+                (byte) 0x81, (byte) 0x00, /* Input (Data, Array) */
 
-                (byte) 0x09, (byte) 0xB8, /* 10      Usage (Eject)                      */
-                (byte) 0x09, (byte) 0xb8, /* 11      Usage (Snapshot)                   */
+                // Block 4: Controls (16 bits)
+                (byte) 0x05, (byte) 0x0C, /* Usage Page (Consumer Devices) */
+                (byte) 0x95, (byte) 0x01, /* Report Count (1) */
+                (byte) 0x75, (byte) 0x10, /* Report Size (16) */
+                (byte) 0x16, (byte) 0x01, (byte) 0x02, /* Logical Minimum (513) */
+                (byte) 0x26, (byte) 0x9C, (byte) 0x02, /* Logical Maximum (668) */
+                (byte) 0x1A, (byte) 0x01, (byte) 0x02, /* Usage Minimum (513) */
+                (byte) 0x2A, (byte) 0x9C, (byte) 0x02, /* Usage Maximum (668) */
+                (byte) 0x81, (byte) 0x00, /* Input (Data, Array) */
+                (byte) 0xC0, /* End Collection */
 
-                (byte) 0x81, (byte) 0x02, /*        Input (Data, Variable, Absolute)    */
-                (byte) 0x95, (byte) 0x05, /*        Report Count (5)                    */
-                (byte) 0x81, (byte) 0x01, /*        Input (Constant)                    */
-                (byte) 0xC0,
+                // --- KEYBOARD (ID 1) - 8 bytes standard ---
+                (byte) 0x05, (byte) 0x01, /* Usage Page (Generic Desktop) */
+                (byte) 0x09, (byte) 0x06, /* Usage (Keyboard) */
+                (byte) 0xA1, (byte) 0x01, /* Collection (Application) */
+                (byte) 0x85, (byte) 0x01, /* Report ID (1) */
+                (byte) 0x05, (byte) 0x07, /* Usage Page (Keyboard/Keypad) */
+                (byte) 0x19, (byte) 0xE0, /* Usage Minimum (Left Control) */
+                (byte) 0x29, (byte) 0xE7, /* Usage Maximum (Right GUI) */
+                (byte) 0x15, (byte) 0x00, /* Logical Minimum (0) */
+                (byte) 0x25, (byte) 0x01, /* Logical Maximum (1) */
+                (byte) 0x75, (byte) 0x01, /* Report Size (1) */
+                (byte) 0x95, (byte) 0x08, /* Report Count (8) */
+                (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) - Modifiers */
+                (byte) 0x95, (byte) 0x01, /* Report Count (1) */
+                (byte) 0x75, (byte) 0x08, /* Report Size (8) */
+                (byte) 0x81, (byte) 0x01, /* Input (Constant) - Reserved byte */
+                (byte) 0x95, (byte) 0x06, /* Report Count (6) */
+                (byte) 0x75, (byte) 0x08, /* Report Size (8) */
+                (byte) 0x15, (byte) 0x00, /* Logical Minimum (0) */
+                (byte) 0x25, (byte) 0xDF, /* Logical Maximum (223) */
+                (byte) 0x05, (byte) 0x07, /* Usage Page (Keyboard/Keypad) */
+                (byte) 0x19, (byte) 0x00, /* Usage Minimum (0) */
+                (byte) 0x29, (byte) 0xDF, /* Usage Maximum (223) */
+                (byte) 0x81, (byte) 0x00, /* Input (Data, Array) - Keys */
+                (byte) 0xC0, /* End Collection */
+
+                // --- MOUSE (ID 2) ---
+                (byte) 0x05, (byte) 0x01, /* Usage Page (Generic Desktop) */
+                (byte) 0x09, (byte) 0x02, /* Usage (Mouse) */
+                (byte) 0xA1, (byte) 0x01, /* Collection (Application) */
+                (byte) 0x85, (byte) 0x02, /* Report ID (2) */
+                (byte) 0x09, (byte) 0x01, /* Usage (Pointer) */
+                (byte) 0xA1, (byte) 0x00, /* Collection (Physical) */
+                (byte) 0x05, (byte) 0x09, /* Usage Page (Button) */
+                (byte) 0x19, (byte) 0x01, /* Usage Minimum (Button 1) */
+                (byte) 0x29, (byte) 0x05, /* Usage Maximum (Button 5) */
+                (byte) 0x15, (byte) 0x00, /* Logical Minimum (0) */
+                (byte) 0x25, (byte) 0x01, /* Logical Maximum (1) */
+                (byte) 0x95, (byte) 0x05, /* Report Count (5) */
+                (byte) 0x75, (byte) 0x01, /* Report Size (1) */
+                (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) - Buttons */
+                (byte) 0x95, (byte) 0x01, /* Report Count (1) */
+                (byte) 0x75, (byte) 0x03, /* Report Size (3) */
+                (byte) 0x81, (byte) 0x01, /* Input (Constant) - Padding */
+                (byte) 0x05, (byte) 0x01, /* Usage Page (Generic Desktop) */
+                (byte) 0x09, (byte) 0x30, /* Usage (X) */
+                (byte) 0x09, (byte) 0x31, /* Usage (Y) */
+                (byte) 0x15, (byte) 0x80, /* Logical Minimum (-128) */
+                (byte) 0x25, (byte) 0x7F, /* Logical Maximum (127) */
+                (byte) 0x75, (byte) 0x08, /* Report Size (8) */
+                (byte) 0x95, (byte) 0x02, /* Report Count (2) */
+                (byte) 0x81, (byte) 0x06, /* Input (Data, Variable, Relative) - X, Y */
+                (byte) 0x09, (byte) 0x38, /* Usage (Wheel) */
+                (byte) 0x15, (byte) 0x80, /* Logical Minimum (-128) */
+                (byte) 0x25, (byte) 0x7F, /* Logical Maximum (127) */
+                (byte) 0x75, (byte) 0x08, /* Report Size (8) */
+                (byte) 0x95, (byte) 0x01, /* Report Count (1) */
+                (byte) 0x81, (byte) 0x06, /* Input (Data, Variable, Relative) - Wheel */
+                (byte) 0xC0, (byte) 0xC0 /* End Collections */
         };
-
-        int position = 0;
-        byte REPORT_MAP[];
-
-
-        if ((features & ReportField.REP_BASIC) == ReportField.REP_BASIC) {
-            REPORT_MAP = REPORT_MAP_BASIC;
-        } else {
-            REPORT_MAP = new byte[]{
-                    // --- CONSUMER (ID 3) - 6 bytes ---
-                    (byte) 0x05, (byte) 0x0C, /* Usage Page (Consumer Devices) */
-                    (byte) 0x09, (byte) 0x01, /* Usage (Consumer Control) */
-                    (byte) 0xA1, (byte) 0x01, /* Collection (Application) */
-                    (byte) 0x85, (byte) 0x03, /* Report ID (3) */
-
-                    // Block 1: Consumer Page (11 bits)
-                    (byte) 0x05, (byte) 0x0C, /* Usage Page (Consumer Devices) */
-                    (byte) 0x15, (byte) 0x00, /* Logical Minimum (0) */
-                    (byte) 0x25, (byte) 0x01, /* Logical Maximum (1) */
-                    (byte) 0x75, (byte) 0x01, /* Report Size (1) */
-                    (byte) 0x95, (byte) 0x0B, /* Report Count (11) */
-                    (byte) 0x09, (byte) 0x6F, /* Bright Up */
-                    (byte) 0x09, (byte) 0x70, /* Bright Down */
-                    (byte) 0x09, (byte) 0xB5, /* Scan Next Track */
-                    (byte) 0x09, (byte) 0xB6, /* Scan Previous Track */
-                    (byte) 0x09, (byte) 0xB7, /* Stop */
-                    (byte) 0x09, (byte) 0xCD, /* Play / Pause */
-                    (byte) 0x09, (byte) 0xE2, /* Mute */
-                    (byte) 0x09, (byte) 0xE9, /* Volume Up */
-                    (byte) 0x09, (byte) 0xEA, /* Volume Down */
-                    (byte) 0x09, (byte) 0xB8, /* Eject */
-                    (byte) 0x09, (byte) 0x65, /* Snapshot */
-                    (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) */
-
-                    // Block 2: Generic Desktop Page (5 bits)
-                    (byte) 0x05, (byte) 0x01, /* Usage Page (Generic Desktop) */
-                    (byte) 0x95, (byte) 0x05, /* Report Count (5) */
-                    (byte) 0x09, (byte) 0x82, /* System Sleep */
-                    (byte) 0x09, (byte) 0xA8, /* System Hibernate */
-                    (byte) 0x09, (byte) 0x81, /* System Power Down */
-                    (byte) 0x09, (byte) 0x8E, /* System Cold Restart */
-                    (byte) 0x09, (byte) 0x8F, /* System Warm Restart */
-                    (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) */
-
-                    // Block 3: Launchers (16 bits)
-                    (byte) 0x05, (byte) 0x0C, /* Usage Page (Consumer Devices) */
-                    (byte) 0x95, (byte) 0x01, /* Report Count (1) */
-                    (byte) 0x75, (byte) 0x10, /* Report Size (16) */
-                    (byte) 0x16, (byte) 0x81, (byte) 0x01, /* Logical Minimum (385) */
-                    (byte) 0x26, (byte) 0xC7, (byte) 0x01, /* Logical Maximum (455) */
-                    (byte) 0x1A, (byte) 0x81, (byte) 0x01, /* Usage Minimum (385) */
-                    (byte) 0x2A, (byte) 0xC7, (byte) 0x01, /* Usage Maximum (455) */
-                    (byte) 0x81, (byte) 0x00, /* Input (Data, Array) */
-
-                    // Block 4: Controls (16 bits)
-                    (byte) 0x05, (byte) 0x0C, /* Usage Page (Consumer Devices) */
-                    (byte) 0x95, (byte) 0x01, /* Report Count (1) */
-                    (byte) 0x75, (byte) 0x10, /* Report Size (16) */
-                    (byte) 0x16, (byte) 0x01, (byte) 0x02, /* Logical Minimum (513) */
-                    (byte) 0x26, (byte) 0x9C, (byte) 0x02, /* Logical Maximum (668) */
-                    (byte) 0x1A, (byte) 0x01, (byte) 0x02, /* Usage Minimum (513) */
-                    (byte) 0x2A, (byte) 0x9C, (byte) 0x02, /* Usage Maximum (668) */
-                    (byte) 0x81, (byte) 0x00, /* Input (Data, Array) */
-                    (byte) 0xC0, /* End Collection */
-
-                    // --- KEYBOARD (ID 1) - 8 bytes standard ---
-                    (byte) 0x05, (byte) 0x01, /* Usage Page (Generic Desktop) */
-                    (byte) 0x09, (byte) 0x06, /* Usage (Keyboard) */
-                    (byte) 0xA1, (byte) 0x01, /* Collection (Application) */
-                    (byte) 0x85, (byte) 0x01, /* Report ID (1) */
-                    (byte) 0x05, (byte) 0x07, /* Usage Page (Keyboard/Keypad) */
-                    (byte) 0x19, (byte) 0xE0, /* Usage Minimum (Left Control) */
-                    (byte) 0x29, (byte) 0xE7, /* Usage Maximum (Right GUI) */
-                    (byte) 0x15, (byte) 0x00, /* Logical Minimum (0) */
-                    (byte) 0x25, (byte) 0x01, /* Logical Maximum (1) */
-                    (byte) 0x75, (byte) 0x01, /* Report Size (1) */
-                    (byte) 0x95, (byte) 0x08, /* Report Count (8) */
-                    (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) - Modifiers */
-                    (byte) 0x95, (byte) 0x01, /* Report Count (1) */
-                    (byte) 0x75, (byte) 0x08, /* Report Size (8) */
-                    (byte) 0x81, (byte) 0x01, /* Input (Constant) - Reserved byte */
-                    (byte) 0x95, (byte) 0x06, /* Report Count (6) */
-                    (byte) 0x75, (byte) 0x08, /* Report Size (8) */
-                    (byte) 0x15, (byte) 0x00, /* Logical Minimum (0) */
-                    (byte) 0x25, (byte) 0xDF, /* Logical Maximum (223) */
-                    (byte) 0x05, (byte) 0x07, /* Usage Page (Keyboard/Keypad) */
-                    (byte) 0x19, (byte) 0x00, /* Usage Minimum (0) */
-                    (byte) 0x29, (byte) 0xDF, /* Usage Maximum (223) */
-                    (byte) 0x81, (byte) 0x00, /* Input (Data, Array) - Keys */
-                    (byte) 0xC0, /* End Collection */
-
-                    // --- MOUSE (ID 2) ---
-                    (byte) 0x05, (byte) 0x01, /* Usage Page (Generic Desktop) */
-                    (byte) 0x09, (byte) 0x02, /* Usage (Mouse) */
-                    (byte) 0xA1, (byte) 0x01, /* Collection (Application) */
-                    (byte) 0x85, (byte) 0x02, /* Report ID (2) */
-                    (byte) 0x09, (byte) 0x01, /* Usage (Pointer) */
-                    (byte) 0xA1, (byte) 0x00, /* Collection (Physical) */
-                    (byte) 0x05, (byte) 0x09, /* Usage Page (Button) */
-                    (byte) 0x19, (byte) 0x01, /* Usage Minimum (Button 1) */
-                    (byte) 0x29, (byte) 0x05, /* Usage Maximum (Button 5) */
-                    (byte) 0x15, (byte) 0x00, /* Logical Minimum (0) */
-                    (byte) 0x25, (byte) 0x01, /* Logical Maximum (1) */
-                    (byte) 0x95, (byte) 0x05, /* Report Count (5) */
-                    (byte) 0x75, (byte) 0x01, /* Report Size (1) */
-                    (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) - Buttons */
-                    (byte) 0x95, (byte) 0x01, /* Report Count (1) */
-                    (byte) 0x75, (byte) 0x03, /* Report Size (3) */
-                    (byte) 0x81, (byte) 0x01, /* Input (Constant) - Padding */
-                    (byte) 0x05, (byte) 0x01, /* Usage Page (Generic Desktop) */
-                    (byte) 0x09, (byte) 0x30, /* Usage (X) */
-                    (byte) 0x09, (byte) 0x31, /* Usage (Y) */
-                    (byte) 0x15, (byte) 0x80, /* Logical Minimum (-128) */
-                    (byte) 0x25, (byte) 0x7F, /* Logical Maximum (127) */
-                    (byte) 0x75, (byte) 0x08, /* Report Size (8) */
-                    (byte) 0x95, (byte) 0x02, /* Report Count (2) */
-                    (byte) 0x81, (byte) 0x06, /* Input (Data, Variable, Relative) - X, Y */
-                    (byte) 0x09, (byte) 0x38, /* Usage (Wheel) */
-                    (byte) 0x15, (byte) 0x80, /* Logical Minimum (-128) */
-                    (byte) 0x25, (byte) 0x7F, /* Logical Maximum (127) */
-                    (byte) 0x75, (byte) 0x08, /* Report Size (8) */
-                    (byte) 0x95, (byte) 0x01, /* Report Count (1) */
-                    (byte) 0x81, (byte) 0x06, /* Input (Data, Variable, Relative) - Wheel */
-                    (byte) 0xC0, (byte) 0xC0 /* End Collections */
-            };
-        }
 
 
         // HID Service
@@ -680,25 +638,6 @@ public class HidBleService extends Service {
                     if (devices.size() == 1) {
                         notificationPossible = true;
                     }
-
-                    BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                    BluetoothLeAdvertiser advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
-
-                    if (ApplicationConfiguration.getConfigurationField(getApplicationContext(),
-                            ApplicationConfiguration.FORCE_BOND_FEAT)) {
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                            if (androidx.core.content.ContextCompat.checkSelfPermission(HidBleService.this, android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                                Log.e("BLE", "Missing BLUETOOTH_CONNECT permission for bonding");
-                                return;
-                            }
-                        }
-                        if (device.getBondState() != BluetoothDevice.BOND_BONDING &&
-                                device.getBondState() != BluetoothDevice.BOND_BONDED) {
-                            device.createBond();
-                        } else if (device.getBondState() == BluetoothDevice.BOND_BONDING) {
-                            device.setPairingConfirmation(true);
-                        }
-                    }
                 } else if (newState == STATE_DISCONNECTED) {
                     if (devices.contains(device)) {
                         // If some notification waiting for this device then they will be removed in
@@ -835,11 +774,6 @@ public class HidBleService extends Service {
         if (ApplicationConfiguration.getConfigurationField(getApplicationContext(),
                 ApplicationConfiguration.KEYBOARD_FEAT)) {
             features |= ReportField.REP_KEYBOARD;
-        }
-
-        if (ApplicationConfiguration.getConfigurationField(getApplicationContext(),
-                ApplicationConfiguration.BASIC_FEAT)) {
-            features |= ReportField.REP_BASIC;
         }
 
         ReportField.updateValues(features);

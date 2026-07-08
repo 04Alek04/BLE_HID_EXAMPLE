@@ -22,14 +22,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
-import android.widget.Switch;
 import android.widget.TextView;
 
 public class ConfigurationFragment extends Fragment implements
         CompoundButton.OnCheckedChangeListener, View.OnClickListener {
-    private static final String BASIC_STRING_ENABLED = "Consumer";
-    private static final String BASIC_STRING_DISABLED = BASIC_STRING_ENABLED +
-            " + Mouse\nKeyboard + D-Pad";
 
     public static ConfigurationFragment newInstance() {
         return new ConfigurationFragment();
@@ -43,58 +39,12 @@ public class ConfigurationFragment extends Fragment implements
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        int[][] ids = {
-                {R.id.conf_pair_switch, ApplicationConfiguration.FORCE_BOND_FEAT},
-                {R.id.conf_basic_switch, ApplicationConfiguration.BASIC_FEAT},
-        };
-
-        for (int[] pair : ids) {
-            Switch sw = (Switch) getActivity().findViewById(pair[0]);
-
-            if (sw == null) {
-                continue;
-            }
-
-            sw.setChecked(ApplicationConfiguration.getConfigurationField(getContext(), pair[1]));
-            sw.setOnCheckedChangeListener(this);
-        }
-
-        ((TextView) getActivity().findViewById(R.id.conf_feat_text)).setText(((Switch)
-                getActivity().findViewById(R.id.conf_basic_switch)).isChecked() ?
-                BASIC_STRING_ENABLED : BASIC_STRING_DISABLED);
 
         getActivity().findViewById(R.id.conf_reboot_button).setOnClickListener(this);
     }
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        MainActivity mainActivity = (MainActivity) getActivity();
-
-        int id = buttonView.getId();
-        if (id == R.id.conf_pair_switch) {
-            ApplicationConfiguration.setConfigurationField(getContext(),
-                    ApplicationConfiguration.FORCE_BOND_FEAT, isChecked);
-        } else if (id == R.id.conf_basic_switch) {
-            ApplicationConfiguration.setConfigurationField(getContext(),
-                    ApplicationConfiguration.BASIC_FEAT, isChecked);
-
-            ApplicationConfiguration.setConfigurationField(getContext(),
-                    ApplicationConfiguration.CONSUMER_FEAT, true);
-
-            ApplicationConfiguration.setConfigurationField(getContext(),
-                    ApplicationConfiguration.MOUSE_FEAT, !isChecked);
-
-            ApplicationConfiguration.setConfigurationField(getContext(),
-                    ApplicationConfiguration.KEYBOARD_FEAT, !isChecked);
-
-            ((TextView) getActivity().findViewById(R.id.conf_feat_text)).setText(isChecked ?
-                    BASIC_STRING_ENABLED : BASIC_STRING_DISABLED);
-        } else {
-            return;
-        }
-
-        mainActivity.pager.getAdapter().notifyDataSetChanged();
-        mainActivity.pager.setAdapter(mainActivity.pagerAdapter);
     }
 
     @Override
