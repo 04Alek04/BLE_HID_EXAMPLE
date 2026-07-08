@@ -328,14 +328,12 @@ public class HidBleService extends Service {
     }
 
     private void startAdvertising() {
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED ||
-                androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_ADVERTISE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                Log.e("BLE", "Missing permissions for advertising");
-                return;
-            }
+        if (bluetoothAdapter == null) {
+            Log.e("BLE", "BluetoothAdapter is null");
+            return;
         }
 
         // Configure a short name starting with (HID)
@@ -820,10 +818,10 @@ public class HidBleService extends Service {
 
     /* Service handling-related methods */
     public void initializeLE() {
-        BluetoothManager mManager;
+        BluetoothManager mManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         int features = 0;
 
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothAdapter bluetoothAdapter = mManager != null ? mManager.getAdapter() : null;
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
             Log.e("BLE", "Bluetooth is not enabled or not supported");
             return;
@@ -871,7 +869,8 @@ public class HidBleService extends Service {
     @Override
     public void onDestroy() {
         if (mOriginalName != null) {
-            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+            BluetoothAdapter bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
             if (bluetoothAdapter != null) {
                 Log.i("BLE", "Restoring original device name: " + mOriginalName);
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
