@@ -35,7 +35,9 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.KeyEvent;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -142,6 +144,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         }
     };
     private HidBleService mService = null;
+    private byte lastKeyboardLedStatus = 0;
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className,
@@ -186,6 +189,27 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
 
     public void onConnectionStateChange(List<BluetoothDevice> dev_array) {
         devices = new ArrayList<>(dev_array);
+    }
+
+    public void onKeyboardLedStatusChanged(final byte status) {
+        lastKeyboardLedStatus = status;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (pagerAdapter != null) {
+                    for (int i = 0; i < pagerAdapter.getCount(); i++) {
+                        Fragment f = pagerAdapter.getRegisteredFragment(i);
+                        if (f instanceof KeyboardFragment) {
+                            ((KeyboardFragment) f).updateLedStatus(status);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    public byte getLastKeyboardLedStatus() {
+        return lastKeyboardLedStatus;
     }
 
     public void sendNotification(ReportField rf, int value) {
@@ -391,8 +415,27 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         static final int KEYBOARD = 3;
         static final int D_PAD = 4;
 
+        private final SparseArray<Fragment> registeredFragments = new SparseArray<>();
+
         PagerAdapter(FragmentManager fm) {
             super(fm);
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            Fragment fragment = (Fragment) super.instantiateItem(container, position);
+            registeredFragments.put(position, fragment);
+            return fragment;
+        }
+
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object) {
+            registeredFragments.remove(position);
+            super.destroyItem(container, position, object);
+        }
+
+        public Fragment getRegisteredFragment(int position) {
+            return registeredFragments.get(position);
         }
 
         @Override

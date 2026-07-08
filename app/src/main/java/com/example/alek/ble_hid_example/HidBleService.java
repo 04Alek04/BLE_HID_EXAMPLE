@@ -150,6 +150,7 @@ public class HidBleService extends Service {
     private volatile boolean notificationPossible;
     private BluetoothGattServer gattServer;
     private BluetoothGattCharacteristic charReportKeyboard;
+    private BluetoothGattCharacteristic charReportKeyboardOutput;
     private BluetoothGattCharacteristic charReportMouse;
     private BluetoothGattCharacteristic charReportConsumer;
     private String mOriginalName = null;
@@ -484,6 +485,15 @@ public class HidBleService extends Service {
                 (byte) 0x19, (byte) 0x00, /* Usage Minimum (0) */
                 (byte) 0x29, (byte) 0xDF, /* Usage Maximum (223) */
                 (byte) 0x81, (byte) 0x00, /* Input (Data, Array) - Keys */
+                (byte) 0x95, (byte) 0x05, /* Report Count (5) */
+                (byte) 0x75, (byte) 0x01, /* Report Size (1) */
+                (byte) 0x05, (byte) 0x08, /* Usage Page (LEDs) */
+                (byte) 0x19, (byte) 0x01, /* Usage Minimum (Num Lock) */
+                (byte) 0x29, (byte) 0x05, /* Usage Maximum (Kana) */
+                (byte) 0x91, (byte) 0x02, /* Output (Data, Var, Abs) */
+                (byte) 0x95, (byte) 0x01, /* Report Count (1) */
+                (byte) 0x75, (byte) 0x03, /* Report Size (3) */
+                (byte) 0x91, (byte) 0x03, /* Output (Const, Var, Abs) */
                 (byte) 0xC0, /* End Collection */
 
                 // --- MOUSE (ID 2) ---
@@ -564,6 +574,16 @@ public class HidBleService extends Service {
         charReportKeyboard.addDescriptor(descReportRefKbd);
         charReportKeyboard.addDescriptor(new BluetoothGattDescriptor(UUID.fromString(DESC_CCC), PERM_READ_WRITE));
 
+        // Report Keyboard Output characteristic (ID 1)
+        charReportKeyboardOutput = new BluetoothGattCharacteristic(
+                UUID.fromString(CHAR_REPORT),
+                BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
+                PERM_READ_WRITE);
+        charReportKeyboardOutput.setValue(new byte[1]);
+        BluetoothGattDescriptor descReportRefKbdOut = new BluetoothGattDescriptor(UUID.fromString(DESC_REPORT_REFERENCE), PERM_READ);
+        descReportRefKbdOut.setValue(new byte[]{0x01, 0x02}); // ID=1, Type=Output
+        charReportKeyboardOutput.addDescriptor(descReportRefKbdOut);
+
         // Report Mouse characteristic (ID 2)
         charReportMouse = new BluetoothGattCharacteristic(
                 UUID.fromString(CHAR_REPORT),
@@ -589,6 +609,7 @@ public class HidBleService extends Service {
         serviceHid.addCharacteristic(charHidControlPoint);
         serviceHid.addCharacteristic(charProtocolMode);
         serviceHid.addCharacteristic(charReportKeyboard);
+        serviceHid.addCharacteristic(charReportKeyboardOutput);
         serviceHid.addCharacteristic(charReportMouse);
         serviceHid.addCharacteristic(charReportConsumer);
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -731,6 +752,13 @@ public class HidBleService extends Service {
                 Log.e("BLE", "onCharacteristicWriteRequest " + characteristic.getUuid().toString() +
                         " offset " + offset);
                 characteristic.setValue(value);
+
+                if (characteristic == charReportKeyboardOutput && value != null && value.length > 0) {
+                    if (mainActivity != null) {
+                        mainActivity.onKeyboardLedStatusChanged(value[0]);
+                    }
+                }
+
                 if (responseNeeded) {
                     gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
                 }

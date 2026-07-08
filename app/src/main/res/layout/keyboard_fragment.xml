@@ -72,6 +72,38 @@
                 android:checked="false"
                 android:textOff="@string/keyboard_off"
                 android:textOn="@string/keyboard_on" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="3"
+                android:paddingTop="10dp">
+
+                <ToggleButton
+                    android:id="@+id/keyboard_lock_num"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textOff="NUM"
+                    android:textOn="NUM" />
+
+                <ToggleButton
+                    android:id="@+id/keyboard_lock_caps"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textOff="CAPS"
+                    android:textOn="CAPS" />
+
+                <ToggleButton
+                    android:id="@+id/keyboard_lock_scroll"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textOff="SCRL"
+                    android:textOn="SCRL" />
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 

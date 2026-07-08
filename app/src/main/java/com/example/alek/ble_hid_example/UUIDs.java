@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package com.example.alek.ble_hid_example;
-
 final class UUIDs {
     // HID related UUIDs
     public static final String SERVICE_HID = "00001812-0000-1000-8000-00805F9B34FB";

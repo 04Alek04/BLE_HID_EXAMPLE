@@ -39,6 +39,8 @@ import java.util.Objects;
 public class KeyboardFragment extends Fragment implements Button.OnTouchListener,
         AdapterView.OnItemSelectedListener, View.OnClickListener {
 
+    private ToggleButton numLockBtn, capsLockBtn, scrollLockBtn;
+
     public static KeyboardFragment newInstance() {
         return new KeyboardFragment();
     }
@@ -74,6 +76,54 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
                         }
                     }
                 });
+
+        numLockBtn = (ToggleButton) getActivity().findViewById(R.id.keyboard_lock_num);
+        capsLockBtn = (ToggleButton) getActivity().findViewById(R.id.keyboard_lock_caps);
+        scrollLockBtn = (ToggleButton) getActivity().findViewById(R.id.keyboard_lock_scroll);
+
+        View.OnClickListener lockClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                byte usage = 0;
+                int id = v.getId();
+                if (id == R.id.keyboard_lock_num) {
+                    usage = (byte) 0x53;
+                } else if (id == R.id.keyboard_lock_caps) {
+                    usage = (byte) 0x39;
+                } else if (id == R.id.keyboard_lock_scroll) {
+                    usage = (byte) 0x47;
+                }
+
+                if (usage != 0) {
+                    MainActivity activity = (MainActivity) getActivity();
+                    // Send key press
+                    activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, usage << 8);
+                    // Send key release
+                    activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
+                }
+            }
+        };
+
+        numLockBtn.setOnClickListener(lockClickListener);
+        capsLockBtn.setOnClickListener(lockClickListener);
+        scrollLockBtn.setOnClickListener(lockClickListener);
+
+        MainActivity activity = (MainActivity) getActivity();
+        if (activity != null) {
+            updateLedStatus(activity.getLastKeyboardLedStatus());
+        }
+    }
+
+    public void updateLedStatus(byte status) {
+        if (numLockBtn != null) {
+            numLockBtn.setChecked((status & 0x01) != 0);
+        }
+        if (capsLockBtn != null) {
+            capsLockBtn.setChecked((status & 0x02) != 0);
+        }
+        if (scrollLockBtn != null) {
+            scrollLockBtn.setChecked((status & 0x04) != 0);
+        }
     }
 
     @Override
