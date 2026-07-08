@@ -79,12 +79,14 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
                         buttonView.setText(isChecked ? R.string.keyboard_on : R.string.keyboard_off);
                         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(
                                 Context.INPUT_METHOD_SERVICE);
-                        if (!isChecked) {
-                            getActivity().findViewById(R.id.keyboard_sub_main_layout).requestFocus();
-                            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+                        View viewToFocus = getActivity().findViewById(R.id.keyboard_edit_text);
+                        if (viewToFocus == null) return;
+
+                        if (isChecked) {
+                            viewToFocus.requestFocus();
+                            imm.showSoftInput(viewToFocus, InputMethodManager.SHOW_IMPLICIT);
                         } else {
-                            getActivity().findViewById(R.id.keyboard_sub_main_layout).requestFocus();
-                            imm.toggleSoftInput(0, InputMethodManager.HIDE_IMPLICIT_ONLY);
+                            imm.hideSoftInputFromWindow(viewToFocus.getWindowToken(), 0);
                         }
                     }
                 });
