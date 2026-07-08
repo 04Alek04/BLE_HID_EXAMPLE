@@ -749,13 +749,20 @@ public class HidBleService extends Service {
                                                      boolean preparedWrite, boolean responseNeeded,
                                                      int offset, byte[] value) {
                 if (gattServer == null) return;
-                Log.e("BLE", "onCharacteristicWriteRequest " + characteristic.getUuid().toString() +
-                        " offset " + offset);
+                Log.i("BLE", "onCharacteristicWriteRequest " + characteristic.getUuid().toString() +
+                        " value: " + (value != null ? Arrays.toString(value) : "null"));
                 characteristic.setValue(value);
 
-                if (characteristic == charReportKeyboardOutput && value != null && value.length > 0) {
-                    if (mainActivity != null) {
-                        mainActivity.onKeyboardLedStatusChanged(value[0]);
+                if (value != null && value.length > 0) {
+                    // Check if this is the Keyboard Output Report (LEDs)
+                    // We check by reference AND by characteristic properties as a fallback
+                    if (characteristic == charReportKeyboardOutput || 
+                        (characteristic.getUuid().toString().equals(CHAR_REPORT) && 
+                         (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0)) {
+                        Log.i("BLE", "Keyboard LED status received: " + value[0]);
+                        if (mainActivity != null) {
+                            mainActivity.onKeyboardLedStatusChanged(value[0]);
+                        }
                     }
                 }
 

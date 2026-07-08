@@ -192,6 +192,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
     }
 
     public void onKeyboardLedStatusChanged(final byte status) {
+        Log.i("BLE", "MainActivity received LED status: " + status);
         lastKeyboardLedStatus = status;
         runOnUiThread(new Runnable() {
             @Override

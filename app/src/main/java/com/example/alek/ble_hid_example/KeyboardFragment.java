@@ -16,6 +16,8 @@
 package com.example.alek.ble_hid_example;
 
 import android.content.Context;
+import androidx.core.content.ContextCompat;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
@@ -164,13 +166,28 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
 
     public void updateLedStatus(byte status) {
         if (numLockBtn != null) {
-            numLockBtn.setChecked((status & 0x01) != 0);
+            boolean isChecked = (status & 0x01) != 0;
+            numLockBtn.setChecked(isChecked);
+            numLockBtn.setBackgroundTintList(ColorStateList.valueOf(isChecked ? 
+                    ContextCompat.getColor(getContext(), R.color.colorPrimary) : Color.TRANSPARENT));
+            numLockBtn.setTextColor(isChecked ? Color.WHITE : 
+                    ContextCompat.getColor(getContext(), R.color.colorWhite));
         }
         if (capsLockBtn != null) {
-            capsLockBtn.setChecked((status & 0x02) != 0);
+            boolean isChecked = (status & 0x02) != 0;
+            capsLockBtn.setChecked(isChecked);
+            capsLockBtn.setBackgroundTintList(ColorStateList.valueOf(isChecked ? 
+                    ContextCompat.getColor(getContext(), R.color.colorPrimary) : Color.TRANSPARENT));
+            capsLockBtn.setTextColor(isChecked ? Color.WHITE : 
+                    ContextCompat.getColor(getContext(), R.color.colorWhite));
         }
         if (scrollLockBtn != null) {
-            scrollLockBtn.setChecked((status & 0x04) != 0);
+            boolean isChecked = (status & 0x04) != 0;
+            scrollLockBtn.setChecked(isChecked);
+            scrollLockBtn.setBackgroundTintList(ColorStateList.valueOf(isChecked ? 
+                    ContextCompat.getColor(getContext(), R.color.colorPrimary) : Color.TRANSPARENT));
+            scrollLockBtn.setTextColor(isChecked ? Color.WHITE : 
+                    ContextCompat.getColor(getContext(), R.color.colorWhite));
         }
     }
 
