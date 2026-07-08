@@ -18,7 +18,6 @@ package com.example.alek.ble_hid_example;
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
-import androidx.core.content.IntentCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -71,29 +70,27 @@ public class ConfigurationFragment extends Fragment implements
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         MainActivity mainActivity = (MainActivity) getActivity();
 
-        switch (buttonView.getId()) {
-            case R.id.conf_pair_switch:
-                ApplicationConfiguration.setConfigurationField(getContext(),
-                        ApplicationConfiguration.FORCE_BOND_FEAT, isChecked);
-                break;
-            case R.id.conf_basic_switch:
-                ApplicationConfiguration.setConfigurationField(getContext(),
-                        ApplicationConfiguration.BASIC_FEAT, isChecked);
+        int id = buttonView.getId();
+        if (id == R.id.conf_pair_switch) {
+            ApplicationConfiguration.setConfigurationField(getContext(),
+                    ApplicationConfiguration.FORCE_BOND_FEAT, isChecked);
+        } else if (id == R.id.conf_basic_switch) {
+            ApplicationConfiguration.setConfigurationField(getContext(),
+                    ApplicationConfiguration.BASIC_FEAT, isChecked);
 
-                ApplicationConfiguration.setConfigurationField(getContext(),
-                        ApplicationConfiguration.CONSUMER_FEAT, true);
+            ApplicationConfiguration.setConfigurationField(getContext(),
+                    ApplicationConfiguration.CONSUMER_FEAT, true);
 
-                ApplicationConfiguration.setConfigurationField(getContext(),
-                        ApplicationConfiguration.MOUSE_FEAT, !isChecked);
+            ApplicationConfiguration.setConfigurationField(getContext(),
+                    ApplicationConfiguration.MOUSE_FEAT, !isChecked);
 
-                ApplicationConfiguration.setConfigurationField(getContext(),
-                        ApplicationConfiguration.KEYBOARD_FEAT, !isChecked);
+            ApplicationConfiguration.setConfigurationField(getContext(),
+                    ApplicationConfiguration.KEYBOARD_FEAT, !isChecked);
 
-                ((TextView) getActivity().findViewById(R.id.conf_feat_text)).setText(isChecked ?
-                        BASIC_STRING_ENABLED : BASIC_STRING_DISABLED);
-                break;
-            default:
-                return;
+            ((TextView) getActivity().findViewById(R.id.conf_feat_text)).setText(isChecked ?
+                    BASIC_STRING_ENABLED : BASIC_STRING_DISABLED);
+        } else {
+            return;
         }
 
         mainActivity.pager.getAdapter().notifyDataSetChanged();
@@ -106,7 +103,7 @@ public class ConfigurationFragment extends Fragment implements
             Intent i = getActivity().getBaseContext().getPackageManager()
                     .getLaunchIntentForPackage(getActivity().getBaseContext().getPackageName());
 
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | IntentCompat.FLAG_ACTIVITY_CLEAR_TASK);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             ((MainActivity) getActivity()).restartGattDatabase();
             startActivity(i);
         }

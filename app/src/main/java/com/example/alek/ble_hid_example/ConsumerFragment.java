@@ -177,27 +177,25 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
         if (parent.getChildAt(0) != null) {
             ((TextView) parent.getChildAt(0)).setTextColor(Color.WHITE);
 
-            switch (parent.getId()) {
-                case R.id.cons_spinner_al_hidden:
-                    if (position == 0) {
-                        /* Dummy item */
-                        return;
-                    }
+            int parentId = parent.getId();
+            if (parentId == R.id.cons_spinner_al_hidden) {
+                if (position == 0) {
+                    /* Dummy item */
+                    return;
+                }
 
-                    value = ApplicationLaunchButtonsUsage.AL_USAGES[position - 1].usage;
-                    activity.sendNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, (int) value);
-                    activity.sendNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, 0);
-                    break;
-                case R.id.cons_spinner_ac_hidden:
-                    if (position == 0) {
-                        /* Dummy item */
-                        return;
-                    }
+                value = ApplicationLaunchButtonsUsage.AL_USAGES[position - 1].usage;
+                activity.sendNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, (int) value);
+                activity.sendNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, 0);
+            } else if (parentId == R.id.cons_spinner_ac_hidden) {
+                if (position == 0) {
+                    /* Dummy item */
+                    return;
+                }
 
-                    value = ApplicationControlUsage.AC_USAGES[position - 1].usage;
-                    activity.sendNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, (int) value);
-                    activity.sendNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, 0);
-                    break;
+                value = ApplicationControlUsage.AC_USAGES[position - 1].usage;
+                activity.sendNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, (int) value);
+                activity.sendNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, 0);
             }
         }
     }

@@ -65,22 +65,17 @@ public class DPadFragment extends Fragment implements View.OnTouchListener {
         byte toSend = 0;
         byte value;
 
-        switch (v.getId()) {
-            /* D-Pad keys */
-            case R.id.d_pad_up:
-                value = KeyboardUsage.getUsage("Up");
-                break;
-            case R.id.d_pad_left:
-                value = KeyboardUsage.getUsage("Left");
-                break;
-            case R.id.d_pad_right:
-                value = KeyboardUsage.getUsage("Right");
-                break;
-            case R.id.d_pad_down:
-                value = KeyboardUsage.getUsage("Down");
-                break;
-            default:
-                return false;
+        int id = v.getId();
+        if (id == R.id.d_pad_up) {
+            value = KeyboardUsage.getUsage("Up");
+        } else if (id == R.id.d_pad_left) {
+            value = KeyboardUsage.getUsage("Left");
+        } else if (id == R.id.d_pad_right) {
+            value = KeyboardUsage.getUsage("Right");
+        } else if (id == R.id.d_pad_down) {
+            value = KeyboardUsage.getUsage("Down");
+        } else {
+            return false;
         }
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {

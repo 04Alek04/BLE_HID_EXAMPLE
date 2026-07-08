@@ -140,25 +140,19 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
         short toSend = 0;
         int value;
 
-        switch (v.getId()) {
-            /* Mouse keys */
-            case R.id.mouse_button_mouse_1:
-                value = 0x01;
-                break;
-            case R.id.mouse_button_mouse_2:
-                value = 0x02;
-                break;
-            case R.id.mouse_button_mouse_3:
-                value = 0x04;
-                break;
-            case R.id.mouse_button_mouse_4:
-                value = 0x08;
-                break;
-            case R.id.mouse_button_mouse_5:
-                value = 0x10;
-                break;
-            default:
-                return false;
+        int id = v.getId();
+        if (id == R.id.mouse_button_mouse_1) {
+            value = 0x01;
+        } else if (id == R.id.mouse_button_mouse_2) {
+            value = 0x02;
+        } else if (id == R.id.mouse_button_mouse_3) {
+            value = 0x04;
+        } else if (id == R.id.mouse_button_mouse_4) {
+            value = 0x08;
+        } else if (id == R.id.mouse_button_mouse_5) {
+            value = 0x10;
+        } else {
+            return false;
         }
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {

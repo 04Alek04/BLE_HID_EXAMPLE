@@ -140,10 +140,9 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
     public void onClick(View v) {
         MainActivity activity = (MainActivity) getActivity();
 
-        switch (v.getId()) {
-            case R.id.keyboard_button_send:
-                activity.sendNotification(((EditText) getActivity().findViewById(
-                        R.id.keyboard_edit_text)).getText().toString());
+        if (v.getId() == R.id.keyboard_button_send) {
+            activity.sendNotification(((EditText) getActivity().findViewById(
+                    R.id.keyboard_edit_text)).getText().toString());
         }
     }
 }
