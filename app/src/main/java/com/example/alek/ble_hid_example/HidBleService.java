@@ -39,6 +39,8 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -77,21 +79,21 @@ enum SecurityLevel {
 }
 
 enum ReportField {
-    /* Consumer */
+    /* Consumer (Report ID 3) */
     REPORT_FIELD_CONSUMER_CONTROL(0, 2),
     REPORT_FIELD_LAUNCHER_BUTTON(2, 2),
     REPORT_FIELD_CONTROL_BUTTON(4, 2),
-    /* Keyboard */
-    REPORT_FIELD_KEYBOARD_META_KEYS(6, 1),
-    REPORT_FIELD_KEYBOARD_KEYS(7, 1),
-    REPORT_FIELD_KEYBOARD_ALL(6, 2),    // REPORT_FIELD_KEYBOARD_META_KEYS + REPORT_FIELD_KEYBOARD_KEYS
-    /* Mouse */
-    REPORT_FIELD_MOUSE_BUTTONS(8, 1),
-    REPORT_FIELD_MOUSE_X(9, 1),
-    REPORT_FIELD_MOUSE_Y(10, 1),
-    REPORT_FIELD_MOUSE_BUTTONS_XY(8, 3),
-    REPORT_FIELD_MOUSE_XY(9, 2),
-    REPORT_FIELD_MOUSE_SCROLL(11, 1);
+    /* Keyboard (Report ID 1) */
+    REPORT_FIELD_KEYBOARD_META_KEYS(0, 1),
+    REPORT_FIELD_KEYBOARD_KEYS(2, 1),
+    REPORT_FIELD_KEYBOARD_ALL(0, 2),    // REPORT_FIELD_KEYBOARD_META_KEYS + REPORT_FIELD_KEYBOARD_KEYS
+    /* Mouse (Report ID 2) */
+    REPORT_FIELD_MOUSE_BUTTONS(0, 1),
+    REPORT_FIELD_MOUSE_X(1, 1),
+    REPORT_FIELD_MOUSE_Y(2, 1),
+    REPORT_FIELD_MOUSE_BUTTONS_XY(0, 3),
+    REPORT_FIELD_MOUSE_XY(1, 2),
+    REPORT_FIELD_MOUSE_SCROLL(3, 1);
 
     final static public int REP_CONSUMER = 0x01;
     final static public int REP_MOUSE = 0x02;
@@ -106,74 +108,21 @@ enum ReportField {
     }
 
     static void updateValues(int features) {
-        /* Restore original value */
+        /* With separate characteristics, each report starts at offset 0 */
         REPORT_FIELD_CONSUMER_CONTROL.byte_offset = 0;
         REPORT_FIELD_LAUNCHER_BUTTON.byte_offset = 2;
         REPORT_FIELD_CONTROL_BUTTON.byte_offset = 4;
 
-        REPORT_FIELD_KEYBOARD_META_KEYS.byte_offset = 6;
-        REPORT_FIELD_KEYBOARD_KEYS.byte_offset = 7;
-        REPORT_FIELD_KEYBOARD_ALL.byte_offset = 6;
+        REPORT_FIELD_KEYBOARD_META_KEYS.byte_offset = 0;
+        REPORT_FIELD_KEYBOARD_KEYS.byte_offset = 2;
+        REPORT_FIELD_KEYBOARD_ALL.byte_offset = 0;
 
-        REPORT_FIELD_MOUSE_BUTTONS.byte_offset = 8;
-        REPORT_FIELD_MOUSE_X.byte_offset = 9;
-        REPORT_FIELD_MOUSE_Y.byte_offset = 10;
-        REPORT_FIELD_MOUSE_BUTTONS_XY.byte_offset = 8;
-        REPORT_FIELD_MOUSE_XY.byte_offset = 9;
-        REPORT_FIELD_MOUSE_SCROLL.byte_offset = 11;
-
-        if ((features & REP_CONSUMER) == 0) {
-            REPORT_FIELD_CONSUMER_CONTROL.byte_offset = -1;
-            REPORT_FIELD_LAUNCHER_BUTTON.byte_offset = -1;
-            REPORT_FIELD_CONTROL_BUTTON.byte_offset = -1;
-
-            REPORT_FIELD_KEYBOARD_META_KEYS.byte_offset -= 6;
-            REPORT_FIELD_KEYBOARD_KEYS.byte_offset -= 6;
-            REPORT_FIELD_KEYBOARD_ALL.byte_offset -= 6;
-
-            REPORT_FIELD_MOUSE_BUTTONS.byte_offset -= 6;
-            REPORT_FIELD_MOUSE_X.byte_offset -= 6;
-            REPORT_FIELD_MOUSE_Y.byte_offset -= 6;
-            REPORT_FIELD_MOUSE_BUTTONS_XY.byte_offset -= 6;
-            REPORT_FIELD_MOUSE_XY.byte_offset -= 6;
-            REPORT_FIELD_MOUSE_SCROLL.byte_offset -= 6;
-        } else if ((features & REP_BASIC) == REP_BASIC) {
-            REPORT_FIELD_LAUNCHER_BUTTON.byte_offset = -1;
-            REPORT_FIELD_CONTROL_BUTTON.byte_offset = -1;
-
-            REPORT_FIELD_KEYBOARD_META_KEYS.byte_offset -= 4;
-            REPORT_FIELD_KEYBOARD_KEYS.byte_offset -= 4;
-            REPORT_FIELD_KEYBOARD_ALL.byte_offset -= 4;
-
-            REPORT_FIELD_MOUSE_BUTTONS.byte_offset -= 4;
-            REPORT_FIELD_MOUSE_X.byte_offset -= 4;
-            REPORT_FIELD_MOUSE_Y.byte_offset -= 4;
-            REPORT_FIELD_MOUSE_BUTTONS_XY.byte_offset -= 4;
-            REPORT_FIELD_MOUSE_XY.byte_offset -= 4;
-            REPORT_FIELD_MOUSE_SCROLL.byte_offset -= 4;
-        }
-
-        if ((features & REP_KEYBOARD) == 0) {
-            REPORT_FIELD_KEYBOARD_META_KEYS.byte_offset = -1;
-            REPORT_FIELD_KEYBOARD_KEYS.byte_offset = -1;
-            REPORT_FIELD_KEYBOARD_ALL.byte_offset = -1;
-
-            REPORT_FIELD_MOUSE_BUTTONS.byte_offset -= 2;
-            REPORT_FIELD_MOUSE_X.byte_offset -= 2;
-            REPORT_FIELD_MOUSE_Y.byte_offset -= 2;
-            REPORT_FIELD_MOUSE_BUTTONS_XY.byte_offset -= 2;
-            REPORT_FIELD_MOUSE_XY.byte_offset -= 2;
-            REPORT_FIELD_MOUSE_SCROLL.byte_offset -= 2;
-        }
-
-        if ((features & REP_MOUSE) == 0) {
-            REPORT_FIELD_MOUSE_BUTTONS.byte_offset = -1;
-            REPORT_FIELD_MOUSE_X.byte_offset = -1;
-            REPORT_FIELD_MOUSE_Y.byte_offset = -1;
-            REPORT_FIELD_MOUSE_BUTTONS_XY.byte_offset = -1;
-            REPORT_FIELD_MOUSE_XY.byte_offset = -1;
-            REPORT_FIELD_MOUSE_SCROLL.byte_offset = -1;
-        }
+        REPORT_FIELD_MOUSE_BUTTONS.byte_offset = 0;
+        REPORT_FIELD_MOUSE_X.byte_offset = 1;
+        REPORT_FIELD_MOUSE_Y.byte_offset = 2;
+        REPORT_FIELD_MOUSE_BUTTONS_XY.byte_offset = 0;
+        REPORT_FIELD_MOUSE_XY.byte_offset = 1;
+        REPORT_FIELD_MOUSE_SCROLL.byte_offset = 3;
     }
 }
 
@@ -193,15 +142,17 @@ class NotificationData {
 
 public class HidBleService extends Service {
     private final IBinder mBinder = new LocalBinder();
-    private final ArrayList<BluetoothDevice> devices = new ArrayList<>();
-    private final ArrayList<NotificationData> pendingNotifications = new ArrayList<>();
-    private final ArrayList<BluetoothGattService> servicesToAdd = new ArrayList<>();
+    private final List<BluetoothDevice> devices = Collections.synchronizedList(new ArrayList<>());
+    private final List<NotificationData> pendingNotifications = Collections.synchronizedList(new ArrayList<>());
+    private final List<BluetoothGattService> servicesToAdd = Collections.synchronizedList(new ArrayList<>());
     /* Call proper methods on some BLE events  */
     private MainActivity mainActivity;
     private BluetoothGattServerCallback mGattServerCallback;
-    private boolean notificationPossible;
+    private volatile boolean notificationPossible;
     private BluetoothGattServer gattServer;
-    private Thread check_thread = null;
+    private BluetoothGattCharacteristic charReportKeyboard;
+    private BluetoothGattCharacteristic charReportMouse;
+    private BluetoothGattCharacteristic charReportConsumer;
     private String mOriginalName = null;
     private final AdvertiseCallback advertisingCallback = new AdvertiseCallback() {
         @Override
@@ -227,86 +178,93 @@ public class HidBleService extends Service {
     }
 
     private void sendNotification(ReportField rf, int value, SendTo st) {
-        // Assume one report characteristic or that the notification should be sent from the first
         BluetoothGattCharacteristic report;
-        byte[] array = new byte[rf.byte_offset + rf.byte_size];
+        int arraySize;
 
-        if (devices.size() == 0) {
+        if (devices.isEmpty() || gattServer == null) {
             return;
         }
 
-        if (rf.byte_offset < 0) {
+        if (rf.name().contains("KEYBOARD")) {
+            report = charReportKeyboard;
+            arraySize = 8; // standard 8-byte keyboard report
+        } else if (rf.name().contains("MOUSE")) {
+            report = charReportMouse;
+            arraySize = 4; // buttons + x + y + scroll
+        } else if (rf.name().contains("CONSUMER") || rf.name().contains("BUTTON")) {
+            report = charReportConsumer;
+            arraySize = 6; // consumer control (2) + launcher (2) + control (2)
+        } else {
             return;
         }
 
-        report = gattServer.getService(UUID.fromString(UUIDs.SERVICE_HID)).getCharacteristic(
-                UUID.fromString(UUIDs.CHAR_REPORT));
+        if (report == null) return;
 
+        byte[] array = new byte[arraySize];
         Arrays.fill(array, (byte) 0);
 
-        for (int i = rf.byte_offset; i < rf.byte_offset + rf.byte_size; i++) {
-            array[i] = (byte) (value & 0xff);
-            value >>= 8;
-        }
-
-        switch (st) {
-            case SEND_TO_FIRST:
-                pendingNotifications.add(new NotificationData(devices.get(0), report, array));
-                break;
-            case SEND_TO_LAST:
-                pendingNotifications.add(new NotificationData(devices.get(devices.size() - 1),
-                        report, array));
-                break;
-            case SEND_TO_ALL:
-                for (int i = 0; i < devices.size(); i++) {
-                    pendingNotifications.add(new NotificationData(devices.get(i), report, array
-                    ));
+        if (rf == ReportField.REPORT_FIELD_KEYBOARD_ALL) {
+            array[0] = (byte) (value & 0xff);
+            array[2] = (byte) ((value >> 8) & 0xff);
+        } else {
+            for (int i = rf.byte_offset; i < rf.byte_offset + rf.byte_size; i++) {
+                if (i < array.length) {
+                    array[i] = (byte) (value & 0xff);
+                    value >>= 8;
                 }
-                break;
+            }
         }
 
-        if (notificationPossible) {
+        synchronized (devices) {
+            switch (st) {
+                case SEND_TO_FIRST:
+                    if (!devices.isEmpty()) {
+                        pendingNotifications.add(new NotificationData(devices.get(0), report, array));
+                    }
+                    break;
+                case SEND_TO_LAST:
+                    if (!devices.isEmpty()) {
+                        pendingNotifications.add(new NotificationData(devices.get(devices.size() - 1),
+                                report, array));
+                    }
+                    break;
+                case SEND_TO_ALL:
+                    for (BluetoothDevice device : devices) {
+                        pendingNotifications.add(new NotificationData(device, report, array));
+                    }
+                    break;
+            }
+        }
+
+        processNotificationQueue();
+    }
+
+    private synchronized void processNotificationQueue() {
+        if (notificationPossible && !pendingNotifications.isEmpty() && gattServer != null) {
             NotificationData toSend = pendingNotifications.remove(0);
-            toSend.characteristic.setValue(toSend.value);
-            gattServer.notifyCharacteristicChanged(toSend.device, toSend.characteristic,
-                    toSend.responseNeeded);
-            notificationPossible = false;
-            return;
-        }
-
-        if (check_thread != null) {
-            return;
-        }
-
-        check_thread = new Thread() {
-            public void run() {
-                NotificationData toSend;
-
-                while (!notificationPossible) {
-                    if (devices.size() == 0) {
-                        pendingNotifications.clear();
+            if (devices.contains(toSend.device)) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                        Log.e("BLE", "Missing BLUETOOTH_CONNECT permission for notification");
                         return;
                     }
                 }
-
-                if (pendingNotifications.size() < 1 || devices.size() == 0) {
-                    check_thread = null;
-                    return;
+                toSend.characteristic.setValue(toSend.value);
+                boolean success = gattServer.notifyCharacteristicChanged(toSend.device, toSend.characteristic,
+                        toSend.responseNeeded);
+                if (success) {
+                    notificationPossible = false;
+                } else {
+                    Log.e("BLE", "Failed to queue notification, will retry on next trigger");
+                    // If it failed to queue, we don't set notificationPossible to false,
+                    // so we can try the next one or retry this one later.
+                    // For now, let's keep it simple.
                 }
-
-                toSend = pendingNotifications.remove(0);
-
-                if (devices.contains(toSend.device)) {
-                    /* Device could disconnect in the mean time */
-                    toSend.characteristic.setValue(toSend.value);
-                    gattServer.notifyCharacteristicChanged(toSend.device, toSend.characteristic,
-                            toSend.responseNeeded);
-                }
-
-                notificationPossible = false;
+            } else {
+                // Device disconnected, try next one
+                processNotificationQueue();
             }
-        };
-        check_thread.start();
+        }
     }
 
     public void sendNotification(String s) {
@@ -428,7 +386,7 @@ public class HidBleService extends Service {
                 (byte) 0x05, (byte) 0x0C, /*        Usage Page (Consumer Devices)       */
                 (byte) 0x09, (byte) 0x01, /*        Usage (Consumer Control)            */
                 (byte) 0xA1, (byte) 0x01, /*        Collection (Application)            */
-                (byte) 0x85, (byte) 0x02, /*        Report ID=2                         */
+                (byte) 0x85, (byte) 0x03, /*        Report ID=3                         */
                 (byte) 0x05, (byte) 0x0C, /*        Usage Page (Consumer Devices)       */
                 (byte) 0x15, (byte) 0x00, /*        Logical Minimum (0)                 */
                 (byte) 0x25, (byte) 0x01, /*        Logical Maximum (1)                 */
@@ -456,145 +414,6 @@ public class HidBleService extends Service {
                 (byte) 0xC0,
         };
 
-        // Report Map - concatenation of few arrays
-        final byte REPORT_MAP_START[] = {
-                (byte) 0x05, (byte) 0x0C, /*        Usage Page (Consumer Devices)       */
-                (byte) 0x09, (byte) 0x01, /*        Usage (Consumer Control)            */
-                (byte) 0xA1, (byte) 0x01, /*        Collection (Application)            */
-                (byte) 0x85, (byte) 0x02, /*        Report ID=2                         */
-        };
-        final byte REPORT_MAP_CONSUMER[] =
-                ((features & ReportField.REP_CONSUMER) == ReportField.REP_CONSUMER) ? new byte[]{
-                /*========================== Consumer control ==========================*/
-                        (byte) 0xA1, (byte) 0x02, /*        Collection (Logical)            */
-                        (byte) 0x05, (byte) 0x0C, /*        Usage Page (Consumer Devices)       */
-                        (byte) 0x15, (byte) 0x00, /*        Logical Minimum (0)                 */
-                        (byte) 0x25, (byte) 0x01, /*        Logical Maximum (1)                 */
-                        (byte) 0x75, (byte) 0x01, /*        Report Size (1)                     */
-                        (byte) 0x95, (byte) 0x10, /*        Report Count (16)                   */
-
-                        (byte) 0x09, (byte) 0x6F, /* 1       Usage (Bright Up)                  */
-                        (byte) 0x09, (byte) 0x70, /* 2       Usage (Bright Down)                */
-
-                        (byte) 0x09, (byte) 0xB5, /* 3       Usage (Scan Next Track)            */
-                        (byte) 0x09, (byte) 0xB6, /* 4       Usage (Scan Previous Track)        */
-                        (byte) 0x09, (byte) 0xB7, /* 5       Usage (Stop)                       */
-                        (byte) 0x09, (byte) 0xCD, /* 6       Usage (Play / Pause)               */
-
-                        (byte) 0x09, (byte) 0xE2, /* 7       Usage (Mute)                       */
-                        (byte) 0x09, (byte) 0xE9, /* 8       Usage (Volume Up)                  */
-                        (byte) 0x09, (byte) 0xEA, /* 9       Usage (Volume Down)                */
-
-                        (byte) 0x09, (byte) 0xB8, /* 10      Usage (Eject)                      */
-                        (byte) 0x09, (byte) 0x65, /* 11      Usage (Snapshot)                   */
-
-                        (byte) 0x05, (byte) 0x01, /*        Usage Page (Generic Desktop)        */
-                        (byte) 0x09, (byte) 0x82, /* 12      Usage (System Sleep)               */
-                        (byte) 0x09, (byte) 0xA8, /* 13      Usage (System Hibernate)           */
-                        (byte) 0x09, (byte) 0x81, /* 14      Usage (System Power Down)          */
-                        (byte) 0x09, (byte) 0x8E, /* 15      Usage (System Cold Restart)        */
-                        (byte) 0x09, (byte) 0x8F, /* 16      Usage (System Warm Restart)        */
-
-                        (byte) 0x81, (byte) 0x02, /*        Input (Data, Variable, Absolute)    */
-//                (byte) 0x95, (byte) 0x00, /*        Report Count (1)                    */
-//                (byte) 0x81, (byte) 0x01, /*        Input (Constant)                    */
-
-                /*==================== Application Launcher Buttons ====================*/
-                        (byte) 0x05, (byte) 0x0C,              /* Usage Page (Consumer Devices) */
-                        (byte) 0x95, (byte) 0x01,              /* Report Count (1)              */
-                        (byte) 0x75, (byte) 0x10,              /* Report Size (16)              */
-                        (byte) 0x16, (byte) 0x81, (byte) 0x01, /* Logical Minimum (385)         */
-                        (byte) 0x26, (byte) 0xC7, (byte) 0x01, /* Logical Maximum (455)         */
-                        (byte) 0x05, (byte) 0x0C,              /* Usage Page (Consumer Devices) */
-                        (byte) 0x1a, (byte) 0x81, (byte) 0x01, /* Usage Minimum (385)           */
-                        (byte) 0x2a, (byte) 0xC7, (byte) 0x01, /* Usage Maximum (455)           */
-                        (byte) 0x81, (byte) 0x00,              /* Input (Data, Array)           */
-
-                /*==================== Application Control Buttons =====================*/
-                        (byte) 0x05, (byte) 0x0C,              /* Usage Page (Consumer Devices) */
-                        (byte) 0x95, (byte) 0x01,              /* Report Count (1)              */
-                        (byte) 0x75, (byte) 0x10,              /* Report Size (16)              */
-                        (byte) 0x16, (byte) 0x01, (byte) 0x02, /* Logical Minimum (385)         */
-                        (byte) 0x26, (byte) 0x9C, (byte) 0x02, /* Logical Maximum (455)         */
-                        (byte) 0x05, (byte) 0x0C,              /* Usage Page (Consumer Devices) */
-                        (byte) 0x1a, (byte) 0x01, (byte) 0x02, /* Usage Minimum (385)           */
-                        (byte) 0x2a, (byte) 0x9C, (byte) 0x02, /* Usage Maximum (455)           */
-                        (byte) 0x81, (byte) 0x00,              /* Input (Data, Array)           */
-                        (byte) 0xC0,              /*       End Collection                       */
-                } : new byte[]{};
-        final byte REPORT_MAP_KEYBOARD[] =
-                ((features & ReportField.REP_KEYBOARD) == ReportField.REP_KEYBOARD) ? new byte[]{
-                /*============================== Keyboard ==============================*/
-                        (byte) 0x05, (byte) 0x07, /*        Usage Page (Keyboard/Keypad)        */
-                        (byte) 0x15, (byte) 0x00, /*        Logical Minimum (0)                 */
-                        (byte) 0x25, (byte) 0x01, /*        Logical Maximum (1)                 */
-                        (byte) 0x75, (byte) 0x01, /*        Report Size (1)                     */
-                        (byte) 0x95, (byte) 0x08, /*        Report Count (8)                    */
-
-                        (byte) 0x09, (byte) 0xE0, /* 1       Usage (LeftControl)                */
-                        (byte) 0x09, (byte) 0xE1, /* 2       Usage (LeftShift)                  */
-                        (byte) 0x09, (byte) 0xE2, /* 3       Usage (LeftAlt)                    */
-                        (byte) 0x09, (byte) 0xE3, /* 4       Usage (LeftGUI)                    */
-                        (byte) 0x09, (byte) 0xE4, /* 5       Usage (RightControl)               */
-                        (byte) 0x09, (byte) 0xE5, /* 6       Usage (RightShift)                 */
-                        (byte) 0x09, (byte) 0xE6, /* 7       Usage (RightAlt)                   */
-                        (byte) 0x09, (byte) 0xE7, /* 8       Usage (RightGUI)                   */
-                        (byte) 0x81, (byte) 0x02, /*        Input (Data, Variable, Absolute)    */
-
-                        (byte) 0x05, (byte) 0x07, /*        Usage Page (Keyboard/Keypad)        */
-                        (byte) 0x95, (byte) 0x01, /*        Report Count (1)                    */
-                        (byte) 0x75, (byte) 0x08, /*        Report Size (8)                     */
-                        (byte) 0x15, (byte) 0x04, /*        Logical Minimum (4)                 */
-                        (byte) 0x25, (byte) 0xDF, /*        Logical Maximum (223)               */
-                        (byte) 0x05, (byte) 0x07, /*        Usage Page (Key codes)              */
-                        (byte) 0x19, (byte) 0x04, /*        Usage Minimum (4)                   */
-                        (byte) 0x29, (byte) 0xDF, /*        Usage Maximum (223)                 */
-                        (byte) 0x81, (byte) 0x00, /*        Input (Data, Array)                 */
-                } : new byte[]{};
-        final byte REPORT_MAP_MOUSE[] =
-                ((features & ReportField.REP_MOUSE) == ReportField.REP_MOUSE) ? new byte[]{
-                /*================================ Mouse ===============================*/
-                        (byte) 0x05, (byte) 0x01, /*        Usage Page (Generic Desktop)        */
-                        (byte) 0x09, (byte) 0x02, /*        Usage (Mouse)                       */
-                        (byte) 0xa1, (byte) 0x01, /*         Collection (Application)            */
-                        (byte) 0x85, (byte) 0x02,
-                        (byte) 0x09, (byte) 0x01, /*        Usage (Consumer Control)            */
-                        (byte) 0xa1, (byte) 0x00, /*        Collection (Physical)               */
-                        (byte) 0x05, (byte) 0x09, /*        Usage Page (Button)                 */
-                        (byte) 0x19, (byte) 0x01, /*        Usage Minimum (1)                   */
-                        (byte) 0x29, (byte) 0x05, /*        Usage Maximum (5)                   */
-                        (byte) 0x15, (byte) 0x00, /*        Logical Minimum (0)                 */
-                        (byte) 0x25, (byte) 0x01, /*        Logical Maximum (1)                 */
-                        (byte) 0x95, (byte) 0x05, /*        Report Count (5)                    */
-                        (byte) 0x75, (byte) 0x01, /*        Report Size (1)                     */
-                        (byte) 0x81, (byte) 0x02, /*        Input (Variable, Absolute)          */
-
-                        (byte) 0x95, (byte) 0x01, /*        Report Count (1)                    */
-                        (byte) 0x75, (byte) 0x03, /*        Report Size (3)                     */
-                        (byte) 0x81, (byte) 0x01, /*        Input (Constant)                    */
-
-                        (byte) 0x05, (byte) 0x01, /*        Usage Page (Generic Desktop)        */
-                        (byte) 0x09, (byte) 0x30, /*        Usage (X)                           */
-                        (byte) 0x09, (byte) 0x31, /*        Usage (Y)                           */
-                        (byte) 0x15, (byte) 0x81, /*        Logical Minimum (-127)              */
-                        (byte) 0x25, (byte) 0x7f, /*        Logical Maximum (127)               */
-                        (byte) 0x75, (byte) 0x08, /*        Report Size (8)                     */
-                        (byte) 0x95, (byte) 0x02, /*        Report Count (2)                    */
-                        (byte) 0x81, (byte) 0x06, /*        Input (Variable, Relative)          */
-
-                        (byte) 0x09, (byte) 0x38, /*        Usage (Wheel)                       */
-                        (byte) 0x15, (byte) 0x81, /*        Logical Minimum (-127)              */
-                        (byte) 0x25, (byte) 0x7f, /*        Logical Maximum (127)               */
-                        (byte) 0x75, (byte) 0x08, /*        Report Size (8)                     */
-                        (byte) 0x95, (byte) 0x01, /*        Report Count (1)                    */
-                        (byte) 0x81, (byte) 0x06, /*        Input (Variable, Relative)          */
-                        (byte) 0xC0,              /*       End Collection                       */
-                        (byte) 0xC0,              /*       End Collection                       */
-                } : new byte[]{};
-        final byte REPORT_MAP_END[] = {
-                (byte) 0xC0,              /*       End Collection                       */
-        };
-
         int position = 0;
         byte REPORT_MAP[];
 
@@ -602,18 +421,123 @@ public class HidBleService extends Service {
         if ((features & ReportField.REP_BASIC) == ReportField.REP_BASIC) {
             REPORT_MAP = REPORT_MAP_BASIC;
         } else {
-            REPORT_MAP = new byte[REPORT_MAP_START.length + REPORT_MAP_CONSUMER.length +
-                    REPORT_MAP_KEYBOARD.length + REPORT_MAP_MOUSE.length + REPORT_MAP_END.length];
+            REPORT_MAP = new byte[]{
+                    // --- CONSUMER (ID 3) - 6 bytes ---
+                    (byte) 0x05, (byte) 0x0C, /* Usage Page (Consumer Devices) */
+                    (byte) 0x09, (byte) 0x01, /* Usage (Consumer Control) */
+                    (byte) 0xA1, (byte) 0x01, /* Collection (Application) */
+                    (byte) 0x85, (byte) 0x03, /* Report ID (3) */
 
-            System.arraycopy(REPORT_MAP_START, 0, REPORT_MAP, position, REPORT_MAP_START.length);
-            position += REPORT_MAP_START.length;
-            System.arraycopy(REPORT_MAP_CONSUMER, 0, REPORT_MAP, position, REPORT_MAP_CONSUMER.length);
-            position += REPORT_MAP_CONSUMER.length;
-            System.arraycopy(REPORT_MAP_KEYBOARD, 0, REPORT_MAP, position, REPORT_MAP_KEYBOARD.length);
-            position += REPORT_MAP_KEYBOARD.length;
-            System.arraycopy(REPORT_MAP_MOUSE, 0, REPORT_MAP, position, REPORT_MAP_MOUSE.length);
-            position += REPORT_MAP_MOUSE.length;
-            System.arraycopy(REPORT_MAP_END, 0, REPORT_MAP, position, REPORT_MAP_END.length);
+                    // Block 1: Consumer Page (11 bits)
+                    (byte) 0x05, (byte) 0x0C, /* Usage Page (Consumer Devices) */
+                    (byte) 0x15, (byte) 0x00, /* Logical Minimum (0) */
+                    (byte) 0x25, (byte) 0x01, /* Logical Maximum (1) */
+                    (byte) 0x75, (byte) 0x01, /* Report Size (1) */
+                    (byte) 0x95, (byte) 0x0B, /* Report Count (11) */
+                    (byte) 0x09, (byte) 0x6F, /* Bright Up */
+                    (byte) 0x09, (byte) 0x70, /* Bright Down */
+                    (byte) 0x09, (byte) 0xB5, /* Scan Next Track */
+                    (byte) 0x09, (byte) 0xB6, /* Scan Previous Track */
+                    (byte) 0x09, (byte) 0xB7, /* Stop */
+                    (byte) 0x09, (byte) 0xCD, /* Play / Pause */
+                    (byte) 0x09, (byte) 0xE2, /* Mute */
+                    (byte) 0x09, (byte) 0xE9, /* Volume Up */
+                    (byte) 0x09, (byte) 0xEA, /* Volume Down */
+                    (byte) 0x09, (byte) 0xB8, /* Eject */
+                    (byte) 0x09, (byte) 0x65, /* Snapshot */
+                    (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) */
+
+                    // Block 2: Generic Desktop Page (5 bits)
+                    (byte) 0x05, (byte) 0x01, /* Usage Page (Generic Desktop) */
+                    (byte) 0x95, (byte) 0x05, /* Report Count (5) */
+                    (byte) 0x09, (byte) 0x82, /* System Sleep */
+                    (byte) 0x09, (byte) 0xA8, /* System Hibernate */
+                    (byte) 0x09, (byte) 0x81, /* System Power Down */
+                    (byte) 0x09, (byte) 0x8E, /* System Cold Restart */
+                    (byte) 0x09, (byte) 0x8F, /* System Warm Restart */
+                    (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) */
+
+                    // Block 3: Launchers (16 bits)
+                    (byte) 0x05, (byte) 0x0C, /* Usage Page (Consumer Devices) */
+                    (byte) 0x95, (byte) 0x01, /* Report Count (1) */
+                    (byte) 0x75, (byte) 0x10, /* Report Size (16) */
+                    (byte) 0x16, (byte) 0x81, (byte) 0x01, /* Logical Minimum (385) */
+                    (byte) 0x26, (byte) 0xC7, (byte) 0x01, /* Logical Maximum (455) */
+                    (byte) 0x1A, (byte) 0x81, (byte) 0x01, /* Usage Minimum (385) */
+                    (byte) 0x2A, (byte) 0xC7, (byte) 0x01, /* Usage Maximum (455) */
+                    (byte) 0x81, (byte) 0x00, /* Input (Data, Array) */
+
+                    // Block 4: Controls (16 bits)
+                    (byte) 0x05, (byte) 0x0C, /* Usage Page (Consumer Devices) */
+                    (byte) 0x95, (byte) 0x01, /* Report Count (1) */
+                    (byte) 0x75, (byte) 0x10, /* Report Size (16) */
+                    (byte) 0x16, (byte) 0x01, (byte) 0x02, /* Logical Minimum (513) */
+                    (byte) 0x26, (byte) 0x9C, (byte) 0x02, /* Logical Maximum (668) */
+                    (byte) 0x1A, (byte) 0x01, (byte) 0x02, /* Usage Minimum (513) */
+                    (byte) 0x2A, (byte) 0x9C, (byte) 0x02, /* Usage Maximum (668) */
+                    (byte) 0x81, (byte) 0x00, /* Input (Data, Array) */
+                    (byte) 0xC0, /* End Collection */
+
+                    // --- KEYBOARD (ID 1) - 8 bytes standard ---
+                    (byte) 0x05, (byte) 0x01, /* Usage Page (Generic Desktop) */
+                    (byte) 0x09, (byte) 0x06, /* Usage (Keyboard) */
+                    (byte) 0xA1, (byte) 0x01, /* Collection (Application) */
+                    (byte) 0x85, (byte) 0x01, /* Report ID (1) */
+                    (byte) 0x05, (byte) 0x07, /* Usage Page (Keyboard/Keypad) */
+                    (byte) 0x19, (byte) 0xE0, /* Usage Minimum (Left Control) */
+                    (byte) 0x29, (byte) 0xE7, /* Usage Maximum (Right GUI) */
+                    (byte) 0x15, (byte) 0x00, /* Logical Minimum (0) */
+                    (byte) 0x25, (byte) 0x01, /* Logical Maximum (1) */
+                    (byte) 0x75, (byte) 0x01, /* Report Size (1) */
+                    (byte) 0x95, (byte) 0x08, /* Report Count (8) */
+                    (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) - Modifiers */
+                    (byte) 0x95, (byte) 0x01, /* Report Count (1) */
+                    (byte) 0x75, (byte) 0x08, /* Report Size (8) */
+                    (byte) 0x81, (byte) 0x01, /* Input (Constant) - Reserved byte */
+                    (byte) 0x95, (byte) 0x06, /* Report Count (6) */
+                    (byte) 0x75, (byte) 0x08, /* Report Size (8) */
+                    (byte) 0x15, (byte) 0x00, /* Logical Minimum (0) */
+                    (byte) 0x25, (byte) 0xDF, /* Logical Maximum (223) */
+                    (byte) 0x05, (byte) 0x07, /* Usage Page (Keyboard/Keypad) */
+                    (byte) 0x19, (byte) 0x00, /* Usage Minimum (0) */
+                    (byte) 0x29, (byte) 0xDF, /* Usage Maximum (223) */
+                    (byte) 0x81, (byte) 0x00, /* Input (Data, Array) - Keys */
+                    (byte) 0xC0, /* End Collection */
+
+                    // --- MOUSE (ID 2) ---
+                    (byte) 0x05, (byte) 0x01, /* Usage Page (Generic Desktop) */
+                    (byte) 0x09, (byte) 0x02, /* Usage (Mouse) */
+                    (byte) 0xA1, (byte) 0x01, /* Collection (Application) */
+                    (byte) 0x85, (byte) 0x02, /* Report ID (2) */
+                    (byte) 0x09, (byte) 0x01, /* Usage (Pointer) */
+                    (byte) 0xA1, (byte) 0x00, /* Collection (Physical) */
+                    (byte) 0x05, (byte) 0x09, /* Usage Page (Button) */
+                    (byte) 0x19, (byte) 0x01, /* Usage Minimum (Button 1) */
+                    (byte) 0x29, (byte) 0x05, /* Usage Maximum (Button 5) */
+                    (byte) 0x15, (byte) 0x00, /* Logical Minimum (0) */
+                    (byte) 0x25, (byte) 0x01, /* Logical Maximum (1) */
+                    (byte) 0x95, (byte) 0x05, /* Report Count (5) */
+                    (byte) 0x75, (byte) 0x01, /* Report Size (1) */
+                    (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) - Buttons */
+                    (byte) 0x95, (byte) 0x01, /* Report Count (1) */
+                    (byte) 0x75, (byte) 0x03, /* Report Size (3) */
+                    (byte) 0x81, (byte) 0x01, /* Input (Constant) - Padding */
+                    (byte) 0x05, (byte) 0x01, /* Usage Page (Generic Desktop) */
+                    (byte) 0x09, (byte) 0x30, /* Usage (X) */
+                    (byte) 0x09, (byte) 0x31, /* Usage (Y) */
+                    (byte) 0x15, (byte) 0x80, /* Logical Minimum (-128) */
+                    (byte) 0x25, (byte) 0x7F, /* Logical Maximum (127) */
+                    (byte) 0x75, (byte) 0x08, /* Report Size (8) */
+                    (byte) 0x95, (byte) 0x02, /* Report Count (2) */
+                    (byte) 0x81, (byte) 0x06, /* Input (Data, Variable, Relative) - X, Y */
+                    (byte) 0x09, (byte) 0x38, /* Usage (Wheel) */
+                    (byte) 0x15, (byte) 0x80, /* Logical Minimum (-128) */
+                    (byte) 0x25, (byte) 0x7F, /* Logical Maximum (127) */
+                    (byte) 0x75, (byte) 0x08, /* Report Size (8) */
+                    (byte) 0x95, (byte) 0x01, /* Report Count (1) */
+                    (byte) 0x81, (byte) 0x06, /* Input (Data, Variable, Relative) - Wheel */
+                    (byte) 0xC0, (byte) 0xC0 /* End Collections */
+            };
         }
 
 
@@ -649,34 +573,43 @@ public class HidBleService extends Service {
                 PERM_READ_WRITE);
         charProtocolMode.setValue(new byte[]{0x01}); // 0x01 = Report Protocol Mode
 
-        // Report characteristic
-        BluetoothGattCharacteristic charReport1 = new BluetoothGattCharacteristic(
+        // Report Keyboard characteristic (ID 1)
+        charReportKeyboard = new BluetoothGattCharacteristic(
                 UUID.fromString(CHAR_REPORT),
-                BluetoothGattCharacteristic.PROPERTY_READ |
-                        BluetoothGattCharacteristic.PROPERTY_NOTIFY, PERM_READ_WRITE);
+                BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, PERM_READ_WRITE);
+        charReportKeyboard.setValue(new byte[8]);
+        BluetoothGattDescriptor descReportRefKbd = new BluetoothGattDescriptor(UUID.fromString(DESC_REPORT_REFERENCE), PERM_READ);
+        descReportRefKbd.setValue(new byte[]{0x01, 0x01}); // ID=1, Type=Input
+        charReportKeyboard.addDescriptor(descReportRefKbd);
+        charReportKeyboard.addDescriptor(new BluetoothGattDescriptor(UUID.fromString(DESC_CCC), PERM_READ_WRITE));
 
-        charReport1.setValue("\0\0".getBytes());
+        // Report Mouse characteristic (ID 2)
+        charReportMouse = new BluetoothGattCharacteristic(
+                UUID.fromString(CHAR_REPORT),
+                BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, PERM_READ_WRITE);
+        charReportMouse.setValue(new byte[4]);
+        BluetoothGattDescriptor descReportRefMouse = new BluetoothGattDescriptor(UUID.fromString(DESC_REPORT_REFERENCE), PERM_READ);
+        descReportRefMouse.setValue(new byte[]{0x02, 0x01}); // ID=2, Type=Input
+        charReportMouse.addDescriptor(descReportRefMouse);
+        charReportMouse.addDescriptor(new BluetoothGattDescriptor(UUID.fromString(DESC_CCC), PERM_READ_WRITE));
 
-        /// Report Reference descriptor
-        BluetoothGattDescriptor descReportReference1 = new BluetoothGattDescriptor(
-                UUID.fromString(DESC_REPORT_REFERENCE), PERM_READ);
-
-        descReportReference1.setValue("\2\1".getBytes());
-
-        /// Client Characteristic Configuration descriptor
-        BluetoothGattDescriptor descCCC1 = new BluetoothGattDescriptor(
-                UUID.fromString(DESC_CCC), PERM_READ_WRITE);
-
-        descCCC1.setValue("\0\0".getBytes());
-
-        charReport1.addDescriptor(descReportReference1);
-        charReport1.addDescriptor(descCCC1);
+        // Report Consumer characteristic (ID 3)
+        charReportConsumer = new BluetoothGattCharacteristic(
+                UUID.fromString(CHAR_REPORT),
+                BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, PERM_READ_WRITE);
+        charReportConsumer.setValue(new byte[6]);
+        BluetoothGattDescriptor descReportRefConsumer = new BluetoothGattDescriptor(UUID.fromString(DESC_REPORT_REFERENCE), PERM_READ);
+        descReportRefConsumer.setValue(new byte[]{0x03, 0x01}); // ID=3, Type=Input
+        charReportConsumer.addDescriptor(descReportRefConsumer);
+        charReportConsumer.addDescriptor(new BluetoothGattDescriptor(UUID.fromString(DESC_CCC), PERM_READ_WRITE));
 
         serviceHid.addCharacteristic(charReportMap);
         serviceHid.addCharacteristic(charHidInformation);
         serviceHid.addCharacteristic(charHidControlPoint);
         serviceHid.addCharacteristic(charProtocolMode);
-        serviceHid.addCharacteristic(charReport1);
+        serviceHid.addCharacteristic(charReportKeyboard);
+        serviceHid.addCharacteristic(charReportMouse);
+        serviceHid.addCharacteristic(charReportConsumer);
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Device Information Service
         //                          -> PnP ID
@@ -753,6 +686,12 @@ public class HidBleService extends Service {
 
                     if (ApplicationConfiguration.getConfigurationField(getApplicationContext(),
                             ApplicationConfiguration.FORCE_BOND_FEAT)) {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                            if (androidx.core.content.ContextCompat.checkSelfPermission(HidBleService.this, android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                Log.e("BLE", "Missing BLUETOOTH_CONNECT permission for bonding");
+                                return;
+                            }
+                        }
                         if (device.getBondState() != BluetoothDevice.BOND_BONDING &&
                                 device.getBondState() != BluetoothDevice.BOND_BONDED) {
                             device.createBond();
@@ -780,23 +719,27 @@ public class HidBleService extends Service {
             @Override
             public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset,
                                                     BluetoothGattCharacteristic characteristic) {
-                super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
-                int charLength = characteristic.getValue().length;
-                int partLength = (currentMtu > charLength - offset) ? charLength - offset : currentMtu;
-                byte bytes[] = new byte[partLength];
-
+                if (gattServer == null) return;
+                
                 if (Objects.equals(characteristic.getUuid().toString(), CHAR_BATTERY_LEVEL)) {
                     characteristic.setValue(new byte[]{readBatteryLevel()});
                 }
 
-                for (int i = 0; i < partLength; i++) {
-                    bytes[i] = characteristic.getValue()[i + offset];
+                byte[] value = characteristic.getValue();
+                if (value == null) value = new byte[0];
+
+                int charLength = value.length;
+                int partLength = Math.max(0, Math.min(charLength - offset, currentMtu));
+                byte[] bytes = new byte[partLength];
+
+                if (partLength > 0) {
+                    System.arraycopy(value, offset, bytes, 0, partLength);
                 }
 
-                gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, bytes);
+                gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, bytes);
 
                 Log.e("BLE", "onCharacteristicReadRequest " + characteristic.getUuid().toString() +
-                        " offset " + offset + " " + new String(bytes));
+                        " offset " + offset);
             }
 
             @Override
@@ -809,10 +752,12 @@ public class HidBleService extends Service {
                                                  BluetoothGattDescriptor descriptor,
                                                  boolean preparedWrite, boolean responseNeeded,
                                                  int offset, byte[] value) {
-                Log.e("BLE", "onDescriptorWriteRequest " + descriptor.getUuid().toString() + "value"
-                        + value[0] + value[1]);
+                if (gattServer == null) return;
+                Log.e("BLE", "onDescriptorWriteRequest " + descriptor.getUuid().toString() + " value " + Arrays.toString(value));
                 descriptor.setValue(value);
-                gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, value);
+                if (responseNeeded) {
+                    gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
+                }
             }
 
             @Override
@@ -820,31 +765,30 @@ public class HidBleService extends Service {
                                                      BluetoothGattCharacteristic characteristic,
                                                      boolean preparedWrite, boolean responseNeeded,
                                                      int offset, byte[] value) {
+                if (gattServer == null) return;
                 Log.e("BLE", "onCharacteristicWriteRequest " + characteristic.getUuid().toString() +
                         " offset " + offset);
                 characteristic.setValue(value);
-                gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, value);
+                if (responseNeeded) {
+                    gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
+                }
             }
 
             @Override
             public void onDescriptorReadRequest(BluetoothDevice device, int requestId,
                                                 int offset, BluetoothGattDescriptor descriptor) {
+                if (gattServer == null) return;
                 Log.e("BLE", "onDescriptorReadRequest " + descriptor.getUuid().toString());
-                gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, descriptor.getValue());
+                byte[] value = descriptor.getValue();
+                if (value == null) value = new byte[0];
+                gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
             }
 
             @Override
             public void onNotificationSent(BluetoothDevice device, int status) {
                 Log.e("BLE", "onNotificationSent - left: " + pendingNotifications.size());
-                if (pendingNotifications.size() > 0) {
-                    NotificationData toSend = pendingNotifications.remove(0);
-                    toSend.characteristic.setValue(toSend.value);
-                    gattServer.notifyCharacteristicChanged(toSend.device, toSend.characteristic,
-                            toSend.responseNeeded);
-                    notificationPossible = false;
-                } else {
-                    notificationPossible = true;
-                }
+                notificationPossible = true;
+                processNotificationQueue();
             }
 
             @Override
@@ -859,7 +803,7 @@ public class HidBleService extends Service {
         };
     }
 
-    public ArrayList<BluetoothDevice> getDevices() {
+    public List<BluetoothDevice> getDevices() {
         return devices;
     }
 
@@ -904,7 +848,7 @@ public class HidBleService extends Service {
         if (gattServer != null) {
             gattServer.close();
         }
-        gattServer = mManager.openGattServer(getBaseContext(), mGattServerCallback);
+        gattServer = mManager.openGattServer(this, mGattServerCallback);
         createGattDatabase(gattServer, SecurityLevel.SECURITY_LEVEL_2.ordinal(), features);
         pendingNotifications.clear();
     }
@@ -914,6 +858,12 @@ public class HidBleService extends Service {
         super.onCreate();
 
         initializeLE();
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        stopSelf();
     }
 
     @Override

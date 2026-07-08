@@ -40,20 +40,21 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends FragmentActivity implements KeyEvent.Callback {
     private final Handler threadHandler = new Handler();
     public CustomViewPager pager = null;
     public PagerAdapter pagerAdapter = null;
-    private volatile ArrayList<BluetoothDevice> devices = new ArrayList<>();
+    private volatile List<BluetoothDevice> devices = new ArrayList<>();
     private final Runnable deviceLayoutUpdate = new Runnable() {
-        volatile ArrayList<BluetoothDevice> devices_copy = new ArrayList<>();
+        volatile List<BluetoothDevice> devices_copy = new ArrayList<>();
 
         public void run() {
             final long refreshLayoutPeriodMs = 300;
             final LinearLayout ll = (LinearLayout) findViewById(R.id.conf_linear_layout_devices);
 
-            devices_copy = devices;
+            devices_copy = new ArrayList<>(devices);
 
             if (ll == null) {
                 threadHandler.postDelayed(this, refreshLayoutPeriodMs);
@@ -100,7 +101,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         }
     };
     private final Runnable deviceFieldUpdate = new Runnable() {
-        volatile ArrayList<BluetoothDevice> devices_copy = new ArrayList<>();
+        volatile List<BluetoothDevice> devices_copy = new ArrayList<>();
         private int i = 0;
 
         public void run() {
@@ -109,7 +110,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             int text_color;
             int bg_color;
 
-            devices_copy = devices;
+            devices_copy = new ArrayList<>(devices);
 
             if (devices_copy != null && devices_copy.size() > 0) {
                 BluetoothDevice d;
@@ -183,8 +184,8 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         });
     }
 
-    public void onConnectionStateChange(ArrayList<BluetoothDevice> dev_array) {
-        devices = dev_array;
+    public void onConnectionStateChange(List<BluetoothDevice> dev_array) {
+        devices = new ArrayList<>(dev_array);
     }
 
     public void sendNotification(ReportField rf, int value) {
@@ -233,6 +234,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         pager.swipePossible(true);
 
         Intent intent = new Intent(this, HidBleService.class);
+        startService(intent);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
 
         ApplicationConfiguration.initializeConfiguration(getApplicationContext());
