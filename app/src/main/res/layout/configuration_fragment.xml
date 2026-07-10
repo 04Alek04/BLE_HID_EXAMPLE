@@ -30,6 +30,12 @@
             android:layout_height="wrap_content"
             android:text="@string/reboot_application" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/conf_clear_configs_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/clear_saved_configs" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="match_parent"

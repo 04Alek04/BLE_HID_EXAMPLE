@@ -40,9 +40,12 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static android.bluetooth.BluetoothAdapter.STATE_CONNECTED;
 import static android.bluetooth.BluetoothAdapter.STATE_DISCONNECTED;
@@ -144,6 +147,7 @@ public class HidBleService extends Service {
     private final List<BluetoothDevice> devices = Collections.synchronizedList(new ArrayList<>());
     private final List<NotificationData> pendingNotifications = Collections.synchronizedList(new ArrayList<>());
     private final List<BluetoothGattService> servicesToAdd = Collections.synchronizedList(new ArrayList<>());
+    private final Map<String, Map<String, byte[]>> mDeviceDescriptorValues = new ConcurrentHashMap<>();
     /* Call proper methods on some BLE events  */
     private MainActivity mainActivity;
     private BluetoothGattServerCallback mGattServerCallback;
@@ -232,6 +236,9 @@ public class HidBleService extends Service {
             }
 
             for (BluetoothDevice device : targetDevices) {
+                if (!isNotificationEnabled(device, report)) {
+                    continue;
+                }
                 boolean merged = false;
                 if (rf == ReportField.REPORT_FIELD_MOUSE_XY) {
                     // Try to merge with an existing pending mouse move for this device
@@ -713,7 +720,7 @@ public class HidBleService extends Service {
                                                     BluetoothGattCharacteristic characteristic) {
                 if (gattServer == null) return;
                 
-                if (Objects.equals(characteristic.getUuid().toString(), CHAR_BATTERY_LEVEL)) {
+                if (characteristic.getUuid().toString().equalsIgnoreCase(CHAR_BATTERY_LEVEL)) {
                     characteristic.setValue(new byte[]{readBatteryLevel()});
                 }
 
@@ -746,7 +753,7 @@ public class HidBleService extends Service {
                                                  int offset, byte[] value) {
                 if (gattServer == null) return;
                 Log.e("BLE", "onDescriptorWriteRequest " + descriptor.getUuid().toString() + " value " + Arrays.toString(value));
-                descriptor.setValue(value);
+                saveDescriptorValue(device, descriptor, value);
                 if (responseNeeded) {
                     gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
                 }
@@ -766,7 +773,7 @@ public class HidBleService extends Service {
                     // Check if this is the Keyboard Output Report (LEDs)
                     // We check by reference AND by characteristic properties as a fallback
                     if (characteristic == charReportKeyboardOutput || 
-                        (characteristic.getUuid().toString().equals(CHAR_REPORT) && 
+                        (characteristic.getUuid().toString().equalsIgnoreCase(CHAR_REPORT) && 
                          (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0)) {
                         Log.i("BLE", "Keyboard LED status received: " + value[0]);
                         if (mainActivity != null) {
@@ -785,9 +792,19 @@ public class HidBleService extends Service {
                                                 int offset, BluetoothGattDescriptor descriptor) {
                 if (gattServer == null) return;
                 Log.e("BLE", "onDescriptorReadRequest " + descriptor.getUuid().toString());
-                byte[] value = descriptor.getValue();
+                byte[] value = getDescriptorValue(device, descriptor);
                 if (value == null) value = new byte[0];
-                gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
+
+                int length = value.length;
+                if (offset > length) {
+                    gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_INVALID_OFFSET, offset, null);
+                    return;
+                }
+
+                byte[] responsePart = new byte[length - offset];
+                System.arraycopy(value, offset, responsePart, 0, length - offset);
+
+                gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, responsePart);
             }
 
             @Override
@@ -806,6 +823,97 @@ public class HidBleService extends Service {
                 }
             }
         };
+    }
+
+    private void saveDescriptorValue(BluetoothDevice device, BluetoothGattDescriptor descriptor, byte[] value) {
+        descriptor.setValue(value);
+        String deviceAddress = device.getAddress();
+        String charUuid = descriptor.getCharacteristic().getUuid().toString();
+        String descUuid = descriptor.getUuid().toString();
+
+        if (descUuid.equalsIgnoreCase(DESC_CCC)) {
+            Map<String, byte[]> deviceMap = mDeviceDescriptorValues.get(deviceAddress);
+            if (deviceMap == null) {
+                deviceMap = new HashMap<>();
+                mDeviceDescriptorValues.put(deviceAddress, deviceMap);
+            }
+            deviceMap.put(charUuid, value);
+
+            // Persist to SharedPreferences
+            getSharedPreferences("ble_ccc_prefs", Context.MODE_PRIVATE)
+                    .edit()
+                    .putString(deviceAddress + "_" + charUuid, bytesToHex(value))
+                    .apply();
+        }
+    }
+
+    private byte[] getDescriptorValue(BluetoothDevice device, BluetoothGattDescriptor descriptor) {
+        if (descriptor == null) return null;
+        String deviceAddress = device.getAddress();
+        String charUuid = descriptor.getCharacteristic().getUuid().toString();
+        String descUuid = descriptor.getUuid().toString();
+
+        if (descUuid.equalsIgnoreCase(DESC_CCC)) {
+            Map<String, byte[]> deviceMap = mDeviceDescriptorValues.get(deviceAddress);
+            if (deviceMap != null && deviceMap.containsKey(charUuid)) {
+                return deviceMap.get(charUuid);
+            }
+
+            // Try loading from SharedPreferences
+            String saved = getSharedPreferences("ble_ccc_prefs", Context.MODE_PRIVATE)
+                    .getString(deviceAddress + "_" + charUuid, null);
+            if (saved != null) {
+                byte[] value = hexToBytes(saved);
+                Map<String, byte[]> map = mDeviceDescriptorValues.get(deviceAddress);
+                if (map == null) {
+                    map = new HashMap<>();
+                    mDeviceDescriptorValues.put(deviceAddress, map);
+                }
+                map.put(charUuid, value);
+                return value;
+            }
+            // For CCCD, if no value is stored, it MUST be disabled by default (0x00, 0x00)
+            return new byte[]{0, 0};
+        }
+        return descriptor.getValue();
+    }
+
+    private boolean isNotificationEnabled(BluetoothDevice device, BluetoothGattCharacteristic characteristic) {
+        if (characteristic == null) return false;
+        BluetoothGattDescriptor ccc = characteristic.getDescriptor(UUID.fromString(DESC_CCC));
+        if (ccc == null) return false;
+
+        byte[] value = getDescriptorValue(device, ccc);
+        return value != null && value.length > 0 && value[0] == 0x01;
+    }
+
+    private String bytesToHex(byte[] bytes) {
+        if (bytes == null) return "";
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
+
+    private byte[] hexToBytes(String s) {
+        if (s == null || s.isEmpty()) return new byte[0];
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i + 1), 16));
+        }
+        return data;
+    }
+
+    public void clearDeviceConfigs() {
+        mDeviceDescriptorValues.clear();
+        getSharedPreferences("ble_ccc_prefs", Context.MODE_PRIVATE)
+                .edit()
+                .clear()
+                .apply();
+        Log.i("BLE", "Cleared all saved device CCC configurations");
     }
 
     public List<BluetoothDevice> getDevices() {

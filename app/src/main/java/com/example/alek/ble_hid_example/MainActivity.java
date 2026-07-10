@@ -229,6 +229,12 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         mService.initializeLE();
     }
 
+    public void clearDeviceConfigs() {
+        if (mService != null) {
+            mService.clearDeviceConfigs();
+        }
+    }
+
     private static final int REQUEST_ENABLE_BT = 1;
     private static final int REQUEST_PERMISSIONS = 2;
 

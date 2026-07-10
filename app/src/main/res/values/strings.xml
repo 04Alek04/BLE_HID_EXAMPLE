@@ -20,6 +20,7 @@
     <string name="keyboard_on">Keyboard On</string>
     <string name="keyboard_off">Keyboard Off</string>
     <string name="reboot_application">Reboot application</string>
+    <string name="clear_saved_configs">Clear saved devices config</string>
     <string name="device_not_connected">Device not connected</string>
     <string name="volume_control">Volume control</string>
     <string name="list_of_connected_devices">List of connected devices</string>

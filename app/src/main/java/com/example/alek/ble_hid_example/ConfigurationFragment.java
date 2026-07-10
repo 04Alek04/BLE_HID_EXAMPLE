@@ -41,6 +41,7 @@ public class ConfigurationFragment extends Fragment implements
         super.onViewCreated(view, savedInstanceState);
 
         view.findViewById(R.id.conf_reboot_button).setOnClickListener(this);
+        view.findViewById(R.id.conf_clear_configs_button).setOnClickListener(this);
     }
 
     @Override
@@ -56,6 +57,8 @@ public class ConfigurationFragment extends Fragment implements
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             ((MainActivity) getActivity()).restartGattDatabase();
             startActivity(i);
+        } else if (v.getId() == R.id.conf_clear_configs_button) {
+            ((MainActivity) getActivity()).clearDeviceConfigs();
         }
     }
 }
