@@ -37,6 +37,7 @@ import androidx.fragment.app.FragmentPagerAdapter;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.KeyEvent;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -51,6 +52,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
     private volatile List<BluetoothDevice> devices = new ArrayList<>();
     private final Runnable deviceLayoutUpdate = new Runnable() {
         private List<BluetoothDevice> lastDevices = new ArrayList<>();
+        private LinearLayout lastLayout = null;
 
         public void run() {
             final long refreshLayoutPeriodMs = 300;
@@ -58,13 +60,21 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
 
             final LinearLayout ll = (LinearLayout) findViewById(R.id.conf_linear_layout_devices);
             
-            // If view is not ready yet or list hasn't changed, just wait
-            if (ll == null || currentDevices.equals(lastDevices)) {
+            // If view is not ready yet, just wait
+            if (ll == null) {
+                lastLayout = null;
+                threadHandler.postDelayed(this, refreshLayoutPeriodMs);
+                return;
+            }
+
+            // If list hasn't changed AND we are looking at the same view instance AND it's not empty, just wait
+            if (ll == lastLayout && currentDevices.equals(lastDevices) && ll.getChildCount() > 0) {
                 threadHandler.postDelayed(this, refreshLayoutPeriodMs);
                 return;
             }
 
             lastDevices = currentDevices;
+            lastLayout = ll;
 
             runOnUiThread(new Runnable() {
                 @Override
@@ -423,31 +433,20 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
 
         @Override
         public Fragment getItem(int pos) {
-            Fragment[] fragments = new Fragment[5];
-            int index = 2;
-
-            fragments[0] = ConfigurationFragment.newInstance();
-            fragments[1] = ConsumerFragment.newInstance();
-            fragments[2] = ConfigurationFragment.newInstance();
-            fragments[3] = ConfigurationFragment.newInstance();
-            fragments[4] = ConfigurationFragment.newInstance();
-
-            // Consumer fragment is always available
-            if (ApplicationConfiguration.getConfigurationField(getApplicationContext(),
-                    ApplicationConfiguration.MOUSE_FEAT)) {
-                fragments[index] = MouseFragment.newInstance();
-                ++index;
+            switch (pos) {
+                case CONFIGURATION:
+                    return ConfigurationFragment.newInstance();
+                case CONSUMER:
+                    return ConsumerFragment.newInstance();
+                case MOUSE:
+                    return MouseFragment.newInstance();
+                case KEYBOARD:
+                    return KeyboardFragment.newInstance();
+                case D_PAD:
+                    return DPadFragment.newInstance();
+                default:
+                    return ConfigurationFragment.newInstance();
             }
-
-            if (ApplicationConfiguration.getConfigurationField(getApplicationContext(),
-                    ApplicationConfiguration.KEYBOARD_FEAT)) {
-                fragments[index] = KeyboardFragment.newInstance();
-                ++index;
-                fragments[index] = DPadFragment.newInstance();
-                ++index;
-            }
-
-            return fragments[pos];
         }
 
         @Override
