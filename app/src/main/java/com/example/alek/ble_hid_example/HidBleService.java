@@ -43,7 +43,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -109,7 +108,7 @@ enum ReportField {
         this.byte_size = byte_size;
     }
 
-    static void updateValues(int features) {
+    static void updateValues() {
         /* With separate characteristics, each report starts at offset 0 */
         REPORT_FIELD_CONSUMER_CONTROL.byte_offset = 0;
         REPORT_FIELD_LAUNCHER_BUTTON.byte_offset = 2;
@@ -148,6 +147,8 @@ public class HidBleService extends Service {
     private final List<NotificationData> pendingNotifications = Collections.synchronizedList(new ArrayList<>());
     private final List<BluetoothGattService> servicesToAdd = Collections.synchronizedList(new ArrayList<>());
     private final Map<String, Map<String, byte[]>> mDeviceDescriptorValues = new ConcurrentHashMap<>();
+    private final Map<BluetoothDevice, Integer> mNotificationMasks = new ConcurrentHashMap<>();
+    
     /* Call proper methods on some BLE events  */
     private MainActivity mainActivity;
     private BluetoothGattServerCallback mGattServerCallback;
@@ -219,6 +220,11 @@ public class HidBleService extends Service {
             }
         }
 
+        int maskBit = 0;
+        if (report == charReportKeyboard) maskBit = ReportField.REP_KEYBOARD;
+        else if (report == charReportMouse) maskBit = ReportField.REP_MOUSE;
+        else if (report == charReportConsumer) maskBit = ReportField.REP_CONSUMER;
+
         synchronized (pendingNotifications) {
             List<BluetoothDevice> targetDevices = new ArrayList<>();
             synchronized (devices) {
@@ -236,9 +242,11 @@ public class HidBleService extends Service {
             }
 
             for (BluetoothDevice device : targetDevices) {
-                if (!isNotificationEnabled(device, report)) {
+                Integer mask = mNotificationMasks.get(device);
+                if (mask == null || (mask & maskBit) == 0) {
                     continue;
                 }
+                
                 boolean merged = false;
                 if (rf == ReportField.REPORT_FIELD_MOUSE_XY) {
                     // Try to merge with an existing pending mouse move for this device
@@ -391,7 +399,7 @@ public class HidBleService extends Service {
         advertiser.startAdvertising(settings, advData, scanResponse, advertisingCallback);
     }
 
-    private void createGattDatabase(BluetoothGattServer gattServer, int level, int features) {
+    private void createGattDatabase(BluetoothGattServer gattServer, int level) {
         // Set characteristics' permissions
         final int PERM_READ = (level == SecurityLevel.SECURITY_LEVEL_3.ordinal()) ?
                 PERMISSION_READ_ENCRYPTED_MITM : ((level == SecurityLevel.SECURITY_LEVEL_2.ordinal()) ?
@@ -688,6 +696,8 @@ public class HidBleService extends Service {
                     if (!devices.contains(device)) {
                         devices.add(device);
                     }
+                    
+                    updateNotificationMask(device);
 
                     if (devices.size() == 1) {
                         notificationPossible = true;
@@ -701,6 +711,7 @@ public class HidBleService extends Service {
                         // proper task
                         devices.remove(device);
                     }
+                    mNotificationMasks.remove(device);
 
                     if (devices.size() == 0) {
                         notificationPossible = false;
@@ -754,6 +765,11 @@ public class HidBleService extends Service {
                 if (gattServer == null) return;
                 Log.e("BLE", "onDescriptorWriteRequest " + descriptor.getUuid().toString() + " value " + Arrays.toString(value));
                 saveDescriptorValue(device, descriptor, value);
+                
+                if (descriptor.getUuid().toString().equalsIgnoreCase(DESC_CCC)) {
+                    updateNotificationMask(device);
+                }
+                
                 if (responseNeeded) {
                     gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
                 }
@@ -886,6 +902,15 @@ public class HidBleService extends Service {
         byte[] value = getDescriptorValue(device, ccc);
         return value != null && value.length > 0 && value[0] == 0x01;
     }
+    
+    private void updateNotificationMask(BluetoothDevice device) {
+        int mask = 0;
+        if (isNotificationEnabled(device, charReportKeyboard)) mask |= ReportField.REP_KEYBOARD;
+        if (isNotificationEnabled(device, charReportMouse)) mask |= ReportField.REP_MOUSE;
+        if (isNotificationEnabled(device, charReportConsumer)) mask |= ReportField.REP_CONSUMER;
+        mNotificationMasks.put(device, mask);
+        Log.i("BLE", "Updated notification mask for " + device.getAddress() + ": " + mask);
+    }
 
     private String bytesToHex(byte[] bytes) {
         if (bytes == null) return "";
@@ -909,6 +934,7 @@ public class HidBleService extends Service {
 
     public void clearDeviceConfigs() {
         mDeviceDescriptorValues.clear();
+        mNotificationMasks.clear();
         getSharedPreferences("ble_ccc_prefs", Context.MODE_PRIVATE)
                 .edit()
                 .clear()
@@ -927,7 +953,6 @@ public class HidBleService extends Service {
     /* Service handling-related methods */
     public void initializeLE() {
         BluetoothManager mManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        int features = 0;
 
         BluetoothAdapter bluetoothAdapter = mManager != null ? mManager.getAdapter() : null;
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
@@ -935,29 +960,14 @@ public class HidBleService extends Service {
             return;
         }
 
-        if (ApplicationConfiguration.getConfigurationField(getApplicationContext(),
-                ApplicationConfiguration.CONSUMER_FEAT)) {
-            features |= ReportField.REP_CONSUMER;
-        }
-
-        if (ApplicationConfiguration.getConfigurationField(getApplicationContext(),
-                ApplicationConfiguration.MOUSE_FEAT)) {
-            features |= ReportField.REP_MOUSE;
-        }
-
-        if (ApplicationConfiguration.getConfigurationField(getApplicationContext(),
-                ApplicationConfiguration.KEYBOARD_FEAT)) {
-            features |= ReportField.REP_KEYBOARD;
-        }
-
-        ReportField.updateValues(features);
+        ReportField.updateValues();
         gattServerCbInit();
         mManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         if (gattServer != null) {
             gattServer.close();
         }
         gattServer = mManager.openGattServer(this, mGattServerCallback);
-        createGattDatabase(gattServer, SecurityLevel.SECURITY_LEVEL_2.ordinal(), features);
+        createGattDatabase(gattServer, SecurityLevel.SECURITY_LEVEL_2.ordinal());
         pendingNotifications.clear();
     }
 

@@ -258,7 +258,6 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         startService(intent);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
 
-        ApplicationConfiguration.initializeConfiguration(getApplicationContext());
         threadHandler.post(deviceFieldUpdate);
         threadHandler.post(deviceLayoutUpdate);
     }
@@ -457,20 +456,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
 
         @Override
         public int getCount() {
-            int count = 2;
-
-            // Consumer fragment is always available
-            if (ApplicationConfiguration.getConfigurationField(getApplicationContext(),
-                    ApplicationConfiguration.MOUSE_FEAT)) {
-                count += 1;
-            }
-
-            if (ApplicationConfiguration.getConfigurationField(getApplicationContext(),
-                    ApplicationConfiguration.KEYBOARD_FEAT)) {
-                count += 2;
-            }
-
-            return count;
+            return 5;
         }
     }
 }
