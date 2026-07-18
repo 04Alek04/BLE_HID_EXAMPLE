@@ -31,12 +31,17 @@ import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.content.Context;
 import android.content.Intent;
+import android.bluetooth.BluetoothProfile;
 import android.os.BatteryManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.ParcelUuid;
+import android.os.Handler;
 import android.util.Log;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -702,6 +707,10 @@ public class HidBleService extends Service {
                     if (devices.size() == 1) {
                         notificationPossible = true;
                     }
+
+                    // Request Low Latency connection parameters with a delay
+                    // to allow initial HID handshake and pairing to complete.
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> requestLowLatency(device), 1500);
                     
                     // Resume advertising to allow more devices to connect
                     startAdvertising();
@@ -723,6 +732,31 @@ public class HidBleService extends Service {
 
                 if (mainActivity != null) {
                     mainActivity.onConnectionStateChange(devices);
+                }
+            }
+
+            private void requestLowLatency(BluetoothDevice device) {
+                if (device == null || gattServer == null) return;
+                Log.i("BLE", "LowLatency: Requesting HIGH priority for " + device.getAddress());
+
+                try {
+                    // Try to find the method in BluetoothGattServer (hidden before API 35)
+                    // Method signature: boolean requestConnectionPriority(BluetoothDevice device, int priority)
+                    Method method = gattServer.getClass().getMethod("requestConnectionPriority",
+                            BluetoothDevice.class, int.class);
+                    
+                    method.setAccessible(true);
+                    method.invoke(gattServer, device, BluetoothGatt.CONNECTION_PRIORITY_HIGH);
+                    Log.i("BLE", "LowLatency: SUCCESS via BluetoothGattServer reflection.");
+                } catch (Exception e) {
+                    Log.w("BLE", "LowLatency: FAILED to request via reflection. Fallback to default.");
+                    // Fallback to a simpler, more common hidden method if the above fails
+                    try {
+                        Method m = device.getClass().getMethod("connectGatt", Context.class, boolean.class, 
+                                android.bluetooth.BluetoothGattCallback.class, int.class);
+                        // Using transport LE (2)
+                        m.invoke(device, HidBleService.this, false, new android.bluetooth.BluetoothGattCallback() {}, 2);
+                    } catch (Exception ignored) {}
                 }
             }
 
