@@ -50,6 +50,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
     public CustomViewPager pager = null;
     public PagerAdapter pagerAdapter = null;
     private volatile List<BluetoothDevice> devices = new ArrayList<>();
+    
     private final Runnable deviceLayoutUpdate = new Runnable() {
         private List<BluetoothDevice> lastDevices = new ArrayList<>();
         private LinearLayout lastLayout = null;
@@ -98,6 +99,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             threadHandler.postDelayed(this, refreshLayoutPeriodMs);
         }
     };
+
     private final Runnable deviceFieldUpdate = new Runnable() {
         private int i = 0;
 
@@ -133,8 +135,12 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             threadHandler.postDelayed(this, refreshTextViewPeriodMs);
         }
     };
+
     private HidBleService mService = null;
     private byte lastKeyboardLedStatus = 0;
+    private int absMouseButtons = 0;
+    private int lastAbsX = 16384, lastAbsY = 16384;
+
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className,
@@ -203,6 +209,30 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         return lastKeyboardLedStatus;
     }
 
+    public int getAbsMouseButtons() {
+        return absMouseButtons;
+    }
+
+    public void sendAbsMouseReport(int buttons, int x, int y) {
+        lastAbsX = x;
+        lastAbsY = y;
+        if (mService != null) {
+            mService.sendAbsMouseReport(buttons, x, y);
+        }
+    }
+
+    public void exitAbsoluteMouseMode() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (pager != null) {
+                    pager.swipePossible(true);
+                    pager.setCurrentItem(PagerAdapter.MOUSE);
+                }
+            }
+        });
+    }
+
     public void sendNotification(ReportField rf, int value) {
         if (mService == null) {
             // Service is not bound yet
@@ -253,6 +283,24 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         pager.setCurrentItem(1);
         pager.setHorizontalFadingEdgeEnabled(false);
         pager.swipePossible(true);
+
+        pager.addOnPageChangeListener(new androidx.viewpager.widget.ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+
+            @Override
+            public void onPageSelected(int position) {
+                if (position == PagerAdapter.ABS_MOUSE) {
+                    pager.swipePossible(false);
+                } else {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                    pager.swipePossible(true);
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {}
+        });
 
         Intent intent = new Intent(this, HidBleService.class);
         startService(intent);
@@ -325,16 +373,23 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        unbindService(mConnection);
-        threadHandler.removeCallbacks(deviceFieldUpdate);
-        threadHandler.removeCallbacks(deviceLayoutUpdate);
-    }
-
-    @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (pager.getCurrentItem() == PagerAdapter.ABS_MOUSE) {
+            if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+                if (event.getRepeatCount() == 0) {
+                    absMouseButtons |= 0x01;
+                    sendAbsMouseReport(absMouseButtons, lastAbsX, lastAbsY);
+                }
+                return true;
+            } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                if (event.getRepeatCount() == 0) {
+                    absMouseButtons |= 0x02;
+                    sendAbsMouseReport(absMouseButtons, lastAbsX, lastAbsY);
+                }
+                return true;
+            }
+        }
+
         byte key = 0;
         byte meta_key = 0;
         short val;
@@ -390,6 +445,18 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (pager.getCurrentItem() == PagerAdapter.ABS_MOUSE) {
+            if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+                absMouseButtons &= ~0x01;
+                sendAbsMouseReport(absMouseButtons, lastAbsX, lastAbsY);
+                return true;
+            } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                absMouseButtons &= ~0x02;
+                sendAbsMouseReport(absMouseButtons, lastAbsX, lastAbsY);
+                return true;
+            }
+        }
+
         int key = 0;
 
         if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
@@ -406,17 +473,40 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         return true;
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        unbindService(mConnection);
+        threadHandler.removeCallbacks(deviceFieldUpdate);
+        threadHandler.removeCallbacks(deviceLayoutUpdate);
+    }
+
     class PagerAdapter extends FragmentPagerAdapter {
         static final int CONFIGURATION = 0;
         static final int CONSUMER = 1;
         static final int MOUSE = 2;
         static final int KEYBOARD = 3;
         static final int D_PAD = 4;
-
+        static final int ABS_MOUSE = 5;
+        
         private final SparseArray<Fragment> registeredFragments = new SparseArray<>();
 
-        PagerAdapter(FragmentManager fm) {
+        public PagerAdapter(FragmentManager fm) {
             super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            switch (position) {
+                case CONFIGURATION: return ConfigurationFragment.newInstance();
+                case CONSUMER: return ConsumerFragment.newInstance();
+                case MOUSE: return MouseFragment.newInstance();
+                case KEYBOARD: return KeyboardFragment.newInstance();
+                case D_PAD: return DPadFragment.newInstance();
+                case ABS_MOUSE: return AbsoluteMouseFragment.newInstance();
+                default: return ConfigurationFragment.newInstance();
+            }
         }
 
         @Override
@@ -437,26 +527,8 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         }
 
         @Override
-        public Fragment getItem(int pos) {
-            switch (pos) {
-                case CONFIGURATION:
-                    return ConfigurationFragment.newInstance();
-                case CONSUMER:
-                    return ConsumerFragment.newInstance();
-                case MOUSE:
-                    return MouseFragment.newInstance();
-                case KEYBOARD:
-                    return KeyboardFragment.newInstance();
-                case D_PAD:
-                    return DPadFragment.newInstance();
-                default:
-                    return ConfigurationFragment.newInstance();
-            }
-        }
-
-        @Override
         public int getCount() {
-            return 5;
+            return 6;
         }
     }
 }

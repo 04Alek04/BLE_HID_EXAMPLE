@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/abs_mouse_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF000000"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Ten kontener wizualnie udaje tryb poziomy -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:rotation="90">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TABLET MODE"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="36sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="TRIPLE TAP TO EXIT"
+            android:textColor="#88FFFFFF"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/abs_mouse_debug"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Rotate phone left"
+            android:textColor="#44FFFFFF"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+</FrameLayout>

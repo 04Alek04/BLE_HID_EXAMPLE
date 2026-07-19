@@ -23,4 +23,6 @@
     <string name="application_launch">Application Launch</string>
     <string name="application_control">Application Control</string>
     <string name="horizontal_scroll">Horizontal Scroll</string>
+    <string name="absolute_mouse">Absolute Mouse</string>
+    <string name="triple_tap_to_exit">Triple tap to exit</string>
 </resources>

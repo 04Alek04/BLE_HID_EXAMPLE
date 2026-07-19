@@ -101,7 +101,12 @@ enum ReportField {
     REPORT_FIELD_MOUSE_BUTTONS_XY(0, 3),
     REPORT_FIELD_MOUSE_XY(1, 2),
     REPORT_FIELD_MOUSE_SCROLL(3, 1),
-    REPORT_FIELD_MOUSE_HSCROLL(4, 1);
+    REPORT_FIELD_MOUSE_HSCROLL(4, 1),
+    /* Absolute Mouse (Report ID 7) */
+    REPORT_FIELD_ABS_MOUSE_BUTTONS(0, 1),
+    REPORT_FIELD_ABS_MOUSE_X(1, 2),
+    REPORT_FIELD_ABS_MOUSE_Y(3, 2),
+    REPORT_FIELD_ABS_MOUSE_ALL(0, 5);
 
     final static public int REP_CONSUMER = 0x01;
     final static public int REP_MOUSE = 0x02;
@@ -132,6 +137,11 @@ enum ReportField {
         REPORT_FIELD_MOUSE_XY.byte_offset = 1;
         REPORT_FIELD_MOUSE_SCROLL.byte_offset = 3;
         REPORT_FIELD_MOUSE_HSCROLL.byte_offset = 4;
+
+        REPORT_FIELD_ABS_MOUSE_BUTTONS.byte_offset = 0;
+        REPORT_FIELD_ABS_MOUSE_X.byte_offset = 1;
+        REPORT_FIELD_ABS_MOUSE_Y.byte_offset = 3;
+        REPORT_FIELD_ABS_MOUSE_ALL.byte_offset = 0;
     }
 }
 
@@ -167,6 +177,7 @@ public class HidBleService extends Service {
     private BluetoothGattCharacteristic charReportMouse;
     private BluetoothGattCharacteristic charReportConsumer;
     private BluetoothGattCharacteristic charReportBattery;
+    private BluetoothGattCharacteristic charReportAbsMouse;
     private BluetoothGattCharacteristic charBatteryLevel;
     private String mOriginalName = null;
     private final AdvertiseCallback advertisingCallback = new AdvertiseCallback() {
@@ -203,6 +214,9 @@ public class HidBleService extends Service {
         if (rf.name().contains("KEYBOARD")) {
             report = charReportKeyboard;
             arraySize = 8; // standard 8-byte keyboard report
+        } else if (rf.name().startsWith("REPORT_FIELD_ABS_MOUSE")) {
+            report = charReportAbsMouse;
+            arraySize = 5; // buttons(1) + x(2) + y(2)
         } else if (rf.name().contains("MOUSE")) {
             report = charReportMouse;
             arraySize = 5; // buttons + x + y + v-scroll + h-scroll
@@ -538,10 +552,10 @@ public class HidBleService extends Service {
                 (byte) 0x25, (byte) 0x01, /* Logical Maximum (1) */
                 (byte) 0x95, (byte) 0x05, /* Report Count (5) */
                 (byte) 0x75, (byte) 0x01, /* Report Size (1) */
-                (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) - Buttons */
+                (byte) 0x81, (byte) 0x02, /* Input (Data, Var, Abs) */
                 (byte) 0x95, (byte) 0x01, /* Report Count (1) */
                 (byte) 0x75, (byte) 0x03, /* Report Size (3) */
-                (byte) 0x81, (byte) 0x01, /* Input (Constant) - Padding */
+                (byte) 0x81, (byte) 0x01, /* Input (Const, Var, Abs) */
                 (byte) 0x05, (byte) 0x01, /* Usage Page (Generic Desktop) */
                 (byte) 0x09, (byte) 0x30, /* Usage (X) */
                 (byte) 0x09, (byte) 0x31, /* Usage (Y) */
@@ -578,6 +592,34 @@ public class HidBleService extends Service {
                 (byte) 0x95, (byte) 0x01, /* Report Count (1) */
                 (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) */
                 (byte) 0xC0, /* End Collection */
+
+                // --- ABSOLUTE MOUSE / DIGITIZER (ID 7) ---
+                (byte) 0x05, 0x01, /* Usage Page (Generic Desktop) */
+                (byte) 0x09, 0x02, /* Usage (Mouse) */
+                (byte) 0xA1, 0x01, /* Collection (Application) */
+                (byte) 0x85, 0x07, /* Report ID (7) */
+                (byte) 0x09, 0x01, /* Usage (Pointer) */
+                (byte) 0xA1, 0x00, /* Collection (Physical) */
+                (byte) 0x05, 0x09, /* Usage Page (Button) */
+                (byte) 0x19, 0x01, /* Usage Minimum (Button 1) */
+                (byte) 0x29, 0x05, /* Usage Maximum (Button 5) */
+                (byte) 0x15, 0x00, /* Logical Minimum (0) */
+                (byte) 0x25, 0x01, /* Logical Maximum (1) */
+                (byte) 0x95, 0x05, /* Report Count (5) */
+                (byte) 0x75, 0x01, /* Report Size (1) */
+                (byte) 0x81, 0x02, /* Input (Data, Var, Abs) - Buttons */
+                (byte) 0x95, 0x01, /* Report Count (1) */
+                (byte) 0x75, 0x03, /* Report Size (3) */
+                (byte) 0x81, 0x01, /* Input (Const, Var, Abs) - Padding */
+                (byte) 0x05, 0x01, /* Usage Page (Generic Desktop) */
+                (byte) 0x09, 0x30, /* Usage (X) */
+                (byte) 0x09, 0x31, /* Usage (Y) */
+                (byte) 0x15, 0x00, /* Logical Minimum (0) */
+                (byte) 0x26, (byte) 0xFF, 0x7F, /* Logical Maximum (32767) */
+                (byte) 0x75, 0x10, /* Report Size (16) */
+                (byte) 0x95, 0x02, /* Report Count (2) */
+                (byte) 0x81, (byte) 0x02, /* Input (Data, Var, Abs) - X, Y */
+                (byte) 0xC0, (byte) 0xC0, /* End Collections */
         };
 
 
@@ -672,6 +714,17 @@ public class HidBleService extends Service {
         serviceHid.addCharacteristic(charReportMouse);
         serviceHid.addCharacteristic(charReportConsumer);
         serviceHid.addCharacteristic(charReportBattery);
+
+        // Report Absolute Mouse characteristic (ID 7)
+        charReportAbsMouse = new BluetoothGattCharacteristic(
+                UUID.fromString(CHAR_REPORT),
+                BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, PERM_READ_WRITE);
+        charReportAbsMouse.setValue(new byte[5]);
+        BluetoothGattDescriptor descReportRefAbsMouse = new BluetoothGattDescriptor(UUID.fromString(DESC_REPORT_REFERENCE), PERM_READ);
+        descReportRefAbsMouse.setValue(new byte[]{0x07, 0x01}); // ID=7, Type=Input
+        charReportAbsMouse.addDescriptor(descReportRefAbsMouse);
+        charReportAbsMouse.addDescriptor(new BluetoothGattDescriptor(UUID.fromString(DESC_CCC), PERM_READ_WRITE));
+        serviceHid.addCharacteristic(charReportAbsMouse);
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Device Information Service
         //                          -> PnP ID
@@ -983,6 +1036,7 @@ public class HidBleService extends Service {
         if (isNotificationEnabled(device, charReportMouse)) mask |= ReportField.REP_MOUSE;
         if (isNotificationEnabled(device, charReportConsumer)) mask |= ReportField.REP_CONSUMER;
         if (isNotificationEnabled(device, charReportBattery)) mask |= ReportField.REP_BATTERY;
+        if (isNotificationEnabled(device, charReportAbsMouse)) mask |= 0x20; // New bit for Abs Mouse
         mNotificationMasks.put(device, mask);
         Log.i("BLE", "Updated notification mask for " + device.getAddress() + ": " + mask);
     }
@@ -1023,6 +1077,23 @@ public class HidBleService extends Service {
 
     public void setActivity(MainActivity ma) {
         mainActivity = ma;
+    }
+
+    public void sendAbsMouseReport(int buttons, int x, int y) {
+        if (charReportAbsMouse == null) return;
+        byte[] array = new byte[5];
+        array[0] = (byte) (buttons & 0xFF);
+        array[1] = (byte) (x & 0xFF);
+        array[2] = (byte) ((x >> 8) & 0xFF);
+        array[3] = (byte) (y & 0xFF);
+        array[4] = (byte) ((y >> 8) & 0xFF);
+        
+        synchronized (pendingNotifications) {
+            for (BluetoothDevice device : devices) {
+                pendingNotifications.add(new NotificationData(device, charReportAbsMouse, array));
+            }
+        }
+        processNotificationQueue();
     }
 
     /* Service handling-related methods */
