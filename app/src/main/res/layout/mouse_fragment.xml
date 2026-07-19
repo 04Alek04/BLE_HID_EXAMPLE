@@ -111,7 +111,22 @@
             <View
                 android:id="@+id/mouse_mouse_cursor"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="300dp"
+                android:layout_margin="@dimen/activity_vertical_margin_x1_5"
+                android:background="?attr/colorPrimary" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/horizontal_scroll"
+                android:textAlignment="center"
+                android:textColor="?attr/colorOnSurface" />
+
+            <View
+                android:id="@+id/mouse_h_scroll"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
                 android:layout_margin="@dimen/activity_vertical_margin_x1_5"
                 android:background="?attr/colorPrimary" />
         </LinearLayout>

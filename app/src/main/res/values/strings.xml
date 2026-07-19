@@ -22,4 +22,5 @@
     <string name="system_control">System Control</string>
     <string name="application_launch">Application Launch</string>
     <string name="application_control">Application Control</string>
+    <string name="horizontal_scroll">Horizontal Scroll</string>
 </resources>

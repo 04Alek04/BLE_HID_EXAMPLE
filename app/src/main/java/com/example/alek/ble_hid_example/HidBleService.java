@@ -100,7 +100,8 @@ enum ReportField {
     REPORT_FIELD_MOUSE_Y(2, 1),
     REPORT_FIELD_MOUSE_BUTTONS_XY(0, 3),
     REPORT_FIELD_MOUSE_XY(1, 2),
-    REPORT_FIELD_MOUSE_SCROLL(3, 1);
+    REPORT_FIELD_MOUSE_SCROLL(3, 1),
+    REPORT_FIELD_MOUSE_HSCROLL(4, 1);
 
     final static public int REP_CONSUMER = 0x01;
     final static public int REP_MOUSE = 0x02;
@@ -130,6 +131,7 @@ enum ReportField {
         REPORT_FIELD_MOUSE_BUTTONS_XY.byte_offset = 0;
         REPORT_FIELD_MOUSE_XY.byte_offset = 1;
         REPORT_FIELD_MOUSE_SCROLL.byte_offset = 3;
+        REPORT_FIELD_MOUSE_HSCROLL.byte_offset = 4;
     }
 }
 
@@ -203,7 +205,7 @@ public class HidBleService extends Service {
             arraySize = 8; // standard 8-byte keyboard report
         } else if (rf.name().contains("MOUSE")) {
             report = charReportMouse;
-            arraySize = 4; // buttons + x + y + scroll
+            arraySize = 5; // buttons + x + y + v-scroll + h-scroll
         } else if (rf.name().contains("CONSUMER") || rf.name().contains("BUTTON")) {
             report = charReportConsumer;
             arraySize = 6; // consumer control (2) + launcher (2) + control (2)
@@ -554,6 +556,13 @@ public class HidBleService extends Service {
                 (byte) 0x75, (byte) 0x08, /* Report Size (8) */
                 (byte) 0x95, (byte) 0x01, /* Report Count (1) */
                 (byte) 0x81, (byte) 0x06, /* Input (Data, Variable, Relative) - Wheel */
+                (byte) 0x05, (byte) 0x0C, /* Usage Page (Consumer) */
+                (byte) 0x0A, (byte) 0x38, (byte) 0x02, /* Usage (AC Pan) */
+                (byte) 0x15, (byte) 0x80, /* Logical Minimum (-128) */
+                (byte) 0x25, (byte) 0x7F, /* Logical Maximum (127) */
+                (byte) 0x75, (byte) 0x08, /* Report Size (8) */
+                (byte) 0x95, (byte) 0x01, /* Report Count (1) */
+                (byte) 0x81, (byte) 0x06, /* Input (Data, Variable, Relative) - AC Pan */
                 (byte) 0xC0, /* End Collection (Physical) */
                 (byte) 0xC0, /* End Collection (Application) */
 
@@ -628,7 +637,7 @@ public class HidBleService extends Service {
         charReportMouse = new BluetoothGattCharacteristic(
                 UUID.fromString(CHAR_REPORT),
                 BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, PERM_READ_WRITE);
-        charReportMouse.setValue(new byte[4]);
+        charReportMouse.setValue(new byte[5]);
         BluetoothGattDescriptor descReportRefMouse = new BluetoothGattDescriptor(UUID.fromString(DESC_REPORT_REFERENCE), PERM_READ);
         descReportRefMouse.setValue(new byte[]{0x02, 0x01}); // ID=2, Type=Input
         charReportMouse.addDescriptor(descReportRefMouse);

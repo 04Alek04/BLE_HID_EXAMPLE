@@ -60,6 +60,47 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
         getActivity().findViewById(R.id.mouse_button_mouse_4).setOnTouchListener(this);
         getActivity().findViewById(R.id.mouse_button_mouse_5).setOnTouchListener(this);
 
+        getActivity().findViewById(R.id.mouse_h_scroll).setOnTouchListener(new View.OnTouchListener() {
+            final MainActivity activity = (MainActivity) getActivity();
+            private float lastX;
+            private float remainderX;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                CustomViewPager pager = (CustomViewPager) getActivity().findViewById(R.id.viewPager);
+                int action = event.getActionMasked();
+
+                switch (action) {
+                    case MotionEvent.ACTION_DOWN:
+                        pager.swipePossible(false);
+                        lastX = event.getX();
+                        remainderX = 0;
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        float currentX = event.getX();
+                        float dx = currentX - lastX;
+                        lastX = currentX;
+
+                        float sensitivity = 0.2f; // Zmniejszono z 0.5f dla wolniejszego scrollowania
+                        float moveX = dx * sensitivity + remainderX;
+                        int intX = Math.round(moveX);
+
+                        if (intX != 0) {
+                            remainderX = moveX - intX;
+                            activity.sendNotification(ReportField.REPORT_FIELD_MOUSE_HSCROLL, intX);
+                        } else {
+                            remainderX = moveX;
+                        }
+                        break;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        pager.swipePossible(true);
+                        break;
+                }
+                return true;
+            }
+        });
+
         getActivity().findViewById(R.id.mouse_mouse_cursor).setOnTouchListener(new View.OnTouchListener() {
             final MainActivity activity = (MainActivity) getActivity();
             private final GestureDetector gestureDetector = new GestureDetector(getContext(),
