@@ -105,6 +105,7 @@ enum ReportField {
     final static public int REP_CONSUMER = 0x01;
     final static public int REP_MOUSE = 0x02;
     final static public int REP_KEYBOARD = 0x04;
+    final static public int REP_BATTERY = 0x08;
     public final int byte_size;
     public int byte_offset;
 
@@ -163,6 +164,8 @@ public class HidBleService extends Service {
     private BluetoothGattCharacteristic charReportKeyboardOutput;
     private BluetoothGattCharacteristic charReportMouse;
     private BluetoothGattCharacteristic charReportConsumer;
+    private BluetoothGattCharacteristic charReportBattery;
+    private BluetoothGattCharacteristic charBatteryLevel;
     private String mOriginalName = null;
     private final AdvertiseCallback advertisingCallback = new AdvertiseCallback() {
         @Override
@@ -551,7 +554,21 @@ public class HidBleService extends Service {
                 (byte) 0x75, (byte) 0x08, /* Report Size (8) */
                 (byte) 0x95, (byte) 0x01, /* Report Count (1) */
                 (byte) 0x81, (byte) 0x06, /* Input (Data, Variable, Relative) - Wheel */
-                (byte) 0xC0, (byte) 0xC0 /* End Collections */
+                (byte) 0xC0, /* End Collection (Physical) */
+                (byte) 0xC0, /* End Collection (Application) */
+
+                // --- BATTERY SYSTEM (ID 4) ---
+                (byte) 0x05, (byte) 0x85, /* Usage Page (Battery System) */
+                (byte) 0x09, (byte) 0x01, /* Usage (Battery System) */
+                (byte) 0xA1, (byte) 0x01, /* Collection (Application) */
+                (byte) 0x85, (byte) 0x04, /* Report ID (4) */
+                (byte) 0x09, (byte) 0x66, /* Usage (Remaining Capacity) */
+                (byte) 0x15, (byte) 0x00, /* Logical Minimum (0) */
+                (byte) 0x25, (byte) 0x64, /* Logical Maximum (100) */
+                (byte) 0x75, (byte) 0x08, /* Report Size (8) */
+                (byte) 0x95, (byte) 0x01, /* Report Count (1) */
+                (byte) 0x81, (byte) 0x02, /* Input (Data, Variable, Absolute) */
+                (byte) 0xC0, /* End Collection */
         };
 
 
@@ -627,6 +644,16 @@ public class HidBleService extends Service {
         charReportConsumer.addDescriptor(descReportRefConsumer);
         charReportConsumer.addDescriptor(new BluetoothGattDescriptor(UUID.fromString(DESC_CCC), PERM_READ_WRITE));
 
+        // Report Battery characteristic (ID 4)
+        charReportBattery = new BluetoothGattCharacteristic(
+                UUID.fromString(CHAR_REPORT),
+                BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, PERM_READ_WRITE);
+        charReportBattery.setValue(new byte[1]);
+        BluetoothGattDescriptor descReportRefBattery = new BluetoothGattDescriptor(UUID.fromString(DESC_REPORT_REFERENCE), PERM_READ);
+        descReportRefBattery.setValue(new byte[]{0x04, 0x01}); // ID=4, Type=Input
+        charReportBattery.addDescriptor(descReportRefBattery);
+        charReportBattery.addDescriptor(new BluetoothGattDescriptor(UUID.fromString(DESC_CCC), PERM_READ_WRITE));
+
         serviceHid.addCharacteristic(charReportMap);
         serviceHid.addCharacteristic(charHidInformation);
         serviceHid.addCharacteristic(charHidControlPoint);
@@ -635,6 +662,7 @@ public class HidBleService extends Service {
         serviceHid.addCharacteristic(charReportKeyboardOutput);
         serviceHid.addCharacteristic(charReportMouse);
         serviceHid.addCharacteristic(charReportConsumer);
+        serviceHid.addCharacteristic(charReportBattery);
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Device Information Service
         //                          -> PnP ID
@@ -668,11 +696,12 @@ public class HidBleService extends Service {
                 BluetoothGattService.SERVICE_TYPE_PRIMARY);
 
         // PBattery Level characteristic
-        BluetoothGattCharacteristic charBatteryLevel = new BluetoothGattCharacteristic(
+        charBatteryLevel = new BluetoothGattCharacteristic(
                 UUID.fromString(CHAR_BATTERY_LEVEL),
-                BluetoothGattCharacteristic.PROPERTY_READ, PERM_READ);
+                BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, PERM_READ);
 
         charBatteryLevel.setValue(new byte[]{readBatteryLevel()});
+        charBatteryLevel.addDescriptor(new BluetoothGattDescriptor(UUID.fromString(DESC_CCC), PERM_READ_WRITE));
         serviceBAS.addCharacteristic(charBatteryLevel);
 
         servicesToAdd.clear();
@@ -815,20 +844,22 @@ public class HidBleService extends Service {
                                                      boolean preparedWrite, boolean responseNeeded,
                                                      int offset, byte[] value) {
                 if (gattServer == null) return;
-                Log.i("BLE", "onCharacteristicWriteRequest " + characteristic.getUuid().toString() +
-                        " value: " + (value != null ? Arrays.toString(value) : "null"));
+                
+                // Get Report ID from descriptor to be 100% sure
+                byte reportId = 0;
+                BluetoothGattDescriptor desc = characteristic.getDescriptor(UUID.fromString(DESC_REPORT_REFERENCE));
+                if (desc != null && desc.getValue() != null && desc.getValue().length > 0) {
+                    reportId = desc.getValue()[0];
+                }
+
+                Log.i("BLE", "Write Request - Report ID: " + reportId + ", UUID: " + characteristic.getUuid().toString() + 
+                        ", Value: " + (value != null ? Arrays.toString(value) : "null"));
+                
                 characteristic.setValue(value);
 
                 if (value != null && value.length > 0) {
-                    // Check if this is the Keyboard Output Report (LEDs)
-                    // We check by reference AND by characteristic properties as a fallback
-                    if (characteristic == charReportKeyboardOutput || 
-                        (characteristic.getUuid().toString().equalsIgnoreCase(CHAR_REPORT) && 
-                         (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0)) {
-                        Log.i("BLE", "Keyboard LED status received: " + value[0]);
-                        if (mainActivity != null) {
-                            mainActivity.onKeyboardLedStatusChanged(value[0]);
-                        }
+                    if (reportId == 1) { // Keyboard LEDs
+                        if (mainActivity != null) mainActivity.onKeyboardLedStatusChanged(value[0]);
                     }
                 }
 
@@ -942,6 +973,7 @@ public class HidBleService extends Service {
         if (isNotificationEnabled(device, charReportKeyboard)) mask |= ReportField.REP_KEYBOARD;
         if (isNotificationEnabled(device, charReportMouse)) mask |= ReportField.REP_MOUSE;
         if (isNotificationEnabled(device, charReportConsumer)) mask |= ReportField.REP_CONSUMER;
+        if (isNotificationEnabled(device, charReportBattery)) mask |= ReportField.REP_BATTERY;
         mNotificationMasks.put(device, mask);
         Log.i("BLE", "Updated notification mask for " + device.getAddress() + ": " + mask);
     }
@@ -1005,11 +1037,51 @@ public class HidBleService extends Service {
         pendingNotifications.clear();
     }
 
+    private final Runnable batteryUpdateTask = new Runnable() {
+        @Override
+        public void run() {
+            updateBatteryLevel();
+            mHandler.postDelayed(this, 60000); // Update every minute
+        }
+    };
+
+    private void updateBatteryLevel() {
+        if (gattServer == null || devices.isEmpty()) return;
+        byte level = readBatteryLevel();
+        
+        // Update standard BAS
+        if (charBatteryLevel != null) {
+            charBatteryLevel.setValue(new byte[]{level});
+            synchronized (devices) {
+                for (BluetoothDevice device : devices) {
+                    if (isNotificationEnabled(device, charBatteryLevel)) {
+                        gattServer.notifyCharacteristicChanged(device, charBatteryLevel, false);
+                    }
+                }
+            }
+        }
+        
+        // Update HID Battery Report (ID 4)
+        if (charReportBattery != null) {
+            charReportBattery.setValue(new byte[]{level});
+            synchronized (devices) {
+                for (BluetoothDevice device : devices) {
+                    if (isNotificationEnabled(device, charReportBattery)) {
+                        gattServer.notifyCharacteristicChanged(device, charReportBattery, false);
+                    }
+                }
+            }
+        }
+    }
+
+    private final android.os.Handler mHandler = new android.os.Handler();
+
     @Override
     public void onCreate() {
         super.onCreate();
 
         initializeLE();
+        mHandler.post(batteryUpdateTask);
     }
 
     @Override
@@ -1020,6 +1092,7 @@ public class HidBleService extends Service {
 
     @Override
     public void onDestroy() {
+        mHandler.removeCallbacks(batteryUpdateTask);
         if (mOriginalName != null) {
             BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             BluetoothAdapter bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
