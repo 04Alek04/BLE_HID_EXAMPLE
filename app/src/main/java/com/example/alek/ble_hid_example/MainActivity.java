@@ -58,17 +58,14 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         public void run() {
             final long refreshLayoutPeriodMs = 300;
             final List<BluetoothDevice> currentDevices = new ArrayList<>(devices);
-
             final LinearLayout ll = (LinearLayout) findViewById(R.id.conf_linear_layout_devices);
             
-            // If view is not ready yet, just wait
             if (ll == null) {
                 lastLayout = null;
                 threadHandler.postDelayed(this, refreshLayoutPeriodMs);
                 return;
             }
 
-            // If list hasn't changed AND we are looking at the same view instance AND it's not empty, just wait
             if (ll == lastLayout && currentDevices.equals(lastDevices) && ll.getChildCount() > 0) {
                 threadHandler.postDelayed(this, refreshLayoutPeriodMs);
                 return;
@@ -89,7 +86,10 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                                 LinearLayout.LayoutParams.WRAP_CONTENT));
                         textView.setBackgroundColor(0xff2546e9);
                         textView.setTextColor(Color.WHITE);
-                        String name = bd.getName() != null ? bd.getName() : "Unknown Device";
+                        String name = "Unknown Device";
+                        try {
+                            name = bd.getName() != null ? bd.getName() : "Unknown Device";
+                        } catch (SecurityException ignored) {}
                         textView.setText(name + "  (" + bd.getAddress() + ")");
                         ll.addView(textView);
                     }
@@ -114,8 +114,10 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             if (!currentDevices.isEmpty()) {
                 if (i >= currentDevices.size()) i = 0;
                 BluetoothDevice d = currentDevices.get(i);
-
-                String name = d.getName() != null ? d.getName() : "Unknown Device";
+                String name = "Unknown Device";
+                try {
+                    name = d.getName() != null ? d.getName() : "Unknown Device";
+                } catch (SecurityException ignored) {}
                 text = name + "  (" + d.getAddress() + ")";
                 text_color = Color.WHITE;
                 bg_color = 0xff2546e9;
@@ -143,8 +145,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
 
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder service) {
+        public void onServiceConnected(ComponentName className, IBinder service) {
             HidBleService.LocalBinder binder = (HidBleService.LocalBinder) service;
             mService = binder.getService();
             mService.setActivity(MainActivity.this);
@@ -153,12 +154,11 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
-
+            mService = null;
         }
     };
 
     private void updateDeviceInfoField(final String text, final int text_color, final int bg_color) {
-
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -169,15 +169,10 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
 
                 for (int id : ids) {
                     TextView textView = (TextView) findViewById(id);
-
-                    if (textView == null) {
-                        continue;
-                    }
-
+                    if (textView == null) continue;
                     textView.setBackgroundColor(bg_color);
                     textView.setTextColor(text_color);
                     textView.setText(text);
-                    textView.refreshDrawableState();
                 }
             }
         });
@@ -234,39 +229,24 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
     }
 
     public void sendNotification(ReportField rf, int value) {
-        if (mService == null) {
-            // Service is not bound yet
-            return;
+        if (mService != null) {
+            mService.sendNotification(rf, value);
         }
-
-        mService.sendNotification(rf, value);
     }
 
     public void sendNotification(String s) {
-        if (mService == null) {
-            // Service is not bound yet
-            return;
+        if (mService != null) {
+            mService.sendNotification(s);
         }
-
-        mService.sendNotification(s);
     }
 
     public void restartGattDatabase() {
-        if (mService == null) {
-            return;
-        }
-
-        mService.initializeLE();
+        if (mService != null) mService.initializeLE();
     }
 
     public void clearDeviceConfigs() {
-        if (mService != null) {
-            mService.clearDeviceConfigs();
-        }
+        if (mService != null) mService.clearDeviceConfigs();
     }
-
-    private static final int REQUEST_ENABLE_BT = 1;
-    private static final int REQUEST_PERMISSIONS = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -275,15 +255,12 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         setContentView(R.layout.activity_main);
 
         checkPermissions();
-        checkBluetoothEnabled();
-
+        
         pagerAdapter = new PagerAdapter(getSupportFragmentManager());
         pager = (CustomViewPager) findViewById(R.id.viewPager);
         pager.setAdapter(pagerAdapter);
         pager.setCurrentItem(1);
-        pager.setHorizontalFadingEdgeEnabled(false);
-        pager.swipePossible(true);
-
+        
         pager.addOnPageChangeListener(new androidx.viewpager.widget.ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
@@ -306,70 +283,8 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         startService(intent);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
 
-        threadHandler.post(deviceFieldUpdate);
         threadHandler.post(deviceLayoutUpdate);
-    }
-
-    private void checkBluetoothEnabled() {
-        android.bluetooth.BluetoothManager bluetoothManager = (android.bluetooth.BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        android.bluetooth.BluetoothAdapter bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
-        if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED ||
-                Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            }
-        }
-    }
-
-    private void checkPermissions() {
-        ArrayList<String> permissions = new ArrayList<>();
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            permissions.add(Manifest.permission.BLUETOOTH_SCAN);
-            permissions.add(Manifest.permission.BLUETOOTH_CONNECT);
-            permissions.add(Manifest.permission.BLUETOOTH_ADVERTISE);
-        } else {
-            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
-            permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
-        }
-
-        ArrayList<String> permissionsToRequest = new ArrayList<>();
-        for (String permission : permissions) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                permissionsToRequest.add(permission);
-            }
-        }
-
-        if (!permissionsToRequest.isEmpty()) {
-            ActivityCompat.requestPermissions(this, permissionsToRequest.toArray(new String[0]), REQUEST_PERMISSIONS);
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_OK) {
-            restartGattDatabase();
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_PERMISSIONS) {
-            boolean allGranted = true;
-            for (int result : grantResults) {
-                if (result != PackageManager.PERMISSION_GRANTED) {
-                    allGranted = false;
-                    break;
-                }
-            }
-            if (allGranted) {
-                checkBluetoothEnabled();
-                restartGattDatabase();
-            }
-        }
+        threadHandler.post(deviceFieldUpdate);
     }
 
     @Override
@@ -388,25 +303,19 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                 }
                 return true;
             }
-        }
-
-        byte key = 0;
-        byte meta_key = 0;
-        short val;
-
-        if (pager.getCurrentItem() == PagerAdapter.MOUSE) {
-            if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-                sendNotification(ReportField.REPORT_FIELD_MOUSE_SCROLL, -1);
-                return true;
-            } else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+        } else if (pager.getCurrentItem() == PagerAdapter.MOUSE) {
+            if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
                 sendNotification(ReportField.REPORT_FIELD_MOUSE_SCROLL, 1);
                 return true;
+            } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                sendNotification(ReportField.REPORT_FIELD_MOUSE_SCROLL, -1);
+                return true;
             }
-        } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN ||
-                keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-            return false;
         }
 
+        // Optimized keyboard mapping logic
+        byte key = 0;
+        byte meta_key = 0;
         for (int i = 0; i < KeyboardUsage.KEYBOARD_USAGES.length; i++) {
             if (keyCode == KeyboardUsage.KEYBOARD_USAGES[i].key_code) {
                 key = KeyboardUsage.KEYBOARD_USAGES[i].usage;
@@ -415,32 +324,18 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             }
         }
 
-        if (key == 0) {
-            Log.e("BLE", "Pressed unhandled keyboard button " + keyCode);
-            return super.onKeyDown(keyCode, event);
-
+        if (key != 0) {
+            if (event.isCtrlPressed()) meta_key |= KeyboardUsage.META_LEFT_CONTROL;
+            if (event.isShiftPressed()) meta_key |= KeyboardUsage.META_LEFT_SHIFT;
+            if (event.isAltPressed()) meta_key |= KeyboardUsage.META_LEFT_ALT;
+            if (event.isMetaPressed()) meta_key |= KeyboardUsage.META_LEFT_META;
+            
+            short val = (short) (meta_key + (key << 8));
+            sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, (int) val);
+            return true;
         }
 
-        if (event.isCtrlPressed()) {
-            meta_key |= KeyboardUsage.META_LEFT_CONTROL;
-        }
-
-        if (event.isShiftPressed()) {
-            meta_key |= KeyboardUsage.META_LEFT_SHIFT;
-        }
-
-        if (event.isAltPressed()) {
-            meta_key |= KeyboardUsage.META_LEFT_ALT;
-        }
-
-        if (event.isMetaPressed()) {
-            meta_key |= KeyboardUsage.META_LEFT_META;
-        }
-
-        val = (short) (meta_key + (key << 8));
-        sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, (int) val);
-
-        return true;
+        return super.onKeyDown(keyCode, event);
     }
 
     @Override
@@ -455,31 +350,87 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                 sendAbsMouseReport(absMouseButtons, lastAbsX, lastAbsY);
                 return true;
             }
-        }
-
-        int key = 0;
-
-        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-            if (pager.getCurrentItem() == PagerAdapter.MOUSE) {
-                sendNotification(ReportField.REPORT_FIELD_MOUSE_SCROLL, 0);
+        } else if (pager.getCurrentItem() == PagerAdapter.MOUSE) {
+            if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
                 return true;
-            } else {
-                return false;
+            }
+        }
+        
+        // Reset keyboard state on release
+        for (int i = 0; i < KeyboardUsage.KEYBOARD_USAGES.length; i++) {
+            if (keyCode == KeyboardUsage.KEYBOARD_USAGES[i].key_code) {
+                sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
+                return true;
             }
         }
 
-        sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, key);
+        return super.onKeyUp(keyCode, event);
+    }
 
-        return true;
+    private void checkPermissions() {
+        ArrayList<String> permissions = new ArrayList<>();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions.add(Manifest.permission.BLUETOOTH_SCAN);
+            permissions.add(Manifest.permission.BLUETOOTH_CONNECT);
+            permissions.add(Manifest.permission.BLUETOOTH_ADVERTISE);
+        } else {
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+            permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        }
+
+        ArrayList<String> permissionsToRequest = new ArrayList<>();
+        for (String p : permissions) {
+            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(p);
+            }
+        }
+
+        if (!permissionsToRequest.isEmpty()) {
+            ActivityCompat.requestPermissions(this, permissionsToRequest.toArray(new String[0]), 2);
+        } else {
+            checkBluetoothEnabled();
+        }
+    }
+
+    private void checkBluetoothEnabled() {
+        android.bluetooth.BluetoothManager bm = (android.bluetooth.BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        android.bluetooth.BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
+        if (ba != null && !ba.isEnabled()) {
+            Intent intent = new Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED ||
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                startActivityForResult(intent, 1);
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1 && resultCode == RESULT_OK) {
+            restartGattDatabase();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 2) {
+            boolean allGranted = true;
+            for (int r : grantResults) if (r != PackageManager.PERMISSION_GRANTED) allGranted = false;
+            if (allGranted) {
+                checkBluetoothEnabled();
+                restartGattDatabase();
+            }
+        }
     }
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-
-        unbindService(mConnection);
-        threadHandler.removeCallbacks(deviceFieldUpdate);
         threadHandler.removeCallbacks(deviceLayoutUpdate);
+        threadHandler.removeCallbacks(deviceFieldUpdate);
+        if (mService != null) unbindService(mConnection);
+        super.onDestroy();
     }
 
     class PagerAdapter extends FragmentPagerAdapter {
@@ -493,7 +444,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         private final SparseArray<Fragment> registeredFragments = new SparseArray<>();
 
         public PagerAdapter(FragmentManager fm) {
-            super(fm);
+            super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
         }
 
         @Override

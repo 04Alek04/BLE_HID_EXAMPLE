@@ -290,9 +290,11 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
                         break;
                     }
                 }
-
                 activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, (int) value);
                 activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
+
+                // Reset spinner selection to allow sending the same character again
+                parent.setSelection(0);
             }
         }
     }
