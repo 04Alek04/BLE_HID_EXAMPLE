@@ -86,7 +86,7 @@ public class DPadFragment extends Fragment implements View.OnTouchListener {
             return false;
         }
 
-        activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_KEYS, toSend);
+        activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_KEYS, toSend);
 
         return true;
     }

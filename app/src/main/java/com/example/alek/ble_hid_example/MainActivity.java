@@ -210,7 +210,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         lastAbsX = x;
         lastAbsY = y;
         if (mService != null) {
-            mService.sendAbsMouseReport(buttons, x, y);
+            mService.sendAbsMouseNotification(buttons, x, y);
         }
     }
 
@@ -226,15 +226,21 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         });
     }
 
-    public void sendNotification(ReportField rf, int value) {
-        if (mService != null) {
-            mService.sendNotification(rf, value);
-        }
+    public void sendKeyboardNotification(ReportField rf, int value) {
+        if (mService != null) mService.sendKeyboardNotification(rf, value, SendTo.SEND_TO_ALL);
     }
 
-    public void sendNotification(String s) {
+    public void sendMouseNotification(ReportField rf, int value) {
+        if (mService != null) mService.sendMouseNotification(rf, value, SendTo.SEND_TO_ALL);
+    }
+
+    public void sendConsumerNotification(ReportField rf, int value) {
+        if (mService != null) mService.sendConsumerNotification(rf, value, SendTo.SEND_TO_ALL);
+    }
+
+    public void sendKeyboardText(String s) {
         if (mService != null) {
-            mService.sendNotification(s);
+            mService.sendKeyboardText(s);
         }
     }
 
@@ -303,10 +309,10 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             }
         } else if (pager.getCurrentItem() == PagerAdapter.MOUSE) {
             if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-                sendNotification(ReportField.REPORT_FIELD_MOUSE_SCROLL, 1);
+                sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_SCROLL, 1);
                 return true;
             } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-                sendNotification(ReportField.REPORT_FIELD_MOUSE_SCROLL, -1);
+                sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_SCROLL, -1);
                 return true;
             }
         }
@@ -329,7 +335,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             if (event.isMetaPressed()) meta_key |= KeyboardUsage.META_LEFT_META;
             
             short val = (short) (meta_key + (key << 8));
-            sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, (int) val);
+            sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, (int) val);
             return true;
         }
 
@@ -357,7 +363,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         // Reset keyboard state on release
         for (int i = 0; i < KeyboardUsage.KEYBOARD_USAGES.length; i++) {
             if (keyCode == KeyboardUsage.KEYBOARD_USAGES[i].key_code) {
-                sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
+                sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
                 return true;
             }
         }

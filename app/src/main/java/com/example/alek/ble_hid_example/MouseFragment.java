@@ -87,7 +87,7 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
 
                         if (intX != 0) {
                             remainderX = moveX - intX;
-                            activity.sendNotification(ReportField.REPORT_FIELD_MOUSE_HSCROLL, intX);
+                            activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_HSCROLL, intX);
                         } else {
                             remainderX = moveX;
                         }
@@ -107,8 +107,8 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
                     new GestureDetector.SimpleOnGestureListener() {
                         @Override
                         public boolean onDoubleTap(MotionEvent e) {
-                            activity.sendNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0x01);
-                            activity.sendNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0x00);
+                            activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0x01);
+                            activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0x00);
                             return super.onDoubleTap(e);
                         }
                     });
@@ -152,7 +152,7 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
                             byte _y = (byte) Math.max(-128, Math.min(127, intY));
                             int toSend = (_x & 0xFF) | ((_y & 0xFF) << 8);
 
-                            activity.sendNotification(ReportField.REPORT_FIELD_MOUSE_XY, toSend);
+                            activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_XY, toSend);
                         } else {
                             remainderX = moveX;
                             remainderY = moveY;
@@ -200,7 +200,7 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
             return false;
         }
 
-        activity.sendNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, toSend);
+        activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, toSend);
 
         return true;
     }

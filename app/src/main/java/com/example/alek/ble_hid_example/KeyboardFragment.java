@@ -18,6 +18,7 @@ package com.example.alek.ble_hid_example;
 import android.content.Context;
 import androidx.core.content.ContextCompat;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -105,7 +106,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
                     String added = s.subSequence(start, start + count).toString();
                     MainActivity activity = (MainActivity) getActivity();
                     if (activity != null) {
-                        activity.sendNotification(added);
+                        activity.sendKeyboardText(added);
                         isInternalChange = true;
                         editText.setText(""); // Clear for next character
                         isInternalChange = false;
@@ -124,8 +125,8 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
                     if (keyCode == KeyEvent.KEYCODE_DEL) {
                         MainActivity activity = (MainActivity) getActivity();
                         if (activity != null) {
-                            activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0x2a << 8);
-                            activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
+                            activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0x2a << 8);
+                            activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
                             return true;
                         }
                     }
@@ -154,9 +155,9 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
                 if (usage != 0) {
                     MainActivity activity = (MainActivity) getActivity();
                     // Send key press
-                    activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, usage << 8);
+                    activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, usage << 8);
                     // Send key release
-                    activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
+                    activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
                 }
             }
         };
@@ -183,8 +184,8 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
                 if (usage != 0) {
                     MainActivity activity = (MainActivity) getActivity();
                     short val = (short) (KeyboardUsage.META_LEFT_CONTROL | (usage << 8));
-                    activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val);
-                    activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
+                    activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val);
+                    activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
                 }
             }
         };
@@ -259,7 +260,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
             return false;
         }
 
-        activity.sendNotification(ReportField.REPORT_FIELD_CONSUMER_CONTROL, toSend);
+        activity.sendConsumerNotification(ReportField.REPORT_FIELD_CONSUMER_CONTROL, toSend);
 
         return true;
     }
@@ -286,8 +287,8 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
                         break;
                     }
                 }
-                activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, value);
-                activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
+                activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, value);
+                activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
 
                 // Reset spinner selection to allow sending the same character again
                 parent.setSelection(0);
@@ -307,7 +308,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         if (v.getId() == R.id.keyboard_button_send) {
             TextInputEditText editText = (TextInputEditText) getActivity().findViewById(R.id.keyboard_edit_text);
             if (editText != null && editText.getText() != null) {
-                activity.sendNotification(editText.getText().toString());
+                activity.sendKeyboardText(editText.getText().toString());
                 editText.setText(""); // Clear field after sending
             }
         }

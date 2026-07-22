@@ -111,6 +111,7 @@ enum ReportField {
     final static public int REP_MOUSE = 0x02;
     final static public int REP_KEYBOARD = 0x04;
     final static public int REP_BATTERY = 0x08;
+    final static public int REP_ABS_MOUSE = 0x20;
     public final int byte_size;
     public int byte_offset;
 
@@ -197,55 +198,8 @@ public class HidBleService extends Service {
         return (byte) batteryLevel;
     }
 
-    public void sendNotification(ReportField rf, int value) {
-        sendNotification(rf, value, SendTo.SEND_TO_ALL);
-    }
-
-    private void sendNotification(ReportField rf, int value, SendTo st) {
-        BluetoothGattCharacteristic report;
-        int arraySize;
-
-        if (devices.isEmpty() || gattServer == null) {
-            return;
-        }
-
-        if (rf.name().contains("KEYBOARD")) {
-            report = charReportKeyboard;
-            arraySize = 8; // standard 8-byte keyboard report
-        } else if (rf.name().startsWith("REPORT_FIELD_ABS_MOUSE")) {
-            report = charReportAbsMouse;
-            arraySize = 5; // buttons(1) + x(2) + y(2)
-        } else if (rf.name().contains("MOUSE")) {
-            report = charReportMouse;
-            arraySize = 5; // buttons + x + y + v-scroll + h-scroll
-        } else if (rf.name().contains("CONSUMER") || rf.name().contains("BUTTON")) {
-            report = charReportConsumer;
-            arraySize = 6; // consumer control (2) + launcher (2) + control (2)
-        } else {
-            return;
-        }
-
-        if (report == null) return;
-
-        byte[] array = new byte[arraySize];
-        Arrays.fill(array, (byte) 0);
-
-        if (rf == ReportField.REPORT_FIELD_KEYBOARD_ALL) {
-            array[0] = (byte) (value & 0xff);
-            array[2] = (byte) ((value >> 8) & 0xff);
-        } else {
-            for (int i = rf.byte_offset; i < rf.byte_offset + rf.byte_size; i++) {
-                if (i < array.length) {
-                    array[i] = (byte) (value & 0xff);
-                    value >>= 8;
-                }
-            }
-        }
-
-        int maskBit = 0;
-        if (report == charReportKeyboard) maskBit = ReportField.REP_KEYBOARD;
-        else if (report == charReportMouse) maskBit = ReportField.REP_MOUSE;
-        else if (report == charReportConsumer) maskBit = ReportField.REP_CONSUMER;
+    private void sendReport(BluetoothGattCharacteristic characteristic, byte[] value, int maskBit, boolean canMerge, SendTo st) {
+        if (devices.isEmpty() || gattServer == null || characteristic == null) return;
 
         synchronized (pendingNotifications) {
             List<BluetoothDevice> targetDevices = new ArrayList<>();
@@ -268,22 +222,15 @@ public class HidBleService extends Service {
                 if (mask == null || (mask & maskBit) == 0) {
                     continue;
                 }
-                
+
                 boolean merged = false;
-                if (rf == ReportField.REPORT_FIELD_MOUSE_XY) {
+                if (canMerge && characteristic == charReportMouse) {
                     // Try to merge with an existing pending mouse move for this device
                     for (int i = pendingNotifications.size() - 1; i >= 0; i--) {
                         NotificationData data = pendingNotifications.get(i);
-                        if (data.device.equals(device) && data.characteristic == report) {
-                            // Merge X and Y deltas.
-                            // X is at offset 1, Y is at offset 2 in the mouse report [buttons, x, y, scroll]
-                            int existingX = data.value[1];
-                            int existingY = data.value[2];
-                            int newX = array[1];
-                            int newY = array[2];
-
-                            data.value[1] = (byte) Math.max(-128, Math.min(127, existingX + newX));
-                            data.value[2] = (byte) Math.max(-128, Math.min(127, existingY + newY));
+                        if (data.device.equals(device) && data.characteristic == characteristic) {
+                            data.value[1] = (byte) Math.max(-128, Math.min(127, data.value[1] + value[1]));
+                            data.value[2] = (byte) Math.max(-128, Math.min(127, data.value[2] + value[2]));
                             merged = true;
                             break;
                         }
@@ -291,12 +238,63 @@ public class HidBleService extends Service {
                 }
 
                 if (!merged) {
-                    pendingNotifications.add(new NotificationData(device, report, array));
+                    pendingNotifications.add(new NotificationData(device, characteristic, value.clone()));
                 }
             }
         }
 
         processNotificationQueue();
+    }
+
+    public void sendKeyboardNotification(ReportField rf, int value, SendTo st) {
+        byte[] array = new byte[8];
+        if (rf == ReportField.REPORT_FIELD_KEYBOARD_ALL) {
+            array[0] = (byte) (value & 0xff);
+            array[2] = (byte) ((value >> 8) & 0xff);
+        } else {
+            int tempVal = value;
+            for (int i = rf.byte_offset; i < rf.byte_offset + rf.byte_size; i++) {
+                if (i < array.length) {
+                    array[i] = (byte) (tempVal & 0xff);
+                    tempVal >>= 8;
+                }
+            }
+        }
+        sendReport(charReportKeyboard, array, ReportField.REP_KEYBOARD, false, st);
+    }
+
+    public void sendMouseNotification(ReportField rf, int value, SendTo st) {
+        byte[] array = new byte[5];
+        int tempVal = value;
+        for (int i = rf.byte_offset; i < rf.byte_offset + rf.byte_size; i++) {
+            if (i < array.length) {
+                array[i] = (byte) (tempVal & 0xff);
+                tempVal >>= 8;
+            }
+        }
+        sendReport(charReportMouse, array, ReportField.REP_MOUSE, rf == ReportField.REPORT_FIELD_MOUSE_XY, st);
+    }
+
+    public void sendConsumerNotification(ReportField rf, int value, SendTo st) {
+        byte[] array = new byte[6];
+        int tempVal = value;
+        for (int i = rf.byte_offset; i < rf.byte_offset + rf.byte_size; i++) {
+            if (i < array.length) {
+                array[i] = (byte) (tempVal & 0xff);
+                tempVal >>= 8;
+            }
+        }
+        sendReport(charReportConsumer, array, ReportField.REP_CONSUMER, false, st);
+    }
+
+    public void sendAbsMouseNotification(int buttons, int x, int y) {
+        byte[] array = new byte[5];
+        array[0] = (byte) (buttons & 0xFF);
+        array[1] = (byte) (x & 0xFF);
+        array[2] = (byte) ((x >> 8) & 0xFF);
+        array[3] = (byte) (y & 0xFF);
+        array[4] = (byte) ((y >> 8) & 0xFF);
+        sendReport(charReportAbsMouse, array, ReportField.REP_ABS_MOUSE, false, SendTo.SEND_TO_ALL);
     }
 
     private synchronized void processNotificationQueue() {
@@ -332,16 +330,16 @@ public class HidBleService extends Service {
         }
     }
 
-    public void sendNotification(String s) {
-        sendNotification(s, SendTo.SEND_TO_ALL);
+    public void sendKeyboardText(String s) {
+        sendKeyboardText(s, SendTo.SEND_TO_ALL);
     }
 
-    private void sendNotification(String s, SendTo st) {
+    private void sendKeyboardText(String s, SendTo st) {
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
 
             for (int j = 0; j < KeyboardUsage.KEYBOARD_USAGES.length; j++) {
-                short val;
+                int val;
                 byte m;
                 byte k;
 
@@ -353,15 +351,15 @@ public class HidBleService extends Service {
                         m |= KeyboardUsage.META_LEFT_SHIFT;
                     }
 
-                    val = (short) (m + (k << 8));
-                    sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val, st);
-                    sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
+                    val = (m & 0xFF) | ((k & 0xFF) << 8);
+                    sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val, st);
+                    sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
                     break;
                 }
             }
         }
 
-        sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
+        sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
     }
 
     private void startAdvertising() {

@@ -160,7 +160,7 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
             return false;
         }
 
-        activity.sendNotification(ReportField.REPORT_FIELD_CONSUMER_CONTROL, toSend);
+        activity.sendConsumerNotification(ReportField.REPORT_FIELD_CONSUMER_CONTROL, toSend);
 
         return true;
     }
@@ -181,8 +181,8 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
                 }
 
                 value = ApplicationLaunchButtonsUsage.AL_USAGES[position - 1].usage;
-                activity.sendNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, value);
-                activity.sendNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, 0);
+                activity.sendConsumerNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, value);
+                activity.sendConsumerNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, 0);
             } else if (parentId == R.id.cons_spinner_ac) {
                 if (position == 0) {
                     /* Dummy item */
@@ -190,8 +190,8 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
                 }
 
                 value = ApplicationControlUsage.AC_USAGES[position - 1].usage;
-                activity.sendNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, value);
-                activity.sendNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, 0);
+                activity.sendConsumerNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, value);
+                activity.sendConsumerNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, 0);
             }
         }
     }
