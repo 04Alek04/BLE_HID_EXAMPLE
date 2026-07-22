@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/abs_mouse_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -7,39 +8,64 @@
     android:clickable="true"
     android:focusable="true">
 
-    <!-- Ten kontener wizualnie udaje tryb poziomy -->
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:rotation="90">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-        <TextView
+        <!--
+            To achieve a LANDSCAPE frame (wide) on a PORTRAIT phone:
+            Width must be the dominant dimension.
+            ConstraintDimensionRatio "W,16:9" with height="0dp" means:
+            Width / Height = 16 / 9  => Height = Width * 9 / 16.
+        -->
+        <View
+            android:id="@+id/abs_mouse_touch_surface"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="16dp"
+            android:background="@drawable/abs_mouse_area_border"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="W,16:9"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/absolute_mouse"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="36sp"
-            android:textStyle="bold" />
+            android:gravity="center"
+            android:orientation="vertical"
+            android:rotation="90"
+            app:layout_constraintBottom_toBottomOf="@id/abs_mouse_touch_surface"
+            app:layout_constraintLeft_toLeftOf="@id/abs_mouse_touch_surface"
+            app:layout_constraintRight_toRightOf="@id/abs_mouse_touch_surface"
+            app:layout_constraintTop_toTopOf="@id/abs_mouse_touch_surface">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="@string/triple_tap_to_exit"
-            android:textColor="@color/colorWhiteTrans88"
-            android:textSize="14sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/absolute_mouse"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/abs_mouse_debug"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="Rotate phone left"
-            android:textColor="@color/colorWhiteTrans44"
-            android:textSize="12sp" />
-    </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/triple_tap_to_exit"
+                android:textColor="@color/colorWhiteTrans88"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/abs_mouse_debug"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="X: 0 Y: 0"
+                android:textColor="@color/colorWhiteTrans44"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>
