@@ -318,6 +318,17 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                 }
                 return true;
             }
+        } else if (pager.getCurrentItem() == PagerAdapter.GAMEPAD) {
+            Fragment f = pagerAdapter.getRegisteredFragment(PagerAdapter.GAMEPAD);
+            if (f instanceof GamepadFragment) {
+                if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+                    if (event.getRepeatCount() == 0) ((GamepadFragment) f).onExternalButtonEvent(0x800, true);
+                    return true;
+                } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                    if (event.getRepeatCount() == 0) ((GamepadFragment) f).onExternalButtonEvent(0x1000, true);
+                    return true;
+                }
+            }
         } else if (pager.getCurrentItem() == PagerAdapter.MOUSE) {
             if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
                 sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_SCROLL, 1);
@@ -364,6 +375,17 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                 absMouseButtons &= ~0x02;
                 sendAbsMouseReport(absMouseButtons, lastAbsX, lastAbsY);
                 return true;
+            }
+        } else if (pager.getCurrentItem() == PagerAdapter.GAMEPAD) {
+            Fragment f = pagerAdapter.getRegisteredFragment(PagerAdapter.GAMEPAD);
+            if (f instanceof GamepadFragment) {
+                if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+                    ((GamepadFragment) f).onExternalButtonEvent(0x800, false);
+                    return true;
+                } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                    ((GamepadFragment) f).onExternalButtonEvent(0x1000, false);
+                    return true;
+                }
             }
         } else if (pager.getCurrentItem() == PagerAdapter.MOUSE) {
             if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {

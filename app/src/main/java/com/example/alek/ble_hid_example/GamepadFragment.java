@@ -2,6 +2,7 @@ package com.example.alek.ble_hid_example;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -131,12 +132,24 @@ public class GamepadFragment extends Fragment {
 
         // Analog Stick logic
         final View stick = view.findViewById(R.id.gamepad_left_analog_stick);
+        
+        final GestureDetector stickGestureDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onDoubleTap(@NonNull MotionEvent e) {
+                // Set Stick Click bit - it will stay active as long as the finger is down
+                buttonsState |= 0x400;
+                if (activity != null) activity.sendGamepadNotification(buttonsState, analogX, analogY);
+                return true;
+            }
+        });
 
         if (analogBase != null) {
             analogBase.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
                     if (activity == null) return false;
+                    
+                    stickGestureDetector.onTouchEvent(event);
                     
                     if (lockSwitch != null && lockSwitch.isChecked()) {
                         v.getParent().requestDisallowInterceptTouchEvent(true);
@@ -170,6 +183,10 @@ public class GamepadFragment extends Fragment {
 
                     } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
                         if (activity.pager != null && lockSwitch != null && lockSwitch.isChecked()) activity.pager.swipePossible(true);
+                        
+                        // Clear Stick Click when analog is released
+                        buttonsState &= ~0x400;
+
                         stick.setTranslationX(0);
                         stick.setTranslationY(0);
                         analogX = 0;
@@ -180,6 +197,18 @@ public class GamepadFragment extends Fragment {
                     return true;
                 }
             });
+        }
+    }
+
+    public void onExternalButtonEvent(int bit, boolean pressed) {
+        if (pressed) {
+            buttonsState |= bit;
+        } else {
+            buttonsState &= ~bit;
+        }
+        MainActivity activity = (MainActivity) getActivity();
+        if (activity != null) {
+            activity.sendGamepadNotification(buttonsState, analogX, analogY);
         }
     }
 
