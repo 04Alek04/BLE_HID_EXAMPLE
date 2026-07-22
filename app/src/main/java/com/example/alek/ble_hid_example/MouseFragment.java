@@ -67,7 +67,7 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                CustomViewPager pager = (CustomViewPager) getActivity().findViewById(R.id.viewPager);
+                CustomViewPager pager = getActivity().findViewById(R.id.viewPager);
                 int action = event.getActionMasked();
 
                 switch (action) {
@@ -117,7 +117,7 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                CustomViewPager pager = (CustomViewPager) getActivity().findViewById(R.id.viewPager);
+                CustomViewPager pager = getActivity().findViewById(R.id.viewPager);
 
                 int action = event.getActionMasked();
 

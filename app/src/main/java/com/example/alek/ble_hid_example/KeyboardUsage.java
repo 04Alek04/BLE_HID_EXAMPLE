@@ -113,34 +113,34 @@ final class KeyboardUsage {
             new KeyboardUsage(KeyEvent.KEYCODE_DPAD_DOWN, (byte) 0x51, '\0', "Down", true),
             new KeyboardUsage(KeyEvent.KEYCODE_DPAD_UP, (byte) 0x52, '\0', "Up", true),
             new KeyboardUsage("NumLock", (byte) 0x53, '\0', false), // Hidden
-            new KeyboardUsage("KPSlash", (byte) 0x54, '\0', "KP /", true),
-            new KeyboardUsage("KPAsterisk", (byte) 0x55, '\0', "KP *", true),
-            new KeyboardUsage("KPMinus", (byte) 0x56, '\0', "KP -", true),
-            new KeyboardUsage("KPPlus", (byte) 0x57, '\0', "KP +", true),
-            new KeyboardUsage("KPEnter", (byte) 0x58, '\0', "KP Enter", true),
-            new KeyboardUsage("KP1", (byte) 0x59, '\0', "KP 1", true),
-            new KeyboardUsage("KP2", (byte) 0x5a, '\0', "KP 2", true),
-            new KeyboardUsage("KP3", (byte) 0x5b, '\0', "KP 3", true),
-            new KeyboardUsage("KP4", (byte) 0x5c, '\0', "KP 4", true),
-            new KeyboardUsage("KP5", (byte) 0x5d, '\0', "KP 5", true),
-            new KeyboardUsage("KP6", (byte) 0x5e, '\0', "KP 6", true),
-            new KeyboardUsage("KP7", (byte) 0x5f, '\0', "KP 7", true),
-            new KeyboardUsage("KP8", (byte) 0x60, '\0', "KP 8", true),
-            new KeyboardUsage("KP9", (byte) 0x61, '\0', "KP 9", true),
-            new KeyboardUsage("KP0", (byte) 0x62, '\0', "KP 0", true),
-            new KeyboardUsage("KPDot", (byte) 0x63, '\0', "KP .", true),
-            new KeyboardUsage("F13", (byte) 0x68, '\0', "F13", true),
-            new KeyboardUsage("F14", (byte) 0x69, '\0', "F14", true),
-            new KeyboardUsage("F15", (byte) 0x6a, '\0', "F15", true),
-            new KeyboardUsage("F16", (byte) 0x6b, '\0', "F16", true),
-            new KeyboardUsage("F17", (byte) 0x6c, '\0', "F17", true),
-            new KeyboardUsage("F18", (byte) 0x6d, '\0', "F18", true),
-            new KeyboardUsage("F19", (byte) 0x6e, '\0', "F19", true),
-            new KeyboardUsage("F20", (byte) 0x6f, '\0', "F20", true),
-            new KeyboardUsage("F21", (byte) 0x70, '\0', "F21", true),
-            new KeyboardUsage("F22", (byte) 0x71, '\0', "F22", true),
-            new KeyboardUsage("F23", (byte) 0x72, '\0', "F23", true),
-            new KeyboardUsage("F24", (byte) 0x73, '\0', "F24", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x54, '\0', "KP /", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x55, '\0', "KP *", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x56, '\0', "KP -", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x57, '\0', "KP +", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x58, '\0', "KP Enter", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x59, '\0', "KP 1", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x5a, '\0', "KP 2", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x5b, '\0', "KP 3", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x5c, '\0', "KP 4", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x5d, '\0', "KP 5", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x5e, '\0', "KP 6", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x5f, '\0', "KP 7", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x60, '\0', "KP 8", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x61, '\0', "KP 9", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x62, '\0', "KP 0", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x63, '\0', "KP .", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x68, '\0', "F13", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x69, '\0', "F14", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x6a, '\0', "F15", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x6b, '\0', "F16", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x6c, '\0', "F17", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x6d, '\0', "F18", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x6e, '\0', "F19", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x6f, '\0', "F20", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x70, '\0', "F21", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x71, '\0', "F22", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x72, '\0', "F23", true),
+            new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x73, '\0', "F24", true),
 
             // Common + META keys (HIDDEN FROM SPINNER)
             new KeyboardUsage(KeyEvent.KEYCODE_UNKNOWN, (byte) 0x1e, '!', META_LEFT_SHIFT, false),
@@ -210,21 +210,8 @@ final class KeyboardUsage {
         description = d;
     }
 
-    private KeyboardUsage(String s, byte u, char c, String d, boolean nk) {
-        key_code = KeyEvent.KEYCODE_UNKNOWN;
-        usage = u;
-        character = c;
-        meta = (byte) 0;
-        non_keyboard = nk;
-        description = d;
-    }
-
     private KeyboardUsage(String d, byte u, char c, boolean nk) {
         this(d, u, c, (byte) 0, nk);
-    }
-
-    private KeyboardUsage(int kc, byte u, char c, byte m) {
-        this(kc, u, c, m, false);
     }
 
     private KeyboardUsage(int kc, byte u, char c) {

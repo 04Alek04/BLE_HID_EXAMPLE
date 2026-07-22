@@ -15,9 +15,9 @@
  */
 package com.example.alek.ble_hid_example;
 
-import android.graphics.Color;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -105,7 +105,7 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
         lal.add("SELECT VALUE");
         lal.addAll(ApplicationLaunchButtonsUsage.getUsageNames());
 
-        Spinner spinner_al = (Spinner) view.findViewById(R.id.cons_spinner_al);
+        Spinner spinner_al = view.findViewById(R.id.cons_spinner_al);
         spinner_al.setOnItemSelectedListener(this);
         ArrayAdapter<String> dataAdapter_al = new ArrayAdapter<>(getContext(),
                 R.layout.spinner_item, lal);
@@ -118,7 +118,7 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
         lac.add("SELECT VALUE");
         lac.addAll(ApplicationControlUsage.getUsageNames());
 
-        Spinner spinner_ac = (Spinner) view.findViewById(R.id.cons_spinner_ac);
+        Spinner spinner_ac = view.findViewById(R.id.cons_spinner_ac);
         spinner_ac.setOnItemSelectedListener(this);
         ArrayAdapter<String> dataAdapter_ac = new ArrayAdapter<>(getContext(),
                 R.layout.spinner_item, lac);
@@ -133,8 +133,8 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
 
         View v = getView();
         if (v != null) {
-            Spinner spinner_al = (Spinner) v.findViewById(R.id.cons_spinner_al);
-            Spinner spinner_ac = (Spinner) v.findViewById(R.id.cons_spinner_ac);
+            Spinner spinner_al = v.findViewById(R.id.cons_spinner_al);
+            Spinner spinner_ac = v.findViewById(R.id.cons_spinner_ac);
 
             if (spinner_al != null) spinner_al.setSelection(0);
             if (spinner_ac != null) spinner_ac.setSelection(0);
@@ -171,7 +171,7 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
         short value;
 
         if (parent.getChildAt(0) != null) {
-            ((TextView) parent.getChildAt(0)).setTextColor(Color.WHITE);
+            ((TextView) parent.getChildAt(0)).setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
 
             int parentId = parent.getId();
             if (parentId == R.id.cons_spinner_al) {
@@ -181,7 +181,7 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
                 }
 
                 value = ApplicationLaunchButtonsUsage.AL_USAGES[position - 1].usage;
-                activity.sendNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, (int) value);
+                activity.sendNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, value);
                 activity.sendNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, 0);
             } else if (parentId == R.id.cons_spinner_ac) {
                 if (position == 0) {
@@ -190,7 +190,7 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
                 }
 
                 value = ApplicationControlUsage.AC_USAGES[position - 1].usage;
-                activity.sendNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, (int) value);
+                activity.sendNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, value);
                 activity.sendNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, 0);
             }
         }
@@ -199,7 +199,7 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
         if (parent.getChildAt(0) != null) {
-            ((TextView) parent.getChildAt(0)).setTextColor(Color.WHITE);
+            ((TextView) parent.getChildAt(0)).setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
         }
     }
 }

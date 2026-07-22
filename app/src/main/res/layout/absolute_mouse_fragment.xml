@@ -3,7 +3,7 @@
     android:id="@+id/abs_mouse_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FF000000"
+    android:background="@color/colorBlack"
     android:clickable="true"
     android:focusable="true">
 
@@ -19,7 +19,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TABLET MODE"
+            android:text="@string/absolute_mouse"
             android:textColor="?attr/colorPrimary"
             android:textSize="36sp"
             android:textStyle="bold" />
@@ -28,8 +28,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="TRIPLE TAP TO EXIT"
-            android:textColor="#88FFFFFF"
+            android:text="@string/triple_tap_to_exit"
+            android:textColor="@color/colorWhiteTrans88"
             android:textSize="14sp" />
 
         <TextView
@@ -38,7 +38,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="Rotate phone left"
-            android:textColor="#44FFFFFF"
+            android:textColor="@color/colorWhiteTrans44"
             android:textSize="12sp" />
     </LinearLayout>
 

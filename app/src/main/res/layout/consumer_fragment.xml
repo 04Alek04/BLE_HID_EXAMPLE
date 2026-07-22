@@ -331,8 +331,8 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="20"
-        android:background="#888888"
+        android:background="@color/colorGrey"
         android:text="@string/device_not_connected"
         android:textAlignment="center"
-        android:textColor="#000000" />
+        android:textColor="@color/colorBlack" />
 </LinearLayout>

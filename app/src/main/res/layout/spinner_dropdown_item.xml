@@ -7,5 +7,5 @@
     android:ellipsize="marquee"
     android:paddingLeft="12dp"
     android:paddingRight="12dp"
-    android:textColor="#FFFFFF"
-    android:background="#333333" />
+    android:textColor="@color/colorWhite"
+    android:background="@color/colorDarkGrey" />

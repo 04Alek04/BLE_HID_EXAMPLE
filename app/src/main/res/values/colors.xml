@@ -6,4 +6,9 @@
     <color name="colorDark">#101010</color>
     <color name="colorGrey">#888888</color>
     <color name="colorWhite">#FFFFFF</color>
+    <color name="colorBleBlue">#2546E9</color>
+    <color name="colorBlack">#000000</color>
+    <color name="colorWhiteTrans88">#88FFFFFF</color>
+    <color name="colorWhiteTrans44">#44FFFFFF</color>
+    <color name="colorDarkGrey">#333333</color>
 </resources>

@@ -34,7 +34,6 @@ import android.content.Intent;
 import android.bluetooth.BluetoothProfile;
 import android.os.BatteryManager;
 import android.os.Binder;
-import android.os.Build;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.ParcelUuid;
@@ -173,7 +172,6 @@ public class HidBleService extends Service {
     private volatile boolean notificationPossible;
     private BluetoothGattServer gattServer;
     private BluetoothGattCharacteristic charReportKeyboard;
-    private BluetoothGattCharacteristic charReportKeyboardOutput;
     private BluetoothGattCharacteristic charReportMouse;
     private BluetoothGattCharacteristic charReportConsumer;
     private BluetoothGattCharacteristic charReportBattery;
@@ -356,7 +354,7 @@ public class HidBleService extends Service {
                     }
 
                     val = (short) (m + (k << 8));
-                    sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, (int) val, st);
+                    sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val, st);
                     sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
                     break;
                 }
@@ -666,7 +664,7 @@ public class HidBleService extends Service {
         charReportKeyboard.addDescriptor(new BluetoothGattDescriptor(UUID.fromString(DESC_CCC), PERM_READ_WRITE));
 
         // Report Keyboard Output characteristic (ID 1)
-        charReportKeyboardOutput = new BluetoothGattCharacteristic(
+        BluetoothGattCharacteristic charReportKeyboardOutput = new BluetoothGattCharacteristic(
                 UUID.fromString(CHAR_REPORT),
                 BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
                 PERM_READ_WRITE);

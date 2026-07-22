@@ -21,7 +21,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -37,7 +36,6 @@ import androidx.fragment.app.FragmentPagerAdapter;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.KeyEvent;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -58,7 +56,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         public void run() {
             final long refreshLayoutPeriodMs = 300;
             final List<BluetoothDevice> currentDevices = new ArrayList<>(devices);
-            final LinearLayout ll = (LinearLayout) findViewById(R.id.conf_linear_layout_devices);
+            final LinearLayout ll = findViewById(R.id.conf_linear_layout_devices);
             
             if (ll == null) {
                 lastLayout = null;
@@ -84,8 +82,8 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                         textView.setLayoutParams(new LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.WRAP_CONTENT));
-                        textView.setBackgroundColor(0xff2546e9);
-                        textView.setTextColor(Color.WHITE);
+                        textView.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.colorBleBlue));
+                        textView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorWhite));
                         String name = "Unknown Device";
                         try {
                             name = bd.getName() != null ? bd.getName() : "Unknown Device";
@@ -119,8 +117,8 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                     name = d.getName() != null ? d.getName() : "Unknown Device";
                 } catch (SecurityException ignored) {}
                 text = name + "  (" + d.getAddress() + ")";
-                text_color = Color.WHITE;
-                bg_color = 0xff2546e9;
+                text_color = ContextCompat.getColor(getApplicationContext(), R.color.colorWhite);
+                bg_color = ContextCompat.getColor(getApplicationContext(), R.color.colorBleBlue);
 
                 if (currentDevices.size() > 1) {
                     text += " [" + (i + 1) + " / " + currentDevices.size() + "]";
@@ -128,8 +126,8 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                 i = (i + 1) % currentDevices.size();
             } else {
                 text = "Device not connected ";
-                text_color = Color.BLACK;
-                bg_color = Color.GRAY;
+                text_color = ContextCompat.getColor(getApplicationContext(), R.color.colorBlack);
+                bg_color = ContextCompat.getColor(getApplicationContext(), R.color.colorGrey);
                 i = 0;
             }
 
@@ -168,7 +166,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                 };
 
                 for (int id : ids) {
-                    TextView textView = (TextView) findViewById(id);
+                    TextView textView = findViewById(id);
                     if (textView == null) continue;
                     textView.setBackgroundColor(bg_color);
                     textView.setTextColor(text_color);
@@ -257,7 +255,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         checkPermissions();
         
         pagerAdapter = new PagerAdapter(getSupportFragmentManager());
-        pager = (CustomViewPager) findViewById(R.id.viewPager);
+        pager = findViewById(R.id.viewPager);
         pager.setAdapter(pagerAdapter);
         pager.setCurrentItem(1);
         

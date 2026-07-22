@@ -18,7 +18,6 @@ package com.example.alek.ble_hid_example;
 import android.content.Context;
 import androidx.core.content.ContextCompat;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -66,7 +65,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         kbList.add("SELECT VALUE");
         kbList.addAll(KeyboardUsage.getUsageNames());
 
-        Spinner spinner_kb = (Spinner) getActivity().findViewById(R.id.keyboard_spinner_character);
+        Spinner spinner_kb = getActivity().findViewById(R.id.keyboard_spinner_character);
         spinner_kb.setOnItemSelectedListener(this);
         ArrayAdapter<String> dataAdapter_kb = new ArrayAdapter<>(getContext(),
                 R.layout.spinner_item, kbList);
@@ -74,8 +73,8 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         spinner_kb.setAdapter(dataAdapter_kb);
         spinner_kb.setSelection(0);
 
-        final TextInputEditText editText = (TextInputEditText) getActivity().findViewById(R.id.keyboard_edit_text);
-        final MaterialButton toggleBtn = (MaterialButton) getActivity().findViewById(R.id.keyboard_toggle_kb);
+        final TextInputEditText editText = getActivity().findViewById(R.id.keyboard_edit_text);
+        final MaterialButton toggleBtn = getActivity().findViewById(R.id.keyboard_toggle_kb);
 
         toggleBtn.addOnCheckedChangeListener(
                 new MaterialButton.OnCheckedChangeListener() {
@@ -184,7 +183,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
                 if (usage != 0) {
                     MainActivity activity = (MainActivity) getActivity();
                     short val = (short) (KeyboardUsage.META_LEFT_CONTROL | (usage << 8));
-                    activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, (int) val);
+                    activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val);
                     activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
                 }
             }
@@ -211,25 +210,22 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
             boolean isChecked = (status & 0x01) != 0;
             numLockBtn.setChecked(isChecked);
             numLockBtn.setBackgroundTintList(ColorStateList.valueOf(isChecked ? 
-                    ContextCompat.getColor(getContext(), R.color.colorPrimary) : Color.TRANSPARENT));
-            numLockBtn.setTextColor(isChecked ? Color.WHITE : 
-                    ContextCompat.getColor(getContext(), R.color.colorWhite));
+                    ContextCompat.getColor(getContext(), R.color.colorPrimary) : android.graphics.Color.TRANSPARENT));
+            numLockBtn.setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
         }
         if (capsLockBtn != null) {
             boolean isChecked = (status & 0x02) != 0;
             capsLockBtn.setChecked(isChecked);
             capsLockBtn.setBackgroundTintList(ColorStateList.valueOf(isChecked ? 
-                    ContextCompat.getColor(getContext(), R.color.colorPrimary) : Color.TRANSPARENT));
-            capsLockBtn.setTextColor(isChecked ? Color.WHITE : 
-                    ContextCompat.getColor(getContext(), R.color.colorWhite));
+                    ContextCompat.getColor(getContext(), R.color.colorPrimary) : android.graphics.Color.TRANSPARENT));
+            capsLockBtn.setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
         }
         if (scrollLockBtn != null) {
             boolean isChecked = (status & 0x04) != 0;
             scrollLockBtn.setChecked(isChecked);
             scrollLockBtn.setBackgroundTintList(ColorStateList.valueOf(isChecked ? 
-                    ContextCompat.getColor(getContext(), R.color.colorPrimary) : Color.TRANSPARENT));
-            scrollLockBtn.setTextColor(isChecked ? Color.WHITE : 
-                    ContextCompat.getColor(getContext(), R.color.colorWhite));
+                    ContextCompat.getColor(getContext(), R.color.colorPrimary) : android.graphics.Color.TRANSPARENT));
+            scrollLockBtn.setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
         }
     }
 
@@ -238,7 +234,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         super.onPause();
 
         ((MaterialButton) getActivity().findViewById(R.id.keyboard_toggle_kb)).setChecked(false);
-        Spinner spinner_kb = (Spinner) getActivity().findViewById(R.id.keyboard_spinner_character);
+        Spinner spinner_kb = getActivity().findViewById(R.id.keyboard_spinner_character);
         if (spinner_kb != null) {
             spinner_kb.setSelection(0);
         }
@@ -274,7 +270,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         short value = 0;
 
         if (parent.getChildAt(0) != null) {
-            ((TextView) parent.getChildAt(0)).setTextColor(Color.WHITE);
+            ((TextView) parent.getChildAt(0)).setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
 
             if (parent.getId() == R.id.keyboard_spinner_character) {
                 if (position == 0) {
@@ -290,7 +286,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
                         break;
                     }
                 }
-                activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, (int) value);
+                activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, value);
                 activity.sendNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
 
                 // Reset spinner selection to allow sending the same character again
