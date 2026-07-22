@@ -34,7 +34,7 @@
             android:id="@+id/gamepad_left_analog_base"
             android:layout_width="180dp"
             android:layout_height="180dp"
-            android:background="@drawable/abs_mouse_area_border"
+            android:background="@drawable/gamepad_analog_octagon"
             android:clickable="true"
             android:focusable="true"
             android:visibility="visible"
