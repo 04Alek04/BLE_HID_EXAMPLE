@@ -268,7 +268,10 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         pagerAdapter = new PagerAdapter(getSupportFragmentManager());
         pager = findViewById(R.id.viewPager);
         pager.setAdapter(pagerAdapter);
-        pager.setCurrentItem(1);
+        
+        // Restore last used fragment
+        int lastTab = getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getInt("last_tab", 1);
+        pager.setCurrentItem(lastTab);
         
         pager.addOnPageChangeListener(new androidx.viewpager.widget.ViewPager.OnPageChangeListener() {
             @Override
@@ -276,6 +279,9 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
 
             @Override
             public void onPageSelected(int position) {
+                // Save last used fragment
+                getSharedPreferences("app_prefs", Context.MODE_PRIVATE).edit().putInt("last_tab", position).apply();
+
                 if (position == PagerAdapter.ABS_MOUSE) {
                     pager.swipePossible(false);
                 } else {

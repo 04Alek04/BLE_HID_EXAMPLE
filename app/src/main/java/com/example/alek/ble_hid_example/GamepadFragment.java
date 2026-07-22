@@ -1,5 +1,6 @@
 package com.example.alek.ble_hid_example;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -34,9 +35,27 @@ public class GamepadFragment extends Fragment {
         final View analogBase = view.findViewById(R.id.gamepad_left_analog_base);
         final View dpadContainer = view.findViewById(R.id.gamepad_dpad_container);
 
+        // Restore Switch states
+        if (getContext() != null) {
+            boolean lockChecked = getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getBoolean("gamepad_lock", true);
+            boolean stickChecked = getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getBoolean("gamepad_stick", true);
+            if (lockSwitch != null) lockSwitch.setChecked(lockChecked);
+            if (stickSwitch != null) {
+                stickSwitch.setChecked(stickChecked);
+                // Initial UI state for STICK
+                if (analogBase != null) analogBase.setVisibility(stickChecked ? View.VISIBLE : View.GONE);
+                if (dpadContainer != null) dpadContainer.setVisibility(stickChecked ? View.GONE : View.VISIBLE);
+            }
+        }
+
         // STICK Switch logic
         if (stickSwitch != null) {
             stickSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                // Save state
+                if (getContext() != null) {
+                    getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE).edit().putBoolean("gamepad_stick", isChecked).apply();
+                }
+                
                 if (isChecked) {
                     if (analogBase != null) analogBase.setVisibility(View.VISIBLE);
                     if (dpadContainer != null) dpadContainer.setVisibility(View.GONE);
@@ -48,6 +67,15 @@ public class GamepadFragment extends Fragment {
                 analogX = 0;
                 analogY = 0;
                 if (activity != null) activity.sendGamepadNotification(buttonsState, analogX, analogY);
+            });
+        }
+
+        // LOCK Switch logic
+        if (lockSwitch != null) {
+            lockSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (getContext() != null) {
+                    getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE).edit().putBoolean("gamepad_lock", isChecked).apply();
+                }
             });
         }
 
