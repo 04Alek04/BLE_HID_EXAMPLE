@@ -1,6 +1,8 @@
 package com.example.alek.ble_hid_example;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -17,6 +19,8 @@ public class GamepadFragment extends Fragment {
     private int buttonsState = 0;
     private int analogX = 0;
     private int analogY = 0;
+    private View stickView;
+    private ColorStateList defaultStickTint;
 
     public static GamepadFragment newInstance() {
         return new GamepadFragment();
@@ -131,13 +135,18 @@ public class GamepadFragment extends Fragment {
         setupDpadButton(view, R.id.gamepad_d_right, 127, 0, activity);
 
         // Analog Stick logic
-        final View stick = view.findViewById(R.id.gamepad_left_analog_stick);
+        stickView = view.findViewById(R.id.gamepad_left_analog_stick);
+        if (stickView != null) {
+            defaultStickTint = stickView.getBackgroundTintList();
+        }
+        final View stick = stickView;
         
         final GestureDetector stickGestureDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onDoubleTap(@NonNull MotionEvent e) {
                 // Set Stick Click bit - it will stay active as long as the finger is down
                 buttonsState |= 0x400;
+                updateStickAlpha();
                 if (activity != null) activity.sendGamepadNotification(buttonsState, analogX, analogY);
                 return true;
             }
@@ -186,6 +195,7 @@ public class GamepadFragment extends Fragment {
                         
                         // Clear Stick Click when analog is released
                         buttonsState &= ~0x400;
+                        updateStickAlpha();
 
                         stick.setTranslationX(0);
                         stick.setTranslationY(0);
@@ -206,9 +216,34 @@ public class GamepadFragment extends Fragment {
         } else {
             buttonsState &= ~bit;
         }
+
+        if (bit == 0x400) {
+            updateStickAlpha();
+        }
+
         MainActivity activity = (MainActivity) getActivity();
         if (activity != null) {
             activity.sendGamepadNotification(buttonsState, analogX, analogY);
+        }
+    }
+
+    private void updateStickAlpha() {
+        if (stickView != null) {
+            // L3 (0x400)
+            boolean isPressed = (buttonsState & 0x400) != 0;
+            
+            if (isPressed) {
+                // When pressed: Intense white color
+                stickView.setBackgroundTintList(ColorStateList.valueOf(Color.WHITE));
+            } else {
+                // Resting state: Return to default color
+                stickView.setBackgroundTintList(defaultStickTint);
+            }
+            
+            // Size remains unchanged (1.0f)
+            stickView.setAlpha(1.0f);
+            stickView.setScaleX(1.0f);
+            stickView.setScaleY(1.0f);
         }
     }
 
