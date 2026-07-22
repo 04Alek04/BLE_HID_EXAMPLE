@@ -37,6 +37,7 @@
             android:background="@drawable/abs_mouse_area_border"
             android:clickable="true"
             android:focusable="true"
+            android:visibility="visible"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             android:layout_marginTop="16dp"
@@ -50,6 +51,26 @@
                 android:backgroundTint="?attr/colorPrimary"/>
         </FrameLayout>
 
+        <!-- Digital D-pad buttons (visible when STICK is disabled) -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/gamepad_dpad_container"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            android:layout_marginTop="16dp"
+            android:layout_marginLeft="10dp">
+
+            <Button android:id="@+id/gamepad_d_left" android:layout_width="65dp" android:layout_height="65dp" android:text="◀" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintTop_toTopOf="parent" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent"/>
+            <Button android:id="@+id/gamepad_d_up" android:layout_width="65dp" android:layout_height="65dp" android:text="▲" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"/>
+            <Button android:id="@+id/gamepad_d_right" android:layout_width="65dp" android:layout_height="65dp" android:text="▶" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent"/>
+            <Button android:id="@+id/gamepad_d_down" android:layout_width="65dp" android:layout_height="65dp" android:text="▼" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
         <!-- Landscape RIGHT side (Portrait BOTTOM) -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/gamepad_buttons_container"
@@ -61,10 +82,10 @@
             app:layout_constraintLeft_toLeftOf="parent"
             android:layout_marginBottom="8dp"
             android:layout_marginLeft="4dp">
-            <Button android:id="@+id/gamepad_btn_1" android:layout_width="80dp" android:layout_height="80dp" android:text="◀" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintTop_toTopOf="parent" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent"/>
-            <Button android:id="@+id/gamepad_btn_2" android:layout_width="80dp" android:layout_height="80dp" android:text="▲" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"/>
-            <Button android:id="@+id/gamepad_btn_3" android:layout_width="80dp" android:layout_height="80dp" android:text="►" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent"/>
-            <Button android:id="@+id/gamepad_btn_4" android:layout_width="80dp" android:layout_height="80dp" android:text="▼" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"/>
+            <Button android:id="@+id/gamepad_btn_1" android:layout_width="80dp" android:layout_height="80dp" android:text="BT_2" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintTop_toTopOf="parent" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent"/>
+            <Button android:id="@+id/gamepad_btn_2" android:layout_width="80dp" android:layout_height="80dp" android:text="BT_3" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"/>
+            <Button android:id="@+id/gamepad_btn_3" android:layout_width="80dp" android:layout_height="80dp" android:text="BT_1" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent"/>
+            <Button android:id="@+id/gamepad_btn_4" android:layout_width="80dp" android:layout_height="80dp" android:text="BT_0" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"/>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- MENU -->
@@ -107,9 +128,25 @@
             android:rotation="90"
             android:checked="true"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/gamepad_stick_switch"
+            app:layout_constraintRight_toRightOf="parent"
+            android:layout_marginRight="-15dp"
+            app:layout_constraintVertical_chainStyle="packed"/>
+
+        <!-- STICK SWITCH -->
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/gamepad_stick_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="STICK"
+            android:textColor="@color/colorWhite"
+            android:rotation="90"
+            android:checked="true"
+            app:layout_constraintTop_toBottomOf="@id/gamepad_lock_switch"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginRight="-15dp"/>
+            android:layout_marginRight="-15dp"
+            android:layout_marginTop="60dp"/>
 
         <!-- Row 1 (Outer/Top): LB and RB -->
         <TextView

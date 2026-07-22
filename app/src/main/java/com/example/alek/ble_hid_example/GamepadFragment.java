@@ -29,6 +29,27 @@ public class GamepadFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         final MainActivity activity = (MainActivity) getActivity();
         final SwitchMaterial lockSwitch = view.findViewById(R.id.gamepad_lock_switch);
+        final SwitchMaterial stickSwitch = view.findViewById(R.id.gamepad_stick_switch);
+        
+        final View analogBase = view.findViewById(R.id.gamepad_left_analog_base);
+        final View dpadContainer = view.findViewById(R.id.gamepad_dpad_container);
+
+        // STICK Switch logic
+        if (stickSwitch != null) {
+            stickSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    if (analogBase != null) analogBase.setVisibility(View.VISIBLE);
+                    if (dpadContainer != null) dpadContainer.setVisibility(View.GONE);
+                } else {
+                    if (analogBase != null) analogBase.setVisibility(View.GONE);
+                    if (dpadContainer != null) dpadContainer.setVisibility(View.VISIBLE);
+                }
+                // Reset axes on switch
+                analogX = 0;
+                analogY = 0;
+                if (activity != null) activity.sendGamepadNotification(buttonsState, analogX, analogY);
+            });
+        }
 
         // Global touch listener to block ViewPager swipe on background areas
         View.OnTouchListener swipeBlocker = new View.OnTouchListener() {
@@ -58,6 +79,8 @@ public class GamepadFragment extends Fragment {
         View buttonsContainer = view.findViewById(R.id.gamepad_buttons_container);
         if (buttonsContainer != null) buttonsContainer.setOnTouchListener(swipeBlocker);
 
+        if (dpadContainer != null) dpadContainer.setOnTouchListener(swipeBlocker);
+
         // Buttons Mapping (Standard HID Mapping - Adjusted for 90deg rotation)
         setupButton(view, R.id.gamepad_btn_4, 0x01, activity); // Visual Down (Portrait Left) -> A
         setupButton(view, R.id.gamepad_btn_3, 0x02, activity); // Visual Right (Portrait Bottom) -> B
@@ -72,12 +95,17 @@ public class GamepadFragment extends Fragment {
         setupButton(view, R.id.gamepad_btn_menu, 0x100, activity);
         setupButton(view, R.id.gamepad_btn_start, 0x200, activity);
 
+        // Digital D-pad Buttons logic
+        setupDpadButton(view, R.id.gamepad_d_up, 0, -127, activity);
+        setupDpadButton(view, R.id.gamepad_d_down, 0, 127, activity);
+        setupDpadButton(view, R.id.gamepad_d_left, -127, 0, activity);
+        setupDpadButton(view, R.id.gamepad_d_right, 127, 0, activity);
+
         // Analog Stick logic
         final View stick = view.findViewById(R.id.gamepad_left_analog_stick);
-        final View base = view.findViewById(R.id.gamepad_left_analog_base);
 
-        if (base != null) {
-            base.setOnTouchListener(new View.OnTouchListener() {
+        if (analogBase != null) {
+            analogBase.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
                     if (activity == null) return false;
@@ -149,6 +177,39 @@ public class GamepadFragment extends Fragment {
                 } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_CANCEL) {
                     if (activity.pager != null && lockSwitch != null && lockSwitch.isChecked()) activity.pager.swipePossible(true);
                     buttonsState &= ~bit;
+                    btn.setPressed(false);
+                }
+                
+                activity.sendGamepadNotification(buttonsState, analogX, analogY);
+                return true;
+            }
+        });
+    }
+
+    private void setupDpadButton(View root, int id, final int xVal, final int yVal, final MainActivity activity) {
+        final View btn = root.findViewById(id);
+        if (btn == null) return;
+        final SwitchMaterial lockSwitch = root.findViewById(R.id.gamepad_lock_switch);
+
+        btn.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (activity == null) return false;
+                
+                if (lockSwitch != null && lockSwitch.isChecked()) {
+                    v.getParent().requestDisallowInterceptTouchEvent(true);
+                    if (activity.pager != null) activity.pager.swipePossible(false);
+                }
+                
+                int action = event.getActionMasked();
+                if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
+                    if (xVal != 0) analogX = xVal;
+                    if (yVal != 0) analogY = yVal;
+                    btn.setPressed(true);
+                } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_CANCEL) {
+                    if (activity.pager != null && lockSwitch != null && lockSwitch.isChecked()) activity.pager.swipePossible(true);
+                    if (xVal != 0) analogX = 0;
+                    if (yVal != 0) analogY = 0;
                     btn.setPressed(false);
                 }
                 
