@@ -162,7 +162,8 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             public void run() {
                 final int[] ids = {
                         R.id.cons_text_device_info, R.id.mouse_text_device_info,
-                        R.id.keyboard_text_device_info, R.id.d_pad_text_device_info
+                        R.id.keyboard_text_device_info, R.id.gamepad_text_device_info,
+                        R.id.abs_mouse_text_device_info
                 };
 
                 for (int id : ids) {

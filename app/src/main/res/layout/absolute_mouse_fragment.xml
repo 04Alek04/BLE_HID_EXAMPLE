@@ -68,4 +68,17 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <TextView
+        android:id="@+id/abs_mouse_text_device_info"
+        android:layout_width="320dp"
+        android:layout_height="24dp"
+        android:layout_gravity="left|center_vertical"
+        android:background="?attr/colorSurface"
+        android:rotation="90"
+        android:text="@string/device_not_connected"
+        android:gravity="center"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="12sp"
+        android:layout_marginLeft="-148dp" />
+
 </FrameLayout>
