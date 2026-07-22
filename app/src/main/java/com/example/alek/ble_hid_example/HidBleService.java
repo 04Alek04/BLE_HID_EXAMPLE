@@ -105,13 +105,18 @@ enum ReportField {
     REPORT_FIELD_ABS_MOUSE_BUTTONS(0, 1),
     REPORT_FIELD_ABS_MOUSE_X(1, 2),
     REPORT_FIELD_ABS_MOUSE_Y(3, 2),
-    REPORT_FIELD_ABS_MOUSE_ALL(0, 5);
+    REPORT_FIELD_ABS_MOUSE_ALL(0, 5),
+    /* Gamepad (Report ID 5) */
+    REPORT_FIELD_GAMEPAD_BUTTONS(0, 2),
+    REPORT_FIELD_GAMEPAD_X(2, 1),
+    REPORT_FIELD_GAMEPAD_Y(3, 1);
 
     final static public int REP_CONSUMER = 0x01;
     final static public int REP_MOUSE = 0x02;
     final static public int REP_KEYBOARD = 0x04;
     final static public int REP_BATTERY = 0x08;
     final static public int REP_ABS_MOUSE = 0x20;
+    final static public int REP_GAMEPAD = 0x40;
     public final int byte_size;
     public int byte_offset;
 
@@ -142,6 +147,10 @@ enum ReportField {
         REPORT_FIELD_ABS_MOUSE_X.byte_offset = 1;
         REPORT_FIELD_ABS_MOUSE_Y.byte_offset = 3;
         REPORT_FIELD_ABS_MOUSE_ALL.byte_offset = 0;
+
+        REPORT_FIELD_GAMEPAD_BUTTONS.byte_offset = 0;
+        REPORT_FIELD_GAMEPAD_X.byte_offset = 2;
+        REPORT_FIELD_GAMEPAD_Y.byte_offset = 3;
     }
 }
 
@@ -177,6 +186,7 @@ public class HidBleService extends Service {
     private BluetoothGattCharacteristic charReportConsumer;
     private BluetoothGattCharacteristic charReportBattery;
     private BluetoothGattCharacteristic charReportAbsMouse;
+    private BluetoothGattCharacteristic charReportGamepad;
     private BluetoothGattCharacteristic charBatteryLevel;
     private String mOriginalName = null;
     private final AdvertiseCallback advertisingCallback = new AdvertiseCallback() {
@@ -295,6 +305,15 @@ public class HidBleService extends Service {
         array[3] = (byte) (y & 0xFF);
         array[4] = (byte) ((y >> 8) & 0xFF);
         sendReport(charReportAbsMouse, array, ReportField.REP_ABS_MOUSE, false, SendTo.SEND_TO_ALL);
+    }
+
+    public void sendGamepadNotification(int buttons, int x, int y) {
+        byte[] array = new byte[4];
+        array[0] = (byte) (buttons & 0xFF);
+        array[1] = (byte) ((buttons >> 8) & 0xFF);
+        array[2] = (byte) (x & 0xFF);
+        array[3] = (byte) (y & 0xFF);
+        sendReport(charReportGamepad, array, ReportField.REP_GAMEPAD, false, SendTo.SEND_TO_ALL);
     }
 
     private synchronized void processNotificationQueue() {
@@ -616,6 +635,31 @@ public class HidBleService extends Service {
                 (byte) 0x95, 0x02, /* Report Count (2) */
                 (byte) 0x81, (byte) 0x02, /* Input (Data, Var, Abs) - X, Y */
                 (byte) 0xC0, (byte) 0xC0, /* End Collections */
+
+                // --- GAMEPAD (ID 5) ---
+                (byte) 0x05, 0x01, /* Usage Page (Generic Desktop) */
+                (byte) 0x09, 0x05, /* Usage (Game Pad) */
+                (byte) 0xA1, 0x01, /* Collection (Application) */
+                (byte) 0x85, 0x05, /* Report ID (5) */
+                // 16 Buttons
+                (byte) 0x05, 0x09, /* Usage Page (Button) */
+                (byte) 0x19, 0x01, /* Usage Minimum (Button 1) */
+                (byte) 0x29, 0x10, /* Usage Maximum (Button 16) */
+                (byte) 0x15, 0x00, /* Logical Minimum (0) */
+                (byte) 0x25, 0x01, /* Logical Maximum (1) */
+                (byte) 0x95, 0x10, /* Report Count (16) */
+                (byte) 0x75, 0x01, /* Report Size (1) */
+                (byte) 0x81, 0x02, /* Input (Data, Var, Abs) */
+                // 2 Joysticks (X, Y)
+                (byte) 0x05, 0x01, /* Usage Page (Generic Desktop) */
+                (byte) 0x09, 0x30, /* Usage (X) */
+                (byte) 0x09, 0x31, /* Usage (Y) */
+                (byte) 0x15, (byte) 0x81, /* Logical Minimum (-127) */
+                (byte) 0x25, 0x7F, /* Logical Maximum (127) */
+                (byte) 0x75, 0x08, /* Report Size (8) */
+                (byte) 0x95, 0x02, /* Report Count (2) */
+                (byte) 0x81, 0x02, /* Input (Data, Var, Abs) */
+                (byte) 0xC0, /* End Collection */
         };
 
 
@@ -721,6 +765,17 @@ public class HidBleService extends Service {
         charReportAbsMouse.addDescriptor(descReportRefAbsMouse);
         charReportAbsMouse.addDescriptor(new BluetoothGattDescriptor(UUID.fromString(DESC_CCC), PERM_READ_WRITE));
         serviceHid.addCharacteristic(charReportAbsMouse);
+
+        // Report Gamepad characteristic (ID 5)
+        charReportGamepad = new BluetoothGattCharacteristic(
+                UUID.fromString(CHAR_REPORT),
+                BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, PERM_READ_WRITE);
+        charReportGamepad.setValue(new byte[4]); // 2 bytes buttons, 2 bytes axes
+        BluetoothGattDescriptor descReportRefGamepad = new BluetoothGattDescriptor(UUID.fromString(DESC_REPORT_REFERENCE), PERM_READ);
+        descReportRefGamepad.setValue(new byte[]{0x05, 0x01}); // ID=5, Type=Input
+        charReportGamepad.addDescriptor(descReportRefGamepad);
+        charReportGamepad.addDescriptor(new BluetoothGattDescriptor(UUID.fromString(DESC_CCC), PERM_READ_WRITE));
+        serviceHid.addCharacteristic(charReportGamepad);
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Device Information Service
         //                          -> PnP ID
@@ -1032,7 +1087,8 @@ public class HidBleService extends Service {
         if (isNotificationEnabled(device, charReportMouse)) mask |= ReportField.REP_MOUSE;
         if (isNotificationEnabled(device, charReportConsumer)) mask |= ReportField.REP_CONSUMER;
         if (isNotificationEnabled(device, charReportBattery)) mask |= ReportField.REP_BATTERY;
-        if (isNotificationEnabled(device, charReportAbsMouse)) mask |= 0x20; // New bit for Abs Mouse
+        if (isNotificationEnabled(device, charReportAbsMouse)) mask |= ReportField.REP_ABS_MOUSE;
+        if (isNotificationEnabled(device, charReportGamepad)) mask |= ReportField.REP_GAMEPAD;
         mNotificationMasks.put(device, mask);
         Log.i("BLE", "Updated notification mask for " + device.getAddress() + ": " + mask);
     }

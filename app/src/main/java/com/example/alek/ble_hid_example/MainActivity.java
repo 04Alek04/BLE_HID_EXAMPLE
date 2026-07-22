@@ -238,6 +238,10 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         if (mService != null) mService.sendConsumerNotification(rf, value, SendTo.SEND_TO_ALL);
     }
 
+    public void sendGamepadNotification(int buttons, int x, int y) {
+        if (mService != null) mService.sendGamepadNotification(buttons, x, y);
+    }
+
     public void sendKeyboardText(String s) {
         if (mService != null) {
             mService.sendKeyboardText(s);
@@ -442,7 +446,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         static final int CONSUMER = 1;
         static final int MOUSE = 2;
         static final int KEYBOARD = 3;
-        static final int D_PAD = 4;
+        static final int GAMEPAD = 4;
         static final int ABS_MOUSE = 5;
         
         private final SparseArray<Fragment> registeredFragments = new SparseArray<>();
@@ -458,7 +462,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                 case CONSUMER: return ConsumerFragment.newInstance();
                 case MOUSE: return MouseFragment.newInstance();
                 case KEYBOARD: return KeyboardFragment.newInstance();
-                case D_PAD: return DPadFragment.newInstance();
+                case GAMEPAD: return GamepadFragment.newInstance();
                 case ABS_MOUSE: return AbsoluteMouseFragment.newInstance();
                 default: return ConfigurationFragment.newInstance();
             }
