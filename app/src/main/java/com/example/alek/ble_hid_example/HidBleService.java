@@ -188,6 +188,7 @@ public class HidBleService extends Service {
     private BluetoothGattCharacteristic charReportAbsMouse;
     private BluetoothGattCharacteristic charReportGamepad;
     private BluetoothGattCharacteristic charBatteryLevel;
+    private byte lastKeyboardLedStatus = 0; // Bit 0: NumLock, Bit 1: CapsLock, Bit 2: ScrollLock
     private String mOriginalName = null;
     private final AdvertiseCallback advertisingCallback = new AdvertiseCallback() {
         @Override
@@ -354,23 +355,33 @@ public class HidBleService extends Service {
     }
 
     private void sendKeyboardText(String s, SendTo st) {
+        // Bit 1 of lastKeyboardLedStatus is Caps Lock
+        boolean hostCapsLock = (lastKeyboardLedStatus & 0x02) != 0;
+
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
 
             for (int j = 0; j < KeyboardUsage.KEYBOARD_USAGES.length; j++) {
-                int val;
-                byte m;
-                byte k;
-
                 if (Character.toLowerCase(c) == KeyboardUsage.KEYBOARD_USAGES[j].character) {
-                    m = KeyboardUsage.KEYBOARD_USAGES[j].meta;
-                    k = KeyboardUsage.KEYBOARD_USAGES[j].usage;
+                    byte m = KeyboardUsage.KEYBOARD_USAGES[j].meta;
+                    byte k = KeyboardUsage.KEYBOARD_USAGES[j].usage;
 
-                    if (Character.isLetter(c) && Character.isUpperCase(c)) {
-                        m |= KeyboardUsage.META_LEFT_SHIFT;
+                    // SMART SHIFT LOGIC (XOR) for Caps Lock
+                    if (Character.isLetter(c)) {
+                        boolean charIsUpper = Character.isUpperCase(c);
+                        // Shift is needed only if (IsUpper != HostCapsLock)
+                        boolean needsShift = charIsUpper ^ hostCapsLock;
+                        
+                        if (needsShift) m |= KeyboardUsage.META_LEFT_SHIFT;
+                        else m &= ~KeyboardUsage.META_LEFT_SHIFT;
+                    } else {
+                        // For non-letters, follow the mapping but preserve manual shift if needed
+                        if (Character.isUpperCase(c) || "!@#$%^&*()_+{}|:\"<>?".indexOf(c) != -1) {
+                            m |= KeyboardUsage.META_LEFT_SHIFT;
+                        }
                     }
 
-                    val = (m & 0xFF) | ((k & 0xFF) << 8);
+                    int val = (m & 0xFF) | ((k & 0xFF) << 8);
                     sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val, st);
                     sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
                     break;
@@ -972,6 +983,7 @@ public class HidBleService extends Service {
 
                 if (value != null && value.length > 0) {
                     if (reportId == 1) { // Keyboard LEDs
+                        lastKeyboardLedStatus = value[0];
                         if (mainActivity != null) mainActivity.onKeyboardLedStatusChanged(value[0]);
                     }
                 }
