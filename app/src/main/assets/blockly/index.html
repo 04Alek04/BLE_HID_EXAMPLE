@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>HID Blockly</title>
+    <script src="blockly_compressed.js"></script>
+    <script src="blocks_compressed.js"></script>
+    <script src="javascript_compressed.js"></script>
+    <script src="en.js"></script>
+    <style>
+        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: #eee; }
+
+        /* Kontener dla całego interfejsu */
+        #blocklyDiv { height: 100vh; width: 100vw; }
+
+        /* Stash Bar - umieszczony wewnątrz paska bocznego Blockly */
+        #stashBar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 85px;
+            background-color: #f8f8f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-top: 1px solid #ccc;
+            max-height: 40%;
+            overflow-y: auto;
+            padding: 5px 0;
+            z-index: 1000; /* Musi być na samym wierzchu */
+            pointer-events: auto; /* Pozwala na klikanie wewnątrz */
+        }
+
+        .stash-item {
+            width: 75px;
+            height: 30px;
+            min-height: 30px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* Stylizacja paska bocznego (Toolbox) */
+        .blocklyToolboxDiv {
+            width: 85px !important;
+            background-color: #f8f8f8 !important;
+            /* Rezerwacja miejsca na dole paska kategorii, żeby nie nachodziły na stash */
+            padding-bottom: 250px !important;
+        }
+        .blocklyTreeLabel { font-size: 11px !important; }
+        .blocklyTreeRow { padding-left: 2px !important; padding-right: 2px !important; }
+
+        /* Naprawa Flyoutu (wysuwanego menu z klockami) */
+        .blocklyFlyout {
+            z-index: 99 !important; /* Poniżej stasha, ale powyżej reszty */
+        }
+    </style>
+</head>
+<body>
+    <div id="blocklyDiv"></div>
+    <div id="stashBar">
+        <div style="font-size: 9px; margin-bottom: 5px; color: #999; font-weight: bold;">STASH</div>
+    </div>
+
+    <xml id="toolbox" style="display: none">
+        <category name="Keyboard" colour="160">
+            <block type="hid_keyboard_text"></block>
+            <block type="hid_keyboard_text_input"></block>
+            <block type="hid_keyboard_key"></block>
+        </category>
+        <category name="Mouse" colour="210">
+            <block type="hid_mouse_move">
+                <value name="X"><block type="math_number"><field name="NUM">0</field></block></value>
+                <value name="Y"><block type="math_number"><field name="NUM">0</field></block></value>
+            </block>
+            <block type="hid_mouse_click"></block>
+            <block type="hid_mouse_scroll">
+                <value name="STEPS"><block type="math_number"><field name="NUM">1</field></block></value>
+            </block>
+            <block type="hid_mouse_pan">
+                <value name="STEPS"><block type="math_number"><field name="NUM">1</field></block></value>
+            </block>
+            <block type="hid_abs_mouse_new">
+                <value name="X"><block type="math_number"><field name="NUM">16384</field></block></value>
+                <value name="Y"><block type="math_number"><field name="NUM">16384</field></block></value>
+            </block>
+        </category>
+        <category name="Gamepad" colour="290">
+             <block type="hid_gamepad_stick">
+                <value name="X"><block type="math_number"><field name="NUM">0</field></block></value>
+                <value name="Y"><block type="math_number"><field name="NUM">0</field></block></value>
+             </block>
+             <block type="hid_gamepad_button"></block>
+        </category>
+        <category name="Media" colour="260">
+            <block type="hid_media_playback"></block>
+            <block type="hid_media_volume"></block>
+            <block type="hid_media_brightness"></block>
+            <block type="hid_app_launch"></block>
+            <block type="hid_app_control"></block>
+            <block type="hid_system_control"></block>
+            <block type="hid_misc_control"></block>
+        </category>
+        <category name="Status" colour="20">
+             <block type="hid_get_lock_state"></block>
+        </category>
+        <sep></sep>
+        <category name="Logic" colour="210">
+            <block type="controls_if"></block>
+            <block type="logic_compare"></block>
+            <block type="logic_operation"></block>
+            <block type="logic_negate"></block>
+            <block type="logic_boolean"></block>
+        </category>
+        <category name="Loops" colour="120">
+            <block type="controls_repeat_ext">
+                <value name="TIMES"><block type="math_number"><field name="NUM">10</field></block></value>
+            </block>
+            <block type="controls_whileUntil"></block>
+        </category>
+        <category name="Math" colour="230">
+            <block type="math_number"></block>
+            <block type="math_arithmetic"></block>
+        </category>
+        <category name="Text" colour="160">
+            <block type="text"></block>
+            <block type="text_join"></block>
+        </category>
+        <category name="Time" colour="230">
+            <block type="hid_delay"></block>
+        </category>
+        <sep></sep>
+        <category name="Recent" colour="0" custom="RECENT_BLOCKS"></category>
+    </xml>
+
+    <script>
+        var executionCancelled = false;
+
+        // --- BLOCK DEFINITIONS ---
+
+        Blockly.Blocks['hid_keyboard_text'] = {
+          init: function() {
+            this.appendDummyInput().appendField("Type text (direct)")
+                .appendField(new Blockly.FieldTextInput("Hello"), "TEXT");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(160);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_keyboard_text'] = function(block) {
+          var text = JSON.stringify(block.getFieldValue('TEXT'));
+          return 'if(executionCancelled) return; AndroidHID.typeText(' + text + ');\n';
+        };
+
+        Blockly.Blocks['hid_keyboard_text_input'] = {
+          init: function() {
+            this.appendValueInput("TEXT").setCheck("String").appendField("Type text (input)");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(160);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_keyboard_text_input'] = function(block) {
+          var text = javascript.javascriptGenerator.valueToCode(block, 'TEXT', javascript.javascriptGenerator.ORDER_ATOMIC) || "''";
+          return 'if(executionCancelled) return; AndroidHID.typeText(' + text + ');\n';
+        };
+
+        Blockly.Blocks['hid_keyboard_key'] = {
+          init: function() {
+            this.appendDummyInput().appendField("Key")
+                .appendField(new Blockly.FieldDropdown([
+                    ["ENTER","40"], ["TAB","43"], ["ESC","41"], ["SPACE","44"],
+                    ["BACKSPACE","42"], ["DEL","76"], ["HOME","74"], ["END","77"],
+                    ["UP","82"], ["DOWN","81"], ["LEFT","80"], ["RIGHT","79"],
+                    ["ż (PL)","29"]
+                ]), "KEY")
+                .appendField(new Blockly.FieldDropdown([
+                    ["Click","CLICK"], ["Press","DOWN"], ["Release","UP"]
+                ]), "ACTION");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(160);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_keyboard_key'] = function(block) {
+          var key = block.getFieldValue('KEY');
+          var action = block.getFieldValue('ACTION');
+          var modifiers = (key == "29") ? 64 : 0;
+          var actualKey = (key == "29") ? 29 : key;
+
+          var code = 'if(executionCancelled) return;\n';
+          if (action == 'CLICK' || action == 'DOWN') {
+              code += 'AndroidHID.sendKeyboardKey(' + actualKey + ',' + modifiers + ');\n';
+          }
+          if (action == 'CLICK') {
+              code += 'await new Promise(r => setTimeout(r, 50));\n';
+          }
+          if (action == 'CLICK' || action == 'UP') {
+              code += 'AndroidHID.sendKeyboardKey(0, 0);\n';
+          }
+          return code;
+        };
+
+        Blockly.Blocks['hid_mouse_move'] = {
+          init: function() {
+            this.appendDummyInput().appendField("Mouse Move (Rel)");
+            this.appendValueInput("X").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("X (-127 to 127):");
+            this.appendValueInput("Y").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("Y (-127 to 127):");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(210);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_mouse_move'] = function(block) {
+          var x = javascript.javascriptGenerator.valueToCode(block, 'X', javascript.javascriptGenerator.ORDER_ATOMIC) || '0';
+          var y = javascript.javascriptGenerator.valueToCode(block, 'Y', javascript.javascriptGenerator.ORDER_ATOMIC) || '0';
+          return 'if(executionCancelled) return; AndroidHID.moveMouse(Math.max(-127, Math.min(127,' + x + ')), Math.max(-127, Math.min(127,' + y + ')));\n';
+        };
+
+        Blockly.Blocks['hid_mouse_click'] = {
+          init: function() {
+            this.appendDummyInput().appendField("Mouse")
+                .appendField(new Blockly.FieldDropdown([["Left","1"], ["Right","2"]]), "BTN")
+                .appendField(new Blockly.FieldDropdown([
+                    ["Click","CLICK"], ["Press","DOWN"], ["Release","UP"]
+                ]), "ACTION");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(210);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_mouse_click'] = function(block) {
+          var btn = block.getFieldValue('BTN');
+          var action = block.getFieldValue('ACTION');
+          var code = 'if(executionCancelled) return;\n';
+          if (action == 'CLICK' || action == 'DOWN') {
+              code += 'AndroidHID.mouseClick(' + btn + ');\n';
+          }
+          if (action == 'CLICK') {
+              code += 'await new Promise(r => setTimeout(r, 50));\n';
+              code += 'AndroidHID.mouseClick(0);\n';
+          }
+          if (action == 'UP') {
+              code += 'AndroidHID.mouseClick(0);\n';
+          }
+          return code;
+        };
+
+        Blockly.Blocks['hid_mouse_scroll'] = {
+          init: function() {
+            this.appendDummyInput().appendField("Mouse Scroll");
+            this.appendValueInput("STEPS").setCheck("Number").appendField("Steps (-127 to 127):");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(210);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_mouse_scroll'] = function(block) {
+          var steps = javascript.javascriptGenerator.valueToCode(block, 'STEPS', javascript.javascriptGenerator.ORDER_ATOMIC) || '1';
+          return 'if(executionCancelled) return; AndroidHID.scrollMouse(Math.max(-127, Math.min(127,' + steps + ')));\n';
+        };
+
+        Blockly.Blocks['hid_mouse_pan'] = {
+          init: function() {
+            this.appendDummyInput().appendField("Mouse Pan (Horiz)");
+            this.appendValueInput("STEPS").setCheck("Number").appendField("Steps (-127 to 127):");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(210);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_mouse_pan'] = function(block) {
+          var steps = javascript.javascriptGenerator.valueToCode(block, 'STEPS', javascript.javascriptGenerator.ORDER_ATOMIC) || '1';
+          return 'if(executionCancelled) return; AndroidHID.panMouse(Math.max(-127, Math.min(127,' + steps + ')));\n';
+        };
+
+        Blockly.Blocks['hid_abs_mouse_new'] = {
+          init: function() {
+            this.appendDummyInput().appendField("Absolute Mouse");
+            this.appendValueInput("X").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("Target X (0-32767):");
+            this.appendValueInput("Y").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("Target Y (0-32767):");
+            this.appendDummyInput().setAlign(Blockly.ALIGN_RIGHT).appendField("Is Touching?").appendField(new Blockly.FieldCheckbox("TRUE"), "TOUCH");
+            this.setInputsInline(false);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(210);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_abs_mouse_new'] = function(block) {
+          var x = javascript.javascriptGenerator.valueToCode(block, 'X', javascript.javascriptGenerator.ORDER_ATOMIC) || '16384';
+          var y = javascript.javascriptGenerator.valueToCode(block, 'Y', javascript.javascriptGenerator.ORDER_ATOMIC) || '16384';
+          var touch = block.getFieldValue('TOUCH') == 'TRUE';
+          return 'if(executionCancelled) return; AndroidHID.sendAbsoluteMouse(' + touch + ', Math.max(0, Math.min(32767,' + x + ')), Math.max(0, Math.min(32767,' + y + ')));\n';
+        };
+
+        Blockly.Blocks['hid_gamepad_stick'] = {
+          init: function() {
+            this.appendDummyInput().appendField("Gamepad Stick");
+            this.appendValueInput("X").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("X (-127 to 127):");
+            this.appendValueInput("Y").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("Y (-127 to 127):");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(290);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_gamepad_stick'] = function(block) {
+          var x = javascript.javascriptGenerator.valueToCode(block, 'X', javascript.javascriptGenerator.ORDER_ATOMIC) || '0';
+          var y = javascript.javascriptGenerator.valueToCode(block, 'Y', javascript.javascriptGenerator.ORDER_ATOMIC) || '0';
+          return 'if(executionCancelled) return; AndroidHID.sendGamepad(0, Math.max(-127, Math.min(127,' + x + ')), Math.max(-127, Math.min(127,' + y + ')));\n';
+        };
+
+        Blockly.Blocks['hid_gamepad_button'] = {
+          init: function() {
+            this.appendDummyInput().appendField("Gamepad")
+                .appendField(new Blockly.FieldDropdown([
+                    ["Button 1","1"], ["Button 2","2"], ["Button 3","3"], ["Button 4","4"],
+                    ["Button 5","5"], ["Button 6","6"], ["Button 7","7"], ["Button 8","8"]
+                ]), "BTN")
+                .appendField(new Blockly.FieldDropdown([
+                    ["Click","CLICK"], ["Press","DOWN"], ["Release","UP"]
+                ]), "ACTION");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(290);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_gamepad_button'] = function(block) {
+          var btn = block.getFieldValue('BTN');
+          var action = block.getFieldValue('ACTION');
+          var code = 'if(executionCancelled) return;\n';
+          if (action == 'CLICK' || action == 'DOWN') {
+              code += 'AndroidHID.sendGamepadButton(' + btn + ', true);\n';
+          }
+          if (action == 'CLICK') {
+              code += 'await new Promise(r => setTimeout(r, 50));\n';
+              code += 'AndroidHID.sendGamepadButton(' + btn + ', false);\n';
+          }
+          if (action == 'UP') {
+              code += 'AndroidHID.sendGamepadButton(' + btn + ', false);\n';
+          }
+          return code;
+        };
+
+        Blockly.Blocks['hid_media_playback'] = {
+          init: function() {
+             this.appendDummyInput().appendField("Playback")
+                .appendField(new Blockly.FieldDropdown([
+                    ["Play/Pause","205"], ["Stop","183"], ["Next","181"], ["Prev","182"]
+                ]), "KEY");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(260);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_media_playback'] = function(block) {
+          return 'if(executionCancelled) return; AndroidHID.sendConsumerKey(' + block.getFieldValue('KEY') + ');\n';
+        };
+
+        Blockly.Blocks['hid_media_volume'] = {
+          init: function() {
+             this.appendDummyInput().appendField("Volume")
+                .appendField(new Blockly.FieldDropdown([
+                    ["Up","233"], ["Down","234"], ["Mute","226"]
+                ]), "KEY");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(260);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_media_volume'] = function(block) {
+          return 'if(executionCancelled) return; AndroidHID.sendConsumerKey(' + block.getFieldValue('KEY') + ');\n';
+        };
+
+        Blockly.Blocks['hid_media_brightness'] = {
+          init: function() {
+             this.appendDummyInput().appendField("Brightness")
+                .appendField(new Blockly.FieldDropdown([
+                    ["Increase","111"], ["Decrease","112"]
+                ]), "KEY");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(260);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_media_brightness'] = function(block) {
+          return 'if(executionCancelled) return; AndroidHID.sendConsumerKey(' + block.getFieldValue('KEY') + ');\n';
+        };
+
+        Blockly.Blocks['hid_app_launch'] = {
+          init: function() {
+             this.appendDummyInput().appendField("Launch")
+                .appendField(new Blockly.FieldDropdown([
+                    ["Browser","386"], ["Calculator","443"], ["Email","394"], ["Media Player","403"]
+                ]), "KEY");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(260);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_app_launch'] = function(block) {
+          return 'if(executionCancelled) return; AndroidHID.sendConsumerKey(' + block.getFieldValue('KEY') + ');\n';
+        };
+
+        Blockly.Blocks['hid_app_control'] = {
+          init: function() {
+             this.appendDummyInput().appendField("App Control")
+                .appendField(new Blockly.FieldDropdown([
+                    ["AC Home","547"], ["AC Search","545"], ["AC Back","548"], ["AC Forward","549"], ["AC Refresh","551"]
+                ]), "KEY");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(260);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_app_control'] = function(block) {
+          return 'if(executionCancelled) return; AndroidHID.sendConsumerKey(' + block.getFieldValue('KEY') + ');\n';
+        };
+
+        Blockly.Blocks['hid_system_control'] = {
+          init: function() {
+             this.appendDummyInput().appendField("System")
+                .appendField(new Blockly.FieldDropdown([
+                    ["Power Down","129"], ["Sleep","130"], ["Hibernate","168"], ["Warm Restart","143"]
+                ]), "KEY");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(260);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_system_control'] = function(block) {
+          return 'if(executionCancelled) return; AndroidHID.sendConsumerKey(' + block.getFieldValue('KEY') + ');\n';
+        };
+
+        Blockly.Blocks['hid_misc_control'] = {
+          init: function() {
+             this.appendDummyInput().appendField("Misc")
+                .appendField(new Blockly.FieldDropdown([
+                    ["Snapshot","101"], ["Eject","184"]
+                ]), "KEY");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(260);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_misc_control'] = function(block) {
+          return 'if(executionCancelled) return; AndroidHID.sendConsumerKey(' + block.getFieldValue('KEY') + ');\n';
+        };
+
+        Blockly.Blocks['hid_get_lock_state'] = {
+          init: function() {
+            this.appendDummyInput().appendField("Is").appendField(new Blockly.FieldDropdown([["Caps","CAPS"], ["Num","NUM"], ["Scroll","SCROLL"]]), "LOCK").appendField("ON?");
+            this.setOutput(true, "Boolean"); this.setColour(20);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_get_lock_state'] = function(block) {
+          var lock = block.getFieldValue('LOCK');
+          var func = 'AndroidHID.getCapsLockState()';
+          if (lock == 'NUM') func = 'AndroidHID.getNumLockState()';
+          if (lock == 'SCROLL') func = 'AndroidHID.getScrollLockState()';
+          return [func, javascript.javascriptGenerator.ORDER_FUNCTION_CALL];
+        };
+
+        Blockly.Blocks['hid_delay'] = {
+          init: function() {
+            this.appendDummyInput().appendField("Wait").appendField(new Blockly.FieldNumber(500), "MS").appendField("ms");
+            this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+            this.setColour(230);
+          }
+        };
+        javascript.javascriptGenerator.forBlock['hid_delay'] = function(block) {
+          return 'if(executionCancelled) return; await new Promise(r => setTimeout(r, ' + block.getFieldValue('MS') + '));\n';
+        };
+
+        // --- INITIALIZATION ---
+        var workspace = Blockly.inject('blocklyDiv', {
+            toolbox: document.getElementById('toolbox'),
+            scrollbars: true, trashcan: true,
+            grid: {spacing: 20, length: 3, colour: '#ccc', snap: true}
+        });
+
+        // --- DYNAMIC RECENT BLOCKS ---
+        var recentBlockTypes = [];
+        var MAX_RECENT = 8;
+        var blockColors = {
+            'hid_keyboard_text': '#a060c0', 'hid_keyboard_text_input': '#a060c0', 'hid_keyboard_key': '#a060c0',
+            'hid_mouse_move': '#5b67a5', 'hid_mouse_click': '#5b67a5',
+            'hid_mouse_scroll': '#5b67a5', 'hid_mouse_pan': '#5b67a5',
+            'hid_abs_mouse_new': '#5b67a5',
+            'hid_gamepad_stick': '#a55b80', 'hid_gamepad_button': '#a55b80',
+            'hid_media_playback': '#a5a55b', 'hid_media_volume': '#a5a55b',
+            'hid_delay': '#a55b5b',
+            // Kolory dla standardowych klocków
+            'controls_if': '#5b80a5', 'controls_repeat_ext': '#5ba55b',
+            'logic_compare': '#5b80a5', 'math_number': '#5b67a5', 'text': '#5ba58c'
+        };
+
+        // XML definitions for stashed blocks to include default values
+        var blockPresets = {
+            'hid_mouse_move': '<block type="hid_mouse_move"><value name="X"><block type="math_number"><field name="NUM">0</field></block></value><value name="Y"><block type="math_number"><field name="NUM">0</field></block></value></block>',
+            'hid_mouse_scroll': '<block type="hid_mouse_scroll"><value name="STEPS"><block type="math_number"><field name="NUM">1</field></block></value></block>',
+            'hid_mouse_pan': '<block type="hid_mouse_pan"><value name="STEPS"><block type="math_number"><field name="NUM">1</field></block></value></block>',
+            'hid_abs_mouse_new': '<block type="hid_abs_mouse_new"><value name="X"><block type="math_number"><field name="NUM">16384</field></block></value><value name="Y"><block type="math_number"><field name="NUM">16384</field></block></value></block>',
+            'hid_gamepad_stick': '<block type="hid_gamepad_stick"><value name="X"><block type="math_number"><field name="NUM">0</field></block></value><value name="Y"><block type="math_number"><field name="NUM">0</field></block></value></block>',
+            'hid_delay': '<block type="hid_delay"><field name="MS">500</field></block>',
+            'hid_keyboard_text': '<block type="hid_keyboard_text"><field name="TEXT">Hello</field></block>'
+        };
+
+        function updateStashUI() {
+            var container = document.getElementById('stashBar');
+            while (container.childNodes.length > 1) { container.removeChild(container.lastChild); }
+
+            recentBlockTypes.forEach(function(type) {
+                var div = document.createElement('div');
+                div.className = 'stash-item';
+                div.style.backgroundColor = blockColors[type] || '#666';
+                var label = type.replace('hid_', '').replace('_new', '').substring(0, 4).toUpperCase();
+                div.innerText = label;
+
+                div.onclick = function() {
+                    var xmlText = blockPresets[type] || ('<block type="' + type + '"></block>');
+                    var xml = Blockly.utils.xml.textToDom(xmlText);
+                    var newBlock = Blockly.Xml.domToBlock(xml, workspace);
+
+                    // Place in the middle of the view
+                    var metrics = workspace.getMetrics();
+                    newBlock.moveBy(metrics.viewLeft + 80, metrics.viewTop + 50);
+                };
+                container.appendChild(div);
+            });
+        }
+
+        workspace.addChangeListener(function(event) {
+            if (event.type === Blockly.Events.BLOCK_CREATE) {
+                var block = workspace.getBlockById(event.blockId);
+                // Filtering only HID blocks
+                if (block && block.type.startsWith('hid_')) {
+                    var type = block.type;
+                    var index = recentBlockTypes.indexOf(type);
+                    if (index !== -1) recentBlockTypes.splice(index, 1);
+                    recentBlockTypes.unshift(type);
+                    if (recentBlockTypes.length > MAX_RECENT) recentBlockTypes.pop();
+                    updateStashUI();
+                }
+            }
+        });
+
+        // Improved runCode with built-in completion
+        async function runCode() {
+            executionCancelled = false;
+            javascript.javascriptGenerator.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
+
+            // Generate code and add finishing call at the end of the command stream
+            var generatedCode = javascript.javascriptGenerator.workspaceToCode(workspace);
+            var finalCode = "(async () => {\n" +
+                            generatedCode +
+                            "\n highlightBlock(null); AndroidHID.onScriptFinished(); \n})();";
+
+            try {
+                eval(finalCode);
+            } catch (e) {
+                AndroidHID.log("Execution error: " + e);
+                AndroidHID.onScriptFinished();
+            }
+        }
+
+        function stopCode() {
+            executionCancelled = true;
+            highlightBlock(null);
+            AndroidHID.releaseAll();
+            AndroidHID.onScriptFinished();
+        }
+
+        function highlightBlock(id) {
+            workspace.highlightBlock(id);
+        }
+
+        function saveToAndroid() {
+            try {
+                var xml = Blockly.Xml.workspaceToDom(workspace);
+                var xmlText = Blockly.Xml.domToText(xml);
+                AndroidHID.log("JS: Starting save, XML length: " + xmlText.length);
+                var encoded = btoa(unescape(encodeURIComponent(xmlText)));
+                AndroidHID.saveBlocks(encoded);
+            } catch (e) {
+                AndroidHID.log("JS Save Error: " + e);
+            }
+        }
+
+        function loadBlocksFromXml(xmlText) {
+            try {
+                workspace.clear();
+                // FIX: Force file refresh (clear cache)
+                // Blockly v10+ fix where textToDom might be moved or behaving differently
+                var xml = Blockly.utils.xml.textToDom(xmlText);
+                Blockly.Xml.domToWorkspace(xml, workspace);
+                AndroidHID.log("JS: Blocks loaded successfully");
+            } catch (e) {
+                AndroidHID.log("JS Load Error: " + e);
+            }
+        }
+
+        function loadBlocksFromBase64(base64) {
+            var xmlText = atob(base64);
+            loadBlocksFromXml(xmlText);
+        }
+
+        function clearWorkspace() {
+            workspace.clear();
+        }
+    </script>
+</body>
+</html>

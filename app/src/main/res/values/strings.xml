@@ -25,4 +25,14 @@
     <string name="horizontal_scroll">Horizontal Scroll</string>
     <string name="absolute_mouse">Absolute Mouse</string>
     <string name="triple_tap_to_exit">Triple tap to exit</string>
+
+    <!-- Blockly Strings -->
+    <string name="blockly_run">RUN</string>
+    <string name="blockly_stop">STOP</string>
+    <string name="blockly_background_on">BG: ON</string>
+    <string name="blockly_background_off">BG: OFF</string>
+    <string name="blockly_save">Save</string>
+    <string name="blockly_load">Load</string>
+    <string name="blockly_macro_saved">Macro saved</string>
+    <string name="blockly_no_macro">No saved macro found</string>
 </resources>

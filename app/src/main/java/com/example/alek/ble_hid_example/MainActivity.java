@@ -39,6 +39,7 @@ import android.view.KeyEvent;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -181,6 +182,45 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         devices = new ArrayList<>(dev_array);
     }
 
+    public void saveBlocklyToFile(String encodedXml) {
+        try {
+            // Decode from Base64
+            byte[] data = android.util.Base64.decode(encodedXml, android.util.Base64.DEFAULT);
+            String xml = new String(data, "UTF-8");
+
+            java.io.File file = new java.io.File(getExternalFilesDir(null), "macro_autosave.xml");
+            java.io.FileWriter writer = new java.io.FileWriter(file);
+            writer.write(xml);
+            writer.close();
+            Toast.makeText(this, R.string.blockly_macro_saved, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e("Blockly", "Save failed", e);
+        }
+    }
+
+    public void openFilePickerForBlockly() {
+        try {
+            java.io.File file = new java.io.File(getExternalFilesDir(null), "macro_autosave.xml");
+            if (file.exists()) {
+                StringBuilder text = new StringBuilder();
+                java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(file));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    text.append(line);
+                }
+                br.close();
+                Fragment f = pagerAdapter.getRegisteredFragment(pager.getCurrentItem());
+                if (f instanceof BlocklyFragment) {
+                    ((BlocklyFragment) f).loadBlocksToWorkspace(text.toString());
+                }
+            } else {
+                Toast.makeText(this, R.string.blockly_no_macro, Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Log.e("Blockly", "Load failed", e);
+        }
+    }
+
     public void onKeyboardLedStatusChanged(final byte status) {
         Log.i("BLE", "MainActivity received LED status: " + status);
         lastKeyboardLedStatus = status;
@@ -221,7 +261,8 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             public void run() {
                 if (pager != null) {
                     pager.swipePossible(true);
-                    pager.setCurrentItem(PagerAdapter.MOUSE);
+                    // Open Blockly as the default tab (now at index 0)
+        pager.setCurrentItem(PagerAdapter.BLOCKLY);
                 }
             }
         });
@@ -471,12 +512,13 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
     }
 
     class PagerAdapter extends FragmentPagerAdapter {
-        static final int CONFIGURATION = 0;
-        static final int CONSUMER = 1;
-        static final int MOUSE = 2;
-        static final int KEYBOARD = 3;
-        static final int GAMEPAD = 4;
-        static final int ABS_MOUSE = 5;
+        static final int BLOCKLY = 0;
+        static final int CONFIGURATION = 1;
+        static final int CONSUMER = 2;
+        static final int MOUSE = 3;
+        static final int KEYBOARD = 4;
+        static final int GAMEPAD = 5;
+        static final int ABS_MOUSE = 6;
         
         private final SparseArray<Fragment> registeredFragments = new SparseArray<>();
 
@@ -487,13 +529,14 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         @Override
         public Fragment getItem(int position) {
             switch (position) {
+                case BLOCKLY: return BlocklyFragment.newInstance();
                 case CONFIGURATION: return ConfigurationFragment.newInstance();
                 case CONSUMER: return ConsumerFragment.newInstance();
                 case MOUSE: return MouseFragment.newInstance();
                 case KEYBOARD: return KeyboardFragment.newInstance();
                 case GAMEPAD: return GamepadFragment.newInstance();
                 case ABS_MOUSE: return AbsoluteMouseFragment.newInstance();
-                default: return ConfigurationFragment.newInstance();
+                default: return BlocklyFragment.newInstance();
             }
         }
 
@@ -516,7 +559,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
 
         @Override
         public int getCount() {
-            return 6;
+            return 7;
         }
     }
 }
