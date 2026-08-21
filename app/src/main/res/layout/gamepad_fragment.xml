@@ -5,8 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/dark_gradient_bg"
-    android:clickable="true"
-    android:focusable="true">
+    android:clickable="false"
+    android:focusable="false">
 
     <!--
         ORIENTATION MAPPING (Landscape Left Perspective):
@@ -149,11 +149,15 @@
             android:layout_marginTop="60dp"/>
 
         <!-- Row 1 (Outer/Top): LB and RB -->
-        <TextView
+        <Button
             android:id="@+id/gamepad_btn_lb"
             android:layout_width="100dp"
             android:layout_height="50dp"
             android:background="@drawable/gamepad_button_selector"
+            app:backgroundTint="@null"
+            android:padding="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
             android:text="LB"
             android:gravity="center"
             android:rotation="90"
@@ -165,11 +169,15 @@
             app:layout_constraintBottom_toTopOf="@+id/gamepad_btn_rb"
             app:layout_constraintVertical_chainStyle="packed"/>
 
-        <TextView
+        <Button
             android:id="@+id/gamepad_btn_rb"
             android:layout_width="100dp"
             android:layout_height="50dp"
             android:background="@drawable/gamepad_button_selector"
+            app:backgroundTint="@null"
+            android:padding="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
             android:text="RB"
             android:gravity="center"
             android:rotation="90"
@@ -182,11 +190,15 @@
             android:layout_marginTop="60dp"/>
 
         <!-- Row 2 (Inner/Bottom): LT and RT -->
-        <TextView
+        <Button
             android:id="@+id/gamepad_btn_lt"
             android:layout_width="100dp"
             android:layout_height="50dp"
             android:background="@drawable/gamepad_button_selector"
+            app:backgroundTint="@null"
+            android:padding="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
             android:text="LT"
             android:gravity="center"
             android:rotation="90"
@@ -198,11 +210,15 @@
             app:layout_constraintBottom_toTopOf="@+id/gamepad_btn_rt"
             app:layout_constraintVertical_chainStyle="packed"/>
 
-        <TextView
+        <Button
             android:id="@+id/gamepad_btn_rt"
             android:layout_width="100dp"
             android:layout_height="50dp"
             android:background="@drawable/gamepad_button_selector"
+            app:backgroundTint="@null"
+            android:padding="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
             android:text="RT"
             android:gravity="center"
             android:rotation="90"

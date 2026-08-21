@@ -104,8 +104,6 @@ public class GamepadFragment extends Fragment {
             }
         };
 
-        view.setOnTouchListener(swipeBlocker);
-        
         View touchSurface = view.findViewById(R.id.gamepad_touch_surface);
         if (touchSurface != null) touchSurface.setOnTouchListener(swipeBlocker);
         
@@ -119,7 +117,7 @@ public class GamepadFragment extends Fragment {
         setupButton(view, R.id.gamepad_btn_3, 0x02, activity); // Visual Right (Portrait Bottom) -> B
         setupButton(view, R.id.gamepad_btn_1, 0x04, activity); // Visual Left (Portrait Top) -> X
         setupButton(view, R.id.gamepad_btn_2, 0x08, activity); // Visual Up (Portrait Right) -> Y
-        
+
         setupButton(view, R.id.gamepad_btn_lb, 0x10, activity); // L1 / LB
         setupButton(view, R.id.gamepad_btn_rb, 0x20, activity); // R1 / RB
         setupButton(view, R.id.gamepad_btn_lt, 0x40, activity); // L2 / LT
@@ -257,23 +255,26 @@ public class GamepadFragment extends Fragment {
             public boolean onTouch(View v, MotionEvent event) {
                 if (activity == null) return false;
                 
-                if (lockSwitch != null && lockSwitch.isChecked()) {
-                    v.getParent().requestDisallowInterceptTouchEvent(true);
-                    if (activity.pager != null) activity.pager.swipePossible(false);
-                }
-                
                 int action = event.getActionMasked();
+                
+                // Block ViewPager only for touches on the button itself
                 if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
+                    if (lockSwitch != null && lockSwitch.isChecked()) {
+                        v.getParent().requestDisallowInterceptTouchEvent(true);
+                        if (activity.pager != null) activity.pager.swipePossible(false);
+                    }
                     buttonsState |= bit;
                     btn.setPressed(true);
                 } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_CANCEL) {
-                    if (activity.pager != null && lockSwitch != null && lockSwitch.isChecked()) activity.pager.swipePossible(true);
                     buttonsState &= ~bit;
                     btn.setPressed(false);
+                    if (activity.pager != null && lockSwitch != null && lockSwitch.isChecked()) {
+                        activity.pager.swipePossible(true);
+                    }
                 }
                 
                 activity.sendGamepadNotification(buttonsState, analogX, analogY);
-                return true;
+                return true; // Consume event so it doesn't leak to background
             }
         });
     }
