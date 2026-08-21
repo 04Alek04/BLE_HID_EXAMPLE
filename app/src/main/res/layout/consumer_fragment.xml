@@ -2,337 +2,406 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
+    android:background="@color/colorSurface"
     tools:context="com.example.alek.ble_hid_example.MainActivity">
 
     <ScrollView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_weight="1">
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
         <LinearLayout
             android:id="@+id/cons_sub_main_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:weightSum="1">
+            android:orientation="vertical">
 
             <TextView
-                android:layout_width="fill_parent"
-                android:layout_height="match_parent"
-                android:padding="@dimen/activity_vertical_margin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
                 android:text="@string/consumer_control"
                 android:textAlignment="center"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="@dimen/activity_text_big" />
+                android:textColor="@color/colorPrimary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
-            <TextView
+            <!-- Media Control Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/music_player_control"
-                android:textAlignment="center"
-                android:textColor="?attr/colorOnSurface" />
+                android:layout_marginBottom="8dp"
+                app:cardBackgroundColor="#1f2937"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:strokeColor="#374151"
+                app:strokeWidth="1dp">
 
-            <LinearLayout
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_previous"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_skip_previous_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
+                    android:orientation="vertical"
+                    android:padding="8dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_stop"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_stop_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:text="@string/music_player_control"
+                        android:textAlignment="center"
+                        android:textColor="@color/colorOnSurface"
+                        android:textSize="12sp"
+                        android:textStyle="italic" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_start_stop"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_pause_play_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_next"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_skip_next_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
-            </LinearLayout>
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_previous"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_skip_previous_black_24dp"
+                            app:iconGravity="textStart"
+                            app:iconPadding="0dp"
+                            app:iconSize="24dp"
+                            app:iconTint="@color/colorOnSurface" />
 
-            <TextView
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_stop"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_stop_black_24dp"
+                            app:iconGravity="textStart"
+                            app:iconPadding="0dp"
+                            app:iconSize="24dp"
+                            app:iconTint="@color/colorOnSurface" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_start_stop"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_pause_play_black_24dp"
+                            app:iconGravity="textStart"
+                            app:iconPadding="0dp"
+                            app:iconSize="24dp"
+                            app:iconTint="@color/colorOnSurface" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_next"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_skip_next_black_24dp"
+                            app:iconGravity="textStart"
+                            app:iconPadding="0dp"
+                            app:iconSize="24dp"
+                            app:iconTint="@color/colorOnSurface" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Volume & Brightness Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/volume_control"
-                android:textAlignment="center"
-                android:textColor="?attr/colorOnSurface" />
+                android:layout_marginBottom="8dp"
+                app:cardBackgroundColor="#1f2937"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:strokeColor="#374151"
+                app:strokeWidth="1dp">
 
-            <LinearLayout
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_vol_minus"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_volume_down_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
+                    android:orientation="vertical"
+                    android:padding="8dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_mute"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_volume_off_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:text="@string/volume_control"
+                        android:textAlignment="center"
+                        android:textColor="@color/colorOnSurface"
+                        android:textSize="12sp" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_vol_plus"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_volume_up_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
-            </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
 
-            <TextView
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_vol_minus"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_volume_down_black_24dp"
+                            app:iconSize="24dp"
+                            app:iconTint="@color/colorOnSurface" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_mute"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_volume_off_black_24dp"
+                            app:iconSize="24dp"
+                            app:iconTint="@color/colorOnSurface" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_vol_plus"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_volume_up_black_24dp"
+                            app:iconSize="24dp"
+                            app:iconTint="@color/colorOnSurface" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:text="@string/brightness_control"
+                        android:textAlignment="center"
+                        android:textColor="@color/colorOnSurface" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_bright_minus"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_brightness_low_black_24dp"
+                            app:iconSize="24dp"
+                            app:iconTint="@color/colorOnSurface" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_bright_plus"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_brightness_high_black_24dp"
+                            app:iconSize="24dp"
+                            app:iconTint="@color/colorOnSurface" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- System Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/brightness_control"
-                android:textAlignment="center"
-                android:textColor="?attr/colorOnSurface" />
+                android:layout_marginBottom="8dp"
+                app:cardBackgroundColor="#1f2937"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:strokeColor="#374151"
+                app:strokeWidth="1dp">
 
-            <LinearLayout
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_bright_minus"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_brightness_low_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
+                    android:orientation="vertical"
+                    android:padding="8dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_bright_plus"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_brightness_high_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
-            </LinearLayout>
+                    <TextView
+                        android:id="@+id/cons_system_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:text="@string/system_control"
+                        android:textAlignment="center"
+                        android:textColor="@color/colorOnSurface"
+                        android:textSize="12sp" />
 
-            <TextView
+                    <LinearLayout
+                        android:id="@+id/cons_system_button_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_system_sleep"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_brightness_3_black_24dp"
+                            app:iconTint="@color/colorOnSurface" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_system_hibernation"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_hotel_black_24dp"
+                            app:iconTint="@color/colorOnSurface" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_system_power_down"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_power_settings_new_black_24dp"
+                            app:iconTint="@color/colorOnSurface" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_system_restart"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_refresh_black_24dp"
+                            app:iconTint="@color/colorOnSurface" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Miscellaneous Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/miscellaneous"
-                android:textAlignment="center"
-                android:textColor="?attr/colorOnSurface" />
+                android:layout_marginBottom="8dp"
+                app:cardBackgroundColor="#1f2937"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:strokeColor="#374151"
+                app:strokeWidth="1dp">
 
-            <LinearLayout
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_eject"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_eject_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
+                    android:orientation="vertical"
+                    android:padding="8dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_snapshot"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_photo_camera_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:text="@string/miscellaneous"
+                        android:textAlignment="center"
+                        android:textColor="@color/colorOnSurface"
+                        android:textSize="12sp" />
 
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/cons_system_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/system_control"
-                android:textAlignment="center"
-                android:textColor="?attr/colorOnSurface" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_eject"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_eject_black_24dp"
+                            app:iconTint="@color/colorOnSurface" />
 
-            <LinearLayout
-                android:id="@+id/cons_system_button_layout"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_system_sleep"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_brightness_3_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_system_hibernation"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_hotel_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_system_power_down"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_power_settings_new_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cons_button_system_restart"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_refresh_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
-            </LinearLayout>
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cons_button_snapshot"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_photo_camera_black_24dp"
+                            app:iconTint="@color/colorOnSurface" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:id="@+id/cons_launch_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
                 android:text="@string/application_launch"
                 android:textAlignment="center"
-                android:textColor="?attr/colorOnSurface" />
+                android:textColor="@color/colorOnSurface"
+                android:textSize="12sp" />
 
             <Spinner
                 android:id="@+id/cons_spinner_al"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/modern_button_bg"
                 android:spinnerMode="dialog" />
 
             <TextView
                 android:id="@+id/cons_control_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
                 android:text="@string/application_control"
                 android:textAlignment="center"
-                android:textColor="?attr/colorOnSurface" />
+                android:textColor="@color/colorOnSurface"
+                android:textSize="12sp" />
 
             <Spinner
                 android:id="@+id/cons_spinner_ac"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:spinnerMode="dialog"
-                android:textColor="@color/colorWhite" />
+                android:layout_height="40dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/modern_button_bg"
+                android:spinnerMode="dialog" />
+
         </LinearLayout>
     </ScrollView>
 
     <TextView
         android:id="@+id/cons_text_device_info"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_weight="20"
-        android:background="@color/colorGrey"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_margin="8dp"
+        android:background="@drawable/device_info_bg"
+        android:gravity="center"
         android:text="@string/device_not_connected"
-        android:textAlignment="center"
-        android:textColor="@color/colorBlack" />
+        android:textColor="@color/colorWhite"
+        android:textSize="12sp"
+        android:textStyle="bold" />
 </LinearLayout>

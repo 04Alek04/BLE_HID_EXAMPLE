@@ -192,10 +192,16 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
         }
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            v.setPressed(true);
             toSend |= value;
-        } else if (event.getAction() == MotionEvent.ACTION_UP) {
-            toSend &= ~value;
-            toSend &= 0xffff;
+        } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
+            v.setPressed(false);
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                toSend &= ~value;
+                toSend &= 0xffff;
+            } else {
+                return false;
+            }
         } else {
             return false;
         }

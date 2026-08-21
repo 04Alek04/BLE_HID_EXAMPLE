@@ -7,14 +7,23 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
 
-        <item name="android:windowBackground">@color/colorDark</item>
-        <item name="colorSurface">@color/colorDark</item>
-        <item name="colorOnSurface">@color/colorWhite</item>
-        <item name="android:textColorPrimary">@color/colorWhite</item>
+        <item name="android:windowBackground">@color/colorSurface</item>
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="colorOnSurface">@color/colorOnSurface</item>
+        <item name="android:textColorPrimary">@color/colorOnSurface</item>
         <item name="android:textColorSecondary">@color/colorGrey</item>
 
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>
+    </style>
+
+    <style name="ModernButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:background">@drawable/modern_button_bg</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/colorWhite</item>
+        <item name="cornerRadius">24dp</item>
+        <item name="elevation">4dp</item>
     </style>
 
 </resources>

@@ -2,143 +2,158 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
+    android:background="@color/colorSurface"
     tools:context="com.example.alek.ble_hid_example.MainActivity">
 
     <ScrollView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_weight="1">
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="16dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:weightSum="1">
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="@dimen/activity_vertical_margin"
+                android:padding="8dp"
                 android:text="@string/mouse"
                 android:textAlignment="center"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="@dimen/activity_text_big" />
+                android:textColor="@color/colorPrimary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
-            <LinearLayout
-                android:layout_width="fill_parent"
+            <!-- Mouse Buttons Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="#1f2937"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:strokeColor="#374151"
+                app:strokeWidth="1dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/mouse_button_mouse_1"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_looks_one_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/mouse_button_mouse_2"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_looks_two_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
-            </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_width="fill_parent"
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/mouse_button_mouse_1"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_looks_one_black_24dp"
+                            app:iconTint="@color/colorOnSurface" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/mouse_button_mouse_2"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_looks_two_black_24dp"
+                            app:iconTint="@color/colorOnSurface" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/mouse_button_mouse_3"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_looks_3_black_24dp"
+                            app:iconTint="@color/colorOnSurface" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/mouse_button_mouse_4"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_looks_4_black_24dp"
+                            app:iconTint="@color/colorOnSurface" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/mouse_button_mouse_5"
+                            style="@style/ModernButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            app:icon="@drawable/ic_looks_5_black_24dp"
+                            app:iconTint="@color/colorOnSurface" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Touchpad area -->
+            <TextView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/mouse_button_mouse_3"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_looks_3_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/mouse_button_mouse_4"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_looks_4_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/mouse_button_mouse_5"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:icon="@drawable/ic_looks_5_black_24dp"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp"
-                    app:iconSize="32dp"
-                    app:iconTint="?attr/colorOnSurface"
-                    app:strokeColor="?attr/colorOnSurface" />
-            </LinearLayout>
+                android:layout_marginBottom="8dp"
+                android:text="Touchpad"
+                android:textAlignment="center"
+                android:textColor="@color/colorOnSurface"
+                android:textStyle="italic" />
 
             <View
                 android:id="@+id/mouse_mouse_cursor"
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:layout_margin="@dimen/activity_vertical_margin_x1_5"
-                android:background="?attr/colorPrimary" />
+                android:layout_height="280dp"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/touchpad_bg"
+                android:elevation="8dp" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
                 android:text="@string/horizontal_scroll"
                 android:textAlignment="center"
-                android:textColor="?attr/colorOnSurface" />
+                android:textColor="@color/colorOnSurface" />
 
             <View
                 android:id="@+id/mouse_h_scroll"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:layout_margin="@dimen/activity_vertical_margin_x1_5"
-                android:background="?attr/colorPrimary" />
+                android:layout_height="50dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/touchpad_bg" />
         </LinearLayout>
     </ScrollView>
 
     <TextView
         android:id="@+id/mouse_text_device_info"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_weight="20"
-        android:background="?attr/colorSurface"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_margin="8dp"
+        android:background="@drawable/device_info_bg"
+        android:gravity="center"
         android:text="@string/device_not_connected"
-        android:textAlignment="center"
-        android:textColor="?attr/colorOnSurface" />
+        android:textColor="@color/colorWhite"
+        android:textSize="12sp"
+        android:textStyle="bold" />
 </LinearLayout>

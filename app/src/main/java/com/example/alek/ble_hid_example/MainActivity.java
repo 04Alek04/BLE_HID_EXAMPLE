@@ -80,16 +80,23 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                     for (BluetoothDevice bd : currentDevices) {
                         TextView textView = new TextView(getApplicationContext());
                         textView.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
-                        textView.setLayoutParams(new LinearLayout.LayoutParams(
+                        
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
-                                LinearLayout.LayoutParams.WRAP_CONTENT));
-                        textView.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.colorBleBlue));
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        params.setMargins(0, 4, 0, 4);
+                        textView.setLayoutParams(params);
+                        
+                        textView.setPadding(16, 24, 16, 24);
+                        textView.setBackgroundResource(R.drawable.device_info_bg);
                         textView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorWhite));
+                        textView.setTextSize(14);
+                        
                         String name = "Unknown Device";
                         try {
                             name = bd.getName() != null ? bd.getName() : "Unknown Device";
                         } catch (SecurityException ignored) {}
-                        textView.setText(name + "  (" + bd.getAddress() + ")");
+                        textView.setText(name + "\n" + bd.getAddress());
                         ll.addView(textView);
                     }
                 }
@@ -118,8 +125,8 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                     name = d.getName() != null ? d.getName() : "Unknown Device";
                 } catch (SecurityException ignored) {}
                 text = name + "  (" + d.getAddress() + ")";
-                text_color = ContextCompat.getColor(getApplicationContext(), R.color.colorWhite);
-                bg_color = ContextCompat.getColor(getApplicationContext(), R.color.colorBleBlue);
+                text_color = ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary);
+                bg_color = 0; // Not used but kept for signature
 
                 if (currentDevices.size() > 1) {
                     text += " [" + (i + 1) + " / " + currentDevices.size() + "]";
@@ -127,8 +134,8 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                 i = (i + 1) % currentDevices.size();
             } else {
                 text = "Device not connected ";
-                text_color = ContextCompat.getColor(getApplicationContext(), R.color.colorBlack);
-                bg_color = ContextCompat.getColor(getApplicationContext(), R.color.colorGrey);
+                text_color = ContextCompat.getColor(getApplicationContext(), R.color.colorGrey);
+                bg_color = 0;
                 i = 0;
             }
 
@@ -164,13 +171,14 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                 final int[] ids = {
                         R.id.cons_text_device_info, R.id.mouse_text_device_info,
                         R.id.keyboard_text_device_info, R.id.gamepad_text_device_info,
-                        R.id.abs_mouse_text_device_info
+                        R.id.abs_mouse_text_device_info, R.id.conf_text_device_info,
+                        R.id.d_pad_text_device_info
                 };
 
                 for (int id : ids) {
                     TextView textView = findViewById(id);
                     if (textView == null) continue;
-                    textView.setBackgroundColor(bg_color);
+                    // textView.setBackgroundColor(bg_color); // Removed to keep custom drawable
                     textView.setTextColor(text_color);
                     textView.setText(text);
                 }

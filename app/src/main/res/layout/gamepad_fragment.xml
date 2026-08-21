@@ -4,7 +4,7 @@
     android:id="@+id/gamepad_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorBlack"
+    android:background="@drawable/dark_gradient_bg"
     android:clickable="true"
     android:focusable="true">
 
@@ -219,16 +219,16 @@
     <TextView
         android:id="@+id/gamepad_text_device_info"
         android:layout_width="320dp"
-        android:layout_height="24dp"
-        android:background="?attr/colorSurface"
+        android:layout_height="32dp"
+        android:background="@drawable/device_info_bg"
         android:gravity="center"
         android:rotation="90"
         android:text="@string/device_not_connected"
-        android:textColor="?attr/colorOnSurface"
-        android:textSize="12sp"
+        android:textColor="@color/colorWhite"
+        android:textSize="10sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginLeft="-148dp" />
+        android:layout_marginLeft="-144dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

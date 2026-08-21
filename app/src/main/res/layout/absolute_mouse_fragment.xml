@@ -4,7 +4,7 @@
     android:id="@+id/abs_mouse_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorBlack"
+    android:background="@drawable/dark_gradient_bg"
     android:clickable="true"
     android:focusable="true">
 
@@ -46,7 +46,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/absolute_mouse"
                 android:textColor="?attr/colorPrimary"
-                android:textSize="24sp"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -71,14 +71,14 @@
     <TextView
         android:id="@+id/abs_mouse_text_device_info"
         android:layout_width="320dp"
-        android:layout_height="24dp"
+        android:layout_height="32dp"
         android:layout_gravity="left|center_vertical"
-        android:background="?attr/colorSurface"
+        android:background="@drawable/device_info_bg"
         android:rotation="90"
         android:text="@string/device_not_connected"
         android:gravity="center"
-        android:textColor="?attr/colorOnSurface"
-        android:textSize="12sp"
-        android:layout_marginLeft="-148dp" />
+        android:textColor="@color/colorWhite"
+        android:textSize="10sp"
+        android:layout_marginLeft="-144dp" />
 
 </FrameLayout>

@@ -41,13 +41,15 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
         return new ConsumerFragment();
     }
 
-    private void setOnTouchListenerForEach(LinearLayout layout) {
+    private void setOnTouchListenerForEach(ViewGroup layout) {
         for (int i = 0; i < layout.getChildCount(); i++) {
             View v = layout.getChildAt(i);
 
-            if (v instanceof LinearLayout) {
-                setOnTouchListenerForEach((LinearLayout) v);
-            } else if (v instanceof Button || v instanceof ImageButton) {
+            if (v instanceof ViewGroup) {
+                setOnTouchListenerForEach((ViewGroup) v);
+            }
+
+            if (v instanceof Button || v instanceof ImageButton) {
                 v.setOnTouchListener(this);
             }
         }
@@ -96,8 +98,8 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
         super.onViewCreated(view, savedInstanceState);
         
         View subMainLayout = view.findViewById(R.id.cons_sub_main_layout);
-        if (subMainLayout instanceof LinearLayout) {
-            setOnTouchListenerForEach((LinearLayout) subMainLayout);
+        if (subMainLayout instanceof ViewGroup) {
+            setOnTouchListenerForEach((ViewGroup) subMainLayout);
         }
 
         // Application launch spinner configuration
@@ -152,10 +154,16 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
         }
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            v.setPressed(true);
             toSend |= value;
-        } else if (event.getAction() == MotionEvent.ACTION_UP) {
-            toSend &= ~value;
-            toSend &= 0xffff;
+        } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
+            v.setPressed(false);
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                toSend &= ~value;
+                toSend &= 0xffff;
+            } else {
+                return false;
+            }
         } else {
             return false;
         }

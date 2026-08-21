@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorPrimary">#6366f1</color>
+    <color name="colorPrimaryDark">#4f46e5</color>
+    <color name="colorAccent">#ec4899</color>
+    <color name="colorSurface">#111827</color>
+    <color name="colorOnSurface">#f9fafb</color>
+    <color name="gradient_start">#4f46e5</color>
+    <color name="gradient_end">#06b6d4</color>
+    <color name="button_bg_start">#1f2937</color>
+    <color name="button_bg_end">#374151</color>
+    <color name="button_stroke">#4b5563</color>
     <color name="colorDark">#101010</color>
     <color name="colorGrey">#888888</color>
     <color name="colorWhite">#FFFFFF</color>

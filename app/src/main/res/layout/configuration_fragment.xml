@@ -1,58 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
+    android:background="@color/colorSurface"
     tools:context="com.example.alek.ble_hid_example.MainActivity">
 
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        tools:ignore="UselessParent">
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
-        <TextView
-            android:layout_width="fill_parent"
-            android:layout_height="match_parent"
-            android:padding="@dimen/activity_vertical_margin"
-            android:text="@string/configuration"
-            android:textAlignment="center"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="@dimen/activity_text_big" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/conf_reboot_button"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/reboot_application" />
+            android:orientation="vertical">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/conf_clear_configs_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/clear_saved_configs" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="@string/configuration"
+                android:textAlignment="center"
+                android:textColor="@color/colorPrimary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="@string/list_of_connected_devices"
-            android:textAlignment="center"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="@dimen/activity_text_medium" />
+            <!-- Configuration Actions Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                app:cardBackgroundColor="#1f2937"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:strokeColor="#374151"
+                app:strokeWidth="1dp">
 
-        <ScrollView
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/conf_reboot_button"
+                        style="@style/ModernButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_margin="4dp"
+                        android:text="@string/reboot_application"
+                        android:textSize="12sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/conf_clear_configs_button"
+                        style="@style/ModernButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_margin="4dp"
+                        android:text="@string/clear_saved_configs"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="4dp"
+                android:text="@string/list_of_connected_devices"
+                android:textAlignment="center"
+                android:textColor="@color/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="italic" />
 
             <LinearLayout
                 android:id="@+id/conf_linear_layout_devices"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
-        </ScrollView>
-    </LinearLayout>
-</RelativeLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <TextView
+        android:id="@+id/conf_text_device_info"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_margin="8dp"
+        android:background="@drawable/device_info_bg"
+        android:gravity="center"
+        android:text="@string/device_not_connected"
+        android:textColor="@color/colorWhite"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+</LinearLayout>

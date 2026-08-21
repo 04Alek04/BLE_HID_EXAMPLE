@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorSurface"
     android:orientation="vertical">
 
     <WebView
@@ -10,59 +12,68 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#CCCCCC" />
-
-    <LinearLayout
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:gravity="center_vertical"
-        android:background="#F5F5F5">
+        android:layout_margin="8dp"
+        app:cardBackgroundColor="#1f2937"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:strokeColor="#374151"
+        app:strokeWidth="1dp">
 
-        <Button
-            android:id="@+id/btn_run_script"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/blockly_run"
-            android:backgroundTint="#4CAF50"
-            android:textColor="@android:color/white" />
+            android:orientation="horizontal"
+            android:padding="8dp"
+            android:gravity="center_vertical">
 
-        <Space
-            android:layout_width="8dp"
-            android:layout_height="wrap_content" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_run_script"
+                style="@style/ModernButton"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="@string/blockly_run"
+                android:backgroundTint="#10b981"
+                android:textSize="12sp" />
 
-        <ImageButton
-            android:id="@+id/btn_clear_blocks"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_delete"
-            android:background="?attr/selectableItemBackground"
-            android:contentDescription="Clear Workspace" />
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="wrap_content" />
 
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
+            <ImageButton
+                android:id="@+id/btn_clear_blocks"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_delete"
+                app:tint="@color/colorWhite"
+                android:background="?attr/selectableItemBackground"
+                android:contentDescription="Clear Workspace" />
 
-        <ImageButton
-            android:id="@+id/btn_save_blocks"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_save"
-            android:background="?attr/selectableItemBackground"
-            android:contentDescription="@string/blockly_save" />
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
 
-        <ImageButton
-            android:id="@+id/btn_load_blocks"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_upload"
-            android:background="?attr/selectableItemBackground"
-            android:contentDescription="@string/blockly_load" />
+            <ImageButton
+                android:id="@+id/btn_save_blocks"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_save"
+                app:tint="@color/colorWhite"
+                android:background="?attr/selectableItemBackground"
+                android:contentDescription="@string/blockly_save" />
 
-    </LinearLayout>
+            <ImageButton
+                android:id="@+id/btn_load_blocks"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_upload"
+                app:tint="@color/colorWhite"
+                android:background="?attr/selectableItemBackground"
+                android:contentDescription="@string/blockly_load" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 </LinearLayout>
