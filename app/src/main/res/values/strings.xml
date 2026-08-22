@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">BLE_HID_EXAMPLE</string>
     <string name="configuration">Configuration</string>
-    <string name="d_pad">D-Pad</string>
     <string name="mouse">Mouse</string>
     <string name="consumer_control">Consumer control</string>
     <string name="enter_text">Enter text</string>
