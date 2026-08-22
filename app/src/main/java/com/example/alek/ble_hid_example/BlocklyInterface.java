@@ -13,9 +13,10 @@ public class BlocklyInterface {
 
     @JavascriptInterface
     public void sendKeyboardKey(int usage, int modifiers) {
-        int val = (modifiers & 0xFF) | ((usage & 0xFF) << 8);
+        // Shift usage to byte 2, keeping byte 1 (reserved) at 0
+        int val = (modifiers & 0xFF) | ((usage & 0xFF) << 16);
         activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val);
-        Log.d("Blockly", "Key Sent: " + usage);
+        Log.d("Blockly", "Key Sent: Usage=" + usage + " (Byte 2), Modifiers=" + modifiers + " (Byte 0)");
     }
 
     @JavascriptInterface
@@ -51,9 +52,49 @@ public class BlocklyInterface {
 
     @JavascriptInterface
     public void sendConsumerKey(int usage) {
-        activity.sendConsumerNotification(ReportField.REPORT_FIELD_CONSUMER_CONTROL, usage);
+        ReportField rf = ReportField.REPORT_FIELD_CONSUMER_CONTROL;
+        int value = 0;
+
+        // Route to the correct field based on Usage ID
+        if (usage >= 0x0201) {
+            // App Control Array (bytes 4-5)
+            rf = ReportField.REPORT_FIELD_CONTROL_BUTTON;
+            value = usage;
+        } else if (usage >= 0x0181) {
+            // App Launch Array (bytes 2-3)
+            rf = ReportField.REPORT_FIELD_LAUNCHER_BUTTON;
+            value = usage;
+        } else {
+            // Bitmask field (bytes 0-1)
+            value = getConsumerBitmask(usage);
+        }
+
+        Log.d("Blockly", "Consumer Notification: Usage=" + usage + " -> Field=" + rf + " Value=" + value);
+        activity.sendConsumerNotification(rf, value);
         try { Thread.sleep(50); } catch (InterruptedException e) {}
-        activity.sendConsumerNotification(ReportField.REPORT_FIELD_CONSUMER_CONTROL, 0);
+        activity.sendConsumerNotification(rf, 0);
+    }
+
+    private int getConsumerBitmask(int usage) {
+        switch (usage) {
+            case 0x6F: return 0x0001; // Bright Up
+            case 0x70: return 0x0002; // Bright Down
+            case 0xB5: return 0x0004; // Scan Next Track
+            case 0xB6: return 0x0008; // Scan Previous Track
+            case 0xB7: return 0x0010; // Stop
+            case 0xCD: return 0x0020; // Play/Pause
+            case 0xE2: return 0x0040; // Mute
+            case 0xE9: return 0x0080; // Volume Up
+            case 0xEA: return 0x0100; // Volume Down
+            case 0xB8: return 0x0200; // Eject
+            case 0x65: return 0x0400; // Snapshot
+            case 0x82: return 0x0800; // System Sleep
+            case 0xA8: return 0x1000; // System Hibernate
+            case 0x81: return 0x2000; // System Power Down
+            case 0x8E: return 0x4000; // System Cold Restart
+            case 0x8F: return 0x8000; // System Warm Restart
+            default: return 0;
+        }
     }
 
     @JavascriptInterface
@@ -121,8 +162,10 @@ public class BlocklyInterface {
         // Release Gamepad Buttons and reset sticks
         activity.sendGamepadNotification(0, 0, 0);
         currentGamepadButtons = 0;
-        // Release Consumer keys
+        // Release Consumer keys (all fields)
         activity.sendConsumerNotification(ReportField.REPORT_FIELD_CONSUMER_CONTROL, 0);
+        activity.sendConsumerNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, 0);
+        activity.sendConsumerNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, 0);
     }
 
     @JavascriptInterface

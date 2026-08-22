@@ -92,7 +92,7 @@ enum ReportField {
     /* Keyboard (Report ID 1) */
     REPORT_FIELD_KEYBOARD_META_KEYS(0, 1),
     REPORT_FIELD_KEYBOARD_KEYS(2, 1),
-    REPORT_FIELD_KEYBOARD_ALL(0, 2),    // REPORT_FIELD_KEYBOARD_META_KEYS + REPORT_FIELD_KEYBOARD_KEYS
+    REPORT_FIELD_KEYBOARD_ALL(0, 3),    // Modifiers(0) + Reserved(1) + Keys(2)
     /* Mouse (Report ID 2) */
     REPORT_FIELD_MOUSE_BUTTONS(0, 1),
     REPORT_FIELD_MOUSE_X(1, 1),
