@@ -113,6 +113,10 @@ public class BlocklyInterface {
     }
 
     private int currentGamepadButtons = 0;
+    private int currentGamepadLX = 0;
+    private int currentGamepadLY = 0;
+    private int currentGamepadRX = 0;
+    private int currentGamepadRY = 0;
 
     @JavascriptInterface
     public void sendGamepadButton(int buttonIndex, boolean pressed) {
@@ -121,13 +125,29 @@ public class BlocklyInterface {
         } else {
             currentGamepadButtons &= ~(1 << (buttonIndex - 1));
         }
-        activity.sendGamepadNotification(currentGamepadButtons, 0, 0);
+        activity.sendGamepadNotification(currentGamepadButtons, currentGamepadLX, currentGamepadLY, currentGamepadRX, currentGamepadRY);
     }
 
     @JavascriptInterface
-    public void sendGamepad(int buttons, int x, int y) {
+    public void sendGamepadStick(int stickIndex, int x, int y) {
+        if (stickIndex == 1) { // Left Stick
+            currentGamepadLX = x;
+            currentGamepadLY = y;
+        } else { // Right Stick
+            currentGamepadRX = x;
+            currentGamepadRY = y;
+        }
+        activity.sendGamepadNotification(currentGamepadButtons, currentGamepadLX, currentGamepadLY, currentGamepadRX, currentGamepadRY);
+    }
+
+    @JavascriptInterface
+    public void sendGamepad(int buttons, int lx, int ly, int rx, int ry) {
         this.currentGamepadButtons = buttons;
-        activity.sendGamepadNotification(buttons, x, y);
+        this.currentGamepadLX = lx;
+        this.currentGamepadLY = ly;
+        this.currentGamepadRX = rx;
+        this.currentGamepadRY = ry;
+        activity.sendGamepadNotification(buttons, lx, ly, rx, ry);
     }
 
     @JavascriptInterface
@@ -160,8 +180,12 @@ public class BlocklyInterface {
         // Release Mouse Buttons
         activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0);
         // Release Gamepad Buttons and reset sticks
-        activity.sendGamepadNotification(0, 0, 0);
+        activity.sendGamepadNotification(0, 0, 0, 0, 0);
         currentGamepadButtons = 0;
+        currentGamepadLX = 0;
+        currentGamepadLY = 0;
+        currentGamepadRX = 0;
+        currentGamepadRY = 0;
         // Release Consumer keys (all fields)
         activity.sendConsumerNotification(ReportField.REPORT_FIELD_CONSUMER_CONTROL, 0);
         activity.sendConsumerNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, 0);

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="gamepad_left_analog_base" type="id" />
+    <item name="gamepad_dpad_container" type="id" />
+    <item name="gamepad_left_analog_stick" type="id" />
+    <item name="gamepad_d_up" type="id" />
+    <item name="gamepad_d_down" type="id" />
+    <item name="gamepad_d_left" type="id" />
+    <item name="gamepad_d_right" type="id" />
+    <item name="gamepad_d_center" type="id" />
+</resources>

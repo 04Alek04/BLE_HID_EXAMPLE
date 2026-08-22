@@ -1,244 +1,508 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/gamepad_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/dark_gradient_bg"
-    android:clickable="false"
-    android:focusable="false">
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
-    <!--
-        ORIENTATION MAPPING (Landscape Left Perspective):
-        - Portrait LEFT edge = Gamepad BOTTOM (Thumb side)
-        - Portrait RIGHT edge = Gamepad TOP (Shoulders / Menu / Start side)
-        - Portrait TOP edge = Gamepad LEFT (Analog side)
-        - Portrait BOTTOM edge = Gamepad RIGHT (Buttons side)
-    -->
+    <!-- 16:9 Container to maintain gamepad proportions on any screen -->
 
+    <!-- 6. DEVICE STATUS BAR (Located on the left side) -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/gamepad_touch_surface"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="8dp"
-        android:clickable="true"
-        android:focusable="true"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="W,16:9"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Landscape LEFT side (Portrait TOP) -->
-        <FrameLayout
+        <!-- 1. LEFT ANALOG / D-PAD (Physically top-left corner) -->
+        <RelativeLayout
             android:id="@+id/gamepad_left_analog_base"
-            android:layout_width="180dp"
-            android:layout_height="180dp"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_marginStart="15dp"
+            android:layout_marginTop="45dp"
             android:background="@drawable/gamepad_analog_octagon"
-            android:clickable="true"
-            android:focusable="true"
-            android:visibility="visible"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            android:layout_marginTop="16dp"
-            android:layout_marginLeft="10dp">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
             <View
                 android:id="@+id/gamepad_left_analog_stick"
-                android:layout_width="70dp"
-                android:layout_height="70dp"
-                android:layout_gravity="center"
-                android:background="@drawable/abs_mouse_area_border"
-                android:backgroundTint="?attr/colorPrimary"/>
-        </FrameLayout>
-
-        <!-- Digital D-pad buttons (visible when STICK is disabled) -->
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/gamepad_dpad_container"
-            android:layout_width="180dp"
-            android:layout_height="180dp"
-            android:visibility="gone"
-            android:clickable="true"
-            android:focusable="true"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            android:layout_marginTop="16dp"
-            android:layout_marginLeft="10dp">
-
-            <Button android:id="@+id/gamepad_d_left" android:layout_width="65dp" android:layout_height="65dp" android:text="◀" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintTop_toTopOf="parent" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent"/>
-            <Button android:id="@+id/gamepad_d_up" android:layout_width="65dp" android:layout_height="65dp" android:text="▲" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"/>
-            <Button android:id="@+id/gamepad_d_right" android:layout_width="65dp" android:layout_height="65dp" android:text="▶" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent"/>
-            <Button android:id="@+id/gamepad_d_down" android:layout_width="65dp" android:layout_height="65dp" android:text="▼" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"/>
-
-            <View
-                android:id="@+id/gamepad_d_center"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
+                android:layout_centerInParent="true"
                 android:background="@drawable/gamepad_center_selector"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:elevation="4dp" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/gamepad_dpad_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipChildren="false"
+                android:clipToPadding="false">
 
-        <!-- Landscape RIGHT side (Portrait BOTTOM) -->
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/gamepad_buttons_container"
-            android:layout_width="220dp"
-            android:layout_height="220dp"
-            android:clickable="true"
-            android:focusable="true"
+                <ImageButton
+                    android:id="@+id/gamepad_d_up"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/gamepad_button_selector"
+                    android:rotation="0"
+                    android:src="@drawable/ic_arrow_simple"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toTopOf="@id/gamepad_d_center"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:tint="@color/colorWhite"
+                    tools:visibility="visible" />
+
+                <ImageButton
+                    android:id="@+id/gamepad_d_left"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/gamepad_button_selector"
+                    android:rotation="270"
+                    android:src="@drawable/ic_arrow_simple"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/gamepad_d_center"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/colorWhite"
+                    tools:visibility="visible" />
+
+                <Button
+                    android:id="@+id/gamepad_d_center"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/gamepad_button_selector"
+                    android:rotation="90"
+                    android:text="L3"
+                    android:textSize="8.5sp"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:visibility="visible" />
+
+                <ImageButton
+                    android:id="@+id/gamepad_d_right"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/gamepad_button_selector"
+                    android:rotation="90"
+                    android:src="@drawable/ic_arrow_simple"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/gamepad_d_center"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/colorWhite"
+                    tools:visibility="visible" />
+
+                <ImageButton
+                    android:id="@+id/gamepad_d_down"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/gamepad_button_selector"
+                    android:rotation="180"
+                    android:src="@drawable/ic_arrow_simple"
+                    android:visibility="visible"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/gamepad_d_center"
+                    app:tint="@color/colorWhite"
+                    tools:visibility="visible" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </RelativeLayout>
+
+        <!-- 2. RIGHT ANALOG / ABXY (Physically bottom-left corner) -->
+        <RelativeLayout
+            android:id="@+id/gamepad_right_analog_base"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_marginStart="15dp"
+            android:layout_marginBottom="45dp"
+            android:background="@drawable/gamepad_analog_octagon"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            android:layout_marginBottom="8dp"
-            android:layout_marginLeft="4dp">
-            <Button android:id="@+id/gamepad_btn_1" android:layout_width="80dp" android:layout_height="80dp" android:text="BT_2" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintTop_toTopOf="parent" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent"/>
-            <Button android:id="@+id/gamepad_btn_2" android:layout_width="80dp" android:layout_height="80dp" android:text="BT_3" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"/>
-            <Button android:id="@+id/gamepad_btn_3" android:layout_width="80dp" android:layout_height="80dp" android:text="BT_1" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent"/>
-            <Button android:id="@+id/gamepad_btn_4" android:layout_width="80dp" android:layout_height="80dp" android:text="BT_0" android:rotation="90" android:background="@drawable/gamepad_button_selector" app:backgroundTint="@null" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"/>
-        </androidx.constraintlayout.widget.ConstraintLayout>
+            app:layout_constraintStart_toStartOf="parent">
 
-        <!-- MENU -->
-        <Button
-            android:id="@+id/gamepad_btn_menu"
-            android:layout_width="200dp"
-            android:layout_height="60dp"
-            android:text="MENU"
-            android:rotation="90"
-            android:textSize="10sp"
-            android:background="@drawable/gamepad_button_selector"
-            app:backgroundTint="@null"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginTop="60dp"
-            android:layout_marginRight="-60dp"/>
+            <View
+                android:id="@+id/gamepad_right_analog_stick"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_centerInParent="true"
+                android:background="@drawable/gamepad_center_selector"
+                android:elevation="4dp" />
 
-        <!-- START -->
-        <Button
-            android:id="@+id/gamepad_btn_start"
-            android:layout_width="200dp"
-            android:layout_height="60dp"
-            android:text="START"
-            android:rotation="90"
-            android:textSize="10sp"
-            android:background="@drawable/gamepad_button_selector"
-            app:backgroundTint="@null"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginBottom="60dp"
-            android:layout_marginRight="-60dp"/>
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/gamepad_buttons_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipChildren="false"
+                android:clipToPadding="false">
 
-        <!-- LOCK SWITCH -->
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/gamepad_lock_switch"
+                <ImageButton
+                    android:id="@+id/gamepad_btn_an_r_up"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/gamepad_button_selector"
+                    android:rotation="0"
+                    android:src="@drawable/ic_arrow_simple"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toTopOf="@id/gamepad_btn_r3"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:tint="@color/colorWhite"
+                    tools:visibility="visible" />
+
+                <ImageButton
+                    android:id="@+id/gamepad_btn_an_r_left"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/gamepad_button_selector"
+                    android:rotation="270"
+                    android:src="@drawable/ic_arrow_simple"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/gamepad_btn_r3"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/colorWhite"
+                    tools:visibility="visible" />
+
+                <Button
+                    android:id="@+id/gamepad_btn_r3"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/gamepad_button_selector"
+                    android:rotation="90"
+                    android:text="R3"
+                    android:textSize="8.5sp"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:visibility="visible" />
+
+                <ImageButton
+                    android:id="@+id/gamepad_btn_an_r_right"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/gamepad_button_selector"
+                    android:rotation="90"
+                    android:src="@drawable/ic_arrow_simple"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/gamepad_btn_r3"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/colorWhite"
+                    tools:visibility="visible" />
+
+                <ImageButton
+                    android:id="@+id/gamepad_btn_an_r_down"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/gamepad_button_selector"
+                    android:rotation="180"
+                    android:src="@drawable/ic_arrow_simple"
+                    android:visibility="visible"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/gamepad_btn_r3"
+                    app:tint="@color/colorWhite"
+                    tools:visibility="visible" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </RelativeLayout>
+
+        <!-- Guidelines positioning trigger sections (LB/LT on the left, RB/RT on the right) -->
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/trigger_left_line"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="LOCK"
-            android:textColor="@color/colorWhite"
-            android:rotation="90"
-            android:checked="true"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/gamepad_stick_switch"
-            app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginRight="-15dp"
-            app:layout_constraintVertical_chainStyle="packed"/>
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.50" />
 
-        <!-- STICK SWITCH -->
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/gamepad_stick_switch"
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/trigger_right_line"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="STICK"
-            android:textColor="@color/colorWhite"
-            android:rotation="90"
-            android:checked="true"
-            app:layout_constraintTop_toBottomOf="@id/gamepad_lock_switch"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginRight="-15dp"
-            android:layout_marginTop="60dp"/>
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.70" />
 
-        <!-- Row 1 (Outer/Top): LB and RB -->
+        <!-- 3. TRIGGERS (LB/LT - Left side, RB/RT - Right side) -->
         <Button
             android:id="@+id/gamepad_btn_lb"
-            android:layout_width="100dp"
+            android:layout_width="80dp"
             android:layout_height="50dp"
+            android:layout_marginTop="-10dp"
             android:background="@drawable/gamepad_button_selector"
-            app:backgroundTint="@null"
-            android:padding="0dp"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:text="LB"
-            android:gravity="center"
             android:rotation="90"
-            android:textColor="@color/colorWhite"
-            android:textSize="18sp"
-            app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginRight="160dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/gamepad_btn_rb"
-            app:layout_constraintVertical_chainStyle="packed"/>
+            android:text="LB"
+            android:textSize="9sp"
+            app:backgroundTint="@null"
+            app:layout_constraintEnd_toStartOf="@id/trigger_left_line"
+            app:layout_constraintStart_toStartOf="@id/trigger_left_line"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/gamepad_btn_lt"
+            android:layout_width="80dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="-10dp"
+            android:background="@drawable/gamepad_button_selector"
+            android:rotation="90"
+            android:text="LT"
+            android:textSize="9sp"
+            app:backgroundTint="@null"
+            app:layout_constraintEnd_toStartOf="@id/trigger_right_line"
+            app:layout_constraintStart_toStartOf="@id/trigger_right_line"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <Button
             android:id="@+id/gamepad_btn_rb"
-            android:layout_width="100dp"
+            android:layout_width="80dp"
             android:layout_height="50dp"
+            android:layout_marginBottom="-10dp"
             android:background="@drawable/gamepad_button_selector"
-            app:backgroundTint="@null"
-            android:padding="0dp"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
+            android:rotation="90"
             android:text="RB"
-            android:gravity="center"
-            android:rotation="90"
-            android:textColor="@color/colorWhite"
-            android:textSize="18sp"
-            app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginRight="160dp"
-            app:layout_constraintTop_toBottomOf="@id/gamepad_btn_lb"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginTop="60dp"/>
-
-        <!-- Row 2 (Inner/Bottom): LT and RT -->
-        <Button
-            android:id="@+id/gamepad_btn_lt"
-            android:layout_width="100dp"
-            android:layout_height="50dp"
-            android:background="@drawable/gamepad_button_selector"
+            android:textSize="9sp"
             app:backgroundTint="@null"
-            android:padding="0dp"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:text="LT"
-            android:gravity="center"
-            android:rotation="90"
-            android:textColor="@color/colorWhite"
-            android:textSize="18sp"
-            app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginRight="100dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/gamepad_btn_rt"
-            app:layout_constraintVertical_chainStyle="packed"/>
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/trigger_left_line"
+            app:layout_constraintStart_toStartOf="@id/trigger_left_line" />
 
         <Button
             android:id="@+id/gamepad_btn_rt"
-            android:layout_width="100dp"
+            android:layout_width="80dp"
             android:layout_height="50dp"
+            android:layout_marginBottom="-10dp"
             android:background="@drawable/gamepad_button_selector"
-            app:backgroundTint="@null"
-            android:padding="0dp"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:text="RT"
-            android:gravity="center"
             android:rotation="90"
-            android:textColor="@color/colorWhite"
-            android:textSize="18sp"
-            app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginRight="100dp"
-            app:layout_constraintTop_toBottomOf="@id/gamepad_btn_lt"
+            android:text="RT"
+            android:textSize="9sp"
+            app:backgroundTint="@null"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginTop="60dp"/>
+            app:layout_constraintEnd_toStartOf="@id/trigger_right_line"
+            app:layout_constraintStart_toStartOf="@id/trigger_right_line" />
+
+        <!-- Guideline positioning the center of the BT button diamond -->
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/bt_cluster_center_v"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.45" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/bt_cluster_center_h"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.75" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/touchpad_center_h"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.25" />
+
+        <!-- Anchor connected to percentage guidelines -->
+        <Space
+            android:id="@+id/gamepad_bt_anchor"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
+            android:layout_marginStart="50dp"
+            android:layout_marginBottom="75dp"
+            app:layout_constraintBottom_toTopOf="@id/bt_cluster_center_h"
+            app:layout_constraintStart_toStartOf="@id/bt_cluster_center_v" />
+
+        <!-- Touchpad Panel (centered horizontally, aligned with top analog height) -->
+        <View
+            android:id="@+id/gamepad_touchpad"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:background="@drawable/gamepad_touchpad_bg"
+            android:translationX="50dp"
+            android:translationY="75dp"
+            app:layout_constraintBottom_toBottomOf="@id/touchpad_center_h"
+            app:layout_constraintEnd_toEndOf="@id/bt_cluster_center_v"
+            app:layout_constraintStart_toStartOf="@id/bt_cluster_center_v"
+            app:layout_constraintTop_toTopOf="@id/touchpad_center_h" />
+
+        <!-- 4. EXTRA BUTTON DIAMOND (BT0 - BT3) -->
+        <Button
+            android:id="@+id/gamepad_btn_bt3"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="26dp"
+            android:background="@drawable/gamepad_button_selector"
+            android:rotation="90"
+            android:text="BT3"
+            android:textSize="9sp"
+            app:backgroundTint="@null"
+            app:layout_constraintBottom_toBottomOf="@id/gamepad_bt_anchor"
+            app:layout_constraintStart_toEndOf="@id/gamepad_bt_anchor"
+            app:layout_constraintTop_toTopOf="@id/gamepad_bt_anchor" />
+
+        <Button
+            android:id="@+id/gamepad_btn_bt0"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="26dp"
+            android:background="@drawable/gamepad_button_selector"
+            android:rotation="90"
+            android:text="BT0"
+            android:textSize="9sp"
+            app:backgroundTint="@null"
+            app:layout_constraintBottom_toBottomOf="@id/gamepad_bt_anchor"
+            app:layout_constraintEnd_toStartOf="@id/gamepad_bt_anchor"
+            app:layout_constraintTop_toTopOf="@id/gamepad_bt_anchor" />
+
+        <Button
+            android:id="@+id/gamepad_btn_bt2"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginBottom="26dp"
+            android:background="@drawable/gamepad_button_selector"
+            android:rotation="90"
+            android:text="BT2"
+            android:textSize="9sp"
+            app:backgroundTint="@null"
+            app:layout_constraintBottom_toTopOf="@id/gamepad_bt_anchor"
+            app:layout_constraintEnd_toEndOf="@id/gamepad_bt_anchor"
+            app:layout_constraintStart_toStartOf="@id/gamepad_bt_anchor" />
+
+        <Button
+            android:id="@+id/gamepad_btn_bt1"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="26dp"
+            android:background="@drawable/gamepad_button_selector"
+            android:rotation="90"
+            android:text="BT1"
+            android:textSize="9sp"
+            app:backgroundTint="@null"
+            app:layout_constraintEnd_toEndOf="@id/gamepad_bt_anchor"
+            app:layout_constraintStart_toStartOf="@id/gamepad_bt_anchor"
+            app:layout_constraintTop_toBottomOf="@id/gamepad_bt_anchor" />
+
+        <!-- 5. SIDEBAR (Sidebar - Right side of the interface) -->
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/sidebar_center_line"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.92" />
+
+        <Button
+            android:id="@+id/gamepad_btn_menu"
+            android:layout_width="150dp"
+            android:layout_height="70dp"
+            android:background="@drawable/gamepad_button_selector"
+            android:rotation="90"
+            android:text="MENU"
+            android:textSize="9sp"
+            android:translationY="-30dp"
+            app:backgroundTint="@null"
+            app:layout_constraintBottom_toTopOf="@id/gamepad_l_stick_toggle"
+            app:layout_constraintEnd_toEndOf="@+id/sidebar_center_line"
+            app:layout_constraintStart_toStartOf="@+id/sidebar_center_line"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="spread" />
+
+        <Button
+            android:id="@+id/gamepad_l_stick_toggle"
+            android:layout_width="90dp"
+            android:layout_height="40dp"
+            android:background="@drawable/gamepad_button_selector"
+            android:drawableStart="@drawable/led_indicator_selector"
+            android:drawablePadding="4dp"
+            android:paddingStart="10dp"
+            android:rotation="90"
+            android:text="L-STICK"
+            android:textSize="9sp"
+            app:backgroundTint="@null"
+            app:layout_constraintBottom_toTopOf="@id/gamepad_touch_toggle"
+            app:layout_constraintEnd_toEndOf="@+id/sidebar_center_line"
+            app:layout_constraintStart_toStartOf="@+id/sidebar_center_line"
+            app:layout_constraintTop_toBottomOf="@id/gamepad_btn_menu" />
+
+        <Button
+            android:id="@+id/gamepad_touch_toggle"
+            android:layout_width="90dp"
+            android:layout_height="40dp"
+            android:background="@drawable/gamepad_button_selector"
+            android:drawableStart="@drawable/led_indicator_selector"
+            android:drawablePadding="4dp"
+            android:paddingStart="10dp"
+            android:rotation="90"
+            android:text="TOUCH"
+            android:textSize="9sp"
+            app:backgroundTint="@null"
+            app:layout_constraintBottom_toTopOf="@id/gamepad_lock_toggle"
+            app:layout_constraintEnd_toEndOf="@+id/sidebar_center_line"
+            app:layout_constraintStart_toStartOf="@+id/sidebar_center_line"
+            app:layout_constraintTop_toBottomOf="@id/gamepad_l_stick_toggle" />
+
+        <Button
+            android:id="@+id/gamepad_lock_toggle"
+            android:layout_width="90dp"
+            android:layout_height="40dp"
+            android:background="@drawable/gamepad_button_selector"
+            android:drawableStart="@drawable/led_indicator_selector"
+            android:drawablePadding="4dp"
+            android:paddingStart="10dp"
+            android:rotation="90"
+            android:text="LOCK"
+            android:textSize="9sp"
+            app:backgroundTint="@null"
+            app:layout_constraintBottom_toTopOf="@id/gamepad_r_stick_toggle"
+            app:layout_constraintEnd_toEndOf="@+id/sidebar_center_line"
+            app:layout_constraintStart_toStartOf="@+id/sidebar_center_line"
+            app:layout_constraintTop_toBottomOf="@id/gamepad_touch_toggle" />
+
+        <Button
+            android:id="@+id/gamepad_r_stick_toggle"
+            android:layout_width="90dp"
+            android:layout_height="40dp"
+            android:background="@drawable/gamepad_button_selector"
+            android:drawableStart="@drawable/led_indicator_selector"
+            android:drawablePadding="4dp"
+            android:paddingStart="10dp"
+            android:rotation="90"
+            android:text="R-STICK"
+            android:textSize="9sp"
+            app:backgroundTint="@null"
+            app:layout_constraintBottom_toTopOf="@id/gamepad_btn_start"
+            app:layout_constraintEnd_toEndOf="@+id/sidebar_center_line"
+            app:layout_constraintStart_toStartOf="@+id/sidebar_center_line"
+            app:layout_constraintTop_toBottomOf="@id/gamepad_lock_toggle" />
+
+        <Button
+            android:id="@+id/gamepad_btn_start"
+            android:layout_width="150dp"
+            android:layout_height="70dp"
+            android:background="@drawable/gamepad_button_selector"
+            android:rotation="90"
+            android:text="START"
+            android:textSize="9sp"
+            android:translationY="30dp"
+            app:backgroundTint="@null"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/sidebar_center_line"
+            app:layout_constraintStart_toStartOf="@+id/sidebar_center_line"
+            app:layout_constraintTop_toBottomOf="@id/gamepad_r_stick_toggle" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -252,9 +516,11 @@
         android:text="@string/device_not_connected"
         android:textColor="@color/colorWhite"
         android:textSize="10sp"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginLeft="-144dp" />
+        android:layout_marginStart="-130dp"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

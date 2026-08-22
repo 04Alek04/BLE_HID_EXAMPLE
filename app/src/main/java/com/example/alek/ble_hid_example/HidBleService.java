@@ -109,7 +109,9 @@ enum ReportField {
     /* Gamepad (Report ID 5) */
     REPORT_FIELD_GAMEPAD_BUTTONS(0, 2),
     REPORT_FIELD_GAMEPAD_X(2, 1),
-    REPORT_FIELD_GAMEPAD_Y(3, 1);
+    REPORT_FIELD_GAMEPAD_Y(3, 1),
+    REPORT_FIELD_GAMEPAD_Z(4, 1),
+    REPORT_FIELD_GAMEPAD_RX(5, 1);
 
     final static public int REP_CONSUMER = 0x01;
     final static public int REP_MOUSE = 0x02;
@@ -308,12 +310,14 @@ public class HidBleService extends Service {
         sendReport(charReportAbsMouse, array, ReportField.REP_ABS_MOUSE, false, SendTo.SEND_TO_ALL);
     }
 
-    public void sendGamepadNotification(int buttons, int x, int y) {
-        byte[] array = new byte[4];
+    public void sendGamepadNotification(int buttons, int lx, int ly, int rx, int ry) {
+        byte[] array = new byte[6];
         array[0] = (byte) (buttons & 0xFF);
-        array[1] = (byte) ((buttons >> 8) & 0xFF);
-        array[2] = (byte) (x & 0xFF);
-        array[3] = (byte) (y & 0xFF);
+        array[1] = (byte) ((buttons >> 8) & 0x0F);
+        array[2] = (byte) (lx & 0xFF);
+        array[3] = (byte) (ly & 0xFF);
+        array[4] = (byte) (rx & 0xFF);
+        array[5] = (byte) (ry & 0xFF);
         sendReport(charReportGamepad, array, ReportField.REP_GAMEPAD, false, SendTo.SEND_TO_ALL);
     }
 
@@ -652,24 +656,30 @@ public class HidBleService extends Service {
                 (byte) 0x09, 0x05, /* Usage (Game Pad) */
                 (byte) 0xA1, 0x01, /* Collection (Application) */
                 (byte) 0x85, 0x05, /* Report ID (5) */
-                // 16 Buttons
+                // 12 Buttons (0x01 to 0x0C)
                 (byte) 0x05, 0x09, /* Usage Page (Button) */
-                (byte) 0x19, 0x01, /* Usage Minimum (Button 1) */
-                (byte) 0x29, 0x10, /* Usage Maximum (Button 16) */
+                (byte) 0x19, 0x01, /* Usage Minimum (Button 1 - 0x01) */
+                (byte) 0x29, 0x0C, /* Usage Maximum (Button 12 - 0x0C) */
                 (byte) 0x15, 0x00, /* Logical Minimum (0) */
                 (byte) 0x25, 0x01, /* Logical Maximum (1) */
-                (byte) 0x95, 0x10, /* Report Count (16) */
+                (byte) 0x95, 0x0C, /* Report Count (12) */
                 (byte) 0x75, 0x01, /* Report Size (1) */
-                (byte) 0x81, 0x02, /* Input (Data, Var, Abs) */
-                // 2 Joysticks (X, Y)
+                (byte) 0x81, (byte) 0x02, /* Input (Data, Var, Abs) */
+                // Padding 4 bits to complete 2 bytes
+                (byte) 0x95, 0x01, /* Report Count (1) */
+                (byte) 0x75, 0x04, /* Report Size (4) */
+                (byte) 0x81, (byte) 0x03, /* Input (Const, Var, Abs) */
+                // 4 Joysticks (0x30, 0x31, 0x32, 0x35)
                 (byte) 0x05, 0x01, /* Usage Page (Generic Desktop) */
-                (byte) 0x09, 0x30, /* Usage (X) */
-                (byte) 0x09, 0x31, /* Usage (Y) */
+                (byte) 0x09, 0x30, /* Usage (X - Lewa gałka Poziom) */
+                (byte) 0x09, 0x31, /* Usage (Y - Lewa gałka Pion) */
+                (byte) 0x09, 0x32, /* Usage (Z - Prawa gałka Poziom) */
+                (byte) 0x09, 0x35, /* Usage (Rz - Prawa gałka Pion) */
                 (byte) 0x15, (byte) 0x81, /* Logical Minimum (-127) */
                 (byte) 0x25, 0x7F, /* Logical Maximum (127) */
                 (byte) 0x75, 0x08, /* Report Size (8) */
-                (byte) 0x95, 0x02, /* Report Count (2) */
-                (byte) 0x81, 0x02, /* Input (Data, Var, Abs) */
+                (byte) 0x95, 0x04, /* Report Count (4) */
+                (byte) 0x81, (byte) 0x02, /* Input (Data, Var, Abs) */
                 (byte) 0xC0, /* End Collection */
         };
 

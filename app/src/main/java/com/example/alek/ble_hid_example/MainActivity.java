@@ -36,6 +36,10 @@ import androidx.fragment.app.FragmentPagerAdapter;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.KeyEvent;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -164,6 +168,35 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         }
     };
 
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            hideSystemUI();
+        }
+    }
+
+    private void hideSystemUI() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Window window = getWindow();
+            window.setDecorFitsSystemWindows(false);
+            WindowInsetsController controller = window.getInsetsController();
+            if (controller != null) {
+                controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        } else {
+            // Starsze wersje Androida
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN);
+        }
+    }
+
     private void updateDeviceInfoField(final String text, final int text_color, final int bg_color) {
         runOnUiThread(new Runnable() {
             @Override
@@ -177,6 +210,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                 for (int id : ids) {
                     TextView textView = findViewById(id);
                     if (textView == null) continue;
+                    textView.setVisibility(View.VISIBLE);
                     // textView.setBackgroundColor(bg_color); // Removed to keep custom drawable
                     textView.setTextColor(text_color);
                     textView.setText(text);
@@ -287,8 +321,8 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         if (mService != null) mService.sendConsumerNotification(rf, value, SendTo.SEND_TO_ALL);
     }
 
-    public void sendGamepadNotification(int buttons, int x, int y) {
-        if (mService != null) mService.sendGamepadNotification(buttons, x, y);
+    public void sendGamepadNotification(int buttons, int lx, int ly, int rx, int ry) {
+        if (mService != null) mService.sendGamepadNotification(buttons, lx, ly, rx, ry);
     }
 
     public void sendKeyboardText(String s) {
@@ -310,6 +344,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
+        hideSystemUI();
 
         checkPermissions();
         
@@ -332,6 +367,9 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
 
                 if (position == PagerAdapter.ABS_MOUSE) {
                     pager.swipePossible(false);
+                } else if (position == PagerAdapter.GAMEPAD) {
+                    boolean lockChecked = getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getBoolean("gamepad_lock", false);
+                    pager.swipePossible(!lockChecked);
                 } else {
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                     pager.swipePossible(true);
@@ -370,10 +408,10 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             Fragment f = pagerAdapter.getRegisteredFragment(PagerAdapter.GAMEPAD);
             if (f instanceof GamepadFragment) {
                 if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-                    if (event.getRepeatCount() == 0) ((GamepadFragment) f).onExternalButtonEvent(0x800, true);
+                    if (event.getRepeatCount() == 0) ((GamepadFragment) f).onExternalButtonEvent(0x400, true);
                     return true;
                 } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-                    if (event.getRepeatCount() == 0) ((GamepadFragment) f).onExternalButtonEvent(0x1000, true);
+                    if (event.getRepeatCount() == 0) ((GamepadFragment) f).onExternalButtonEvent(0x800, true);
                     return true;
                 }
             }
@@ -428,10 +466,10 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             Fragment f = pagerAdapter.getRegisteredFragment(PagerAdapter.GAMEPAD);
             if (f instanceof GamepadFragment) {
                 if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-                    ((GamepadFragment) f).onExternalButtonEvent(0x800, false);
+                    ((GamepadFragment) f).onExternalButtonEvent(0x400, false);
                     return true;
                 } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-                    ((GamepadFragment) f).onExternalButtonEvent(0x1000, false);
+                    ((GamepadFragment) f).onExternalButtonEvent(0x800, false);
                     return true;
                 }
             }
