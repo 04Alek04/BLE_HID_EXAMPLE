@@ -125,6 +125,7 @@ public class GamepadFragment extends Fragment {
 
         setupButton(view, R.id.gamepad_btn_menu, 0x100, activity);
         setupButton(view, R.id.gamepad_btn_start, 0x200, activity);
+        setupButton(view, R.id.gamepad_d_center, 0x400, activity); // L3 / Stick Click
 
         // Digital D-pad Buttons logic
         setupDpadButton(view, R.id.gamepad_d_up, 0, -127, activity);
