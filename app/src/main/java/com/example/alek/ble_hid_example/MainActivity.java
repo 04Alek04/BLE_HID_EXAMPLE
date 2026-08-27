@@ -302,8 +302,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             public void run() {
                 if (pager != null) {
                     pager.swipePossible(true);
-                    // Open Blockly as the default tab (now at index 0)
-        pager.setCurrentItem(PagerAdapter.BLOCKLY);
+                    pager.setCurrentItem(PagerAdapter.MOUSE);
                 }
             }
         });
