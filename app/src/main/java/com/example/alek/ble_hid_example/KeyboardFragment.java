@@ -77,25 +77,106 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         final TextInputEditText editText = getActivity().findViewById(R.id.keyboard_edit_text);
         final MaterialButton toggleBtn = getActivity().findViewById(R.id.keyboard_toggle_kb);
 
+        // Dummy invisible input view for live typing so 'enter text' is NOT focused/highlighted
+        final android.widget.EditText dummyEditText = new android.widget.EditText(getContext());
+        dummyEditText.setLayoutParams(new ViewGroup.LayoutParams(1, 1));
+        dummyEditText.setAlpha(0f);
+        dummyEditText.setFocusable(true);
+        dummyEditText.setFocusableInTouchMode(true);
+        if (view instanceof ViewGroup) {
+            ((ViewGroup) view).addView(dummyEditText);
+        }
+
+        final long[] keyboardOpenTime = new long[]{0};
+
         toggleBtn.addOnCheckedChangeListener(
                 new MaterialButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(MaterialButton buttonView, boolean isChecked) {
                         buttonView.setText(isChecked ? R.string.keyboard_on : R.string.keyboard_off);
-                        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(
-                                Context.INPUT_METHOD_SERVICE);
+                        InputMethodManager imm = getActivity() != null ? (InputMethodManager) getActivity().getSystemService(
+                                Context.INPUT_METHOD_SERVICE) : null;
                         
                         if (isChecked) {
-                            editText.requestFocus();
-                            imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
+                            keyboardOpenTime[0] = System.currentTimeMillis();
+                            dummyEditText.requestFocus();
+                            if (imm != null) {
+                                imm.showSoftInput(dummyEditText, InputMethodManager.SHOW_IMPLICIT);
+                            }
                         } else {
-                            imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+                            dummyEditText.clearFocus();
+                            if (imm != null) {
+                                imm.hideSoftInputFromWindow(dummyEditText.getWindowToken(), 0);
+                            }
                         }
                     }
                 });
 
-        // Live typing logic
-        editText.addTextChangedListener(new TextWatcher() {
+        final long[] editTextOpenTime = new long[]{0};
+
+        editText.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                editTextOpenTime[0] = System.currentTimeMillis();
+            }
+            return false;
+        });
+
+        editText.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus && getActivity() != null) {
+                InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+                }
+            }
+        });
+
+        View.OnTouchListener touchOutsideListener = (v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                if (editText.hasFocus()) {
+                    editText.clearFocus();
+                    if (getActivity() != null) {
+                        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        if (imm != null) {
+                            imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+                        }
+                    }
+                }
+            }
+            return false;
+        };
+
+        view.setOnTouchListener(touchOutsideListener);
+        View subMainLayout = view.findViewById(R.id.keyboard_sub_main_layout);
+        if (subMainLayout != null) {
+            subMainLayout.setOnTouchListener(touchOutsideListener);
+        }
+
+        view.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            if (getActivity() == null) return;
+            long now = System.currentTimeMillis();
+            // Grace period of 500ms after clicking Keyboard On or focusing editText to avoid closing while animating open
+            if (now - keyboardOpenTime[0] < 500 || now - editTextOpenTime[0] < 500) {
+                return;
+            }
+            android.graphics.Rect r = new android.graphics.Rect();
+            view.getWindowVisibleDisplayFrame(r);
+            int screenHeight = view.getRootView().getHeight();
+            int keypadHeight = screenHeight - r.bottom;
+
+            boolean isKeyboardVisible = keypadHeight > screenHeight * 0.15;
+            if (!isKeyboardVisible) {
+                if (toggleBtn.isChecked()) {
+                    toggleBtn.setChecked(false);
+                    dummyEditText.clearFocus();
+                }
+                if (editText.hasFocus()) {
+                    editText.clearFocus();
+                }
+            }
+        });
+
+        // Live typing logic on dummyEditText
+        dummyEditText.addTextChangedListener(new TextWatcher() {
             private boolean isInternalChange = false;
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -108,7 +189,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
                     if (activity != null) {
                         activity.sendKeyboardText(added);
                         isInternalChange = true;
-                        editText.setText(""); // Clear for next character
+                        dummyEditText.setText(""); // Clear for next character
                         isInternalChange = false;
                     }
                 }
@@ -118,7 +199,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         });
 
         // Handle backspace in live mode
-        editText.setOnKeyListener(new View.OnKeyListener() {
+        dummyEditText.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (toggleBtn.isChecked() && event.getAction() == KeyEvent.ACTION_DOWN) {
