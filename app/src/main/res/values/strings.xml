@@ -7,7 +7,6 @@
     <string name="music_player_control">Music/Player control</string>
     <string name="send_text">Send text</string>
     <string name="send_single_character">Send Single Character</string>
-    <string name="consumer">Consumer</string>
     <string name="keyboard_on">Keyboard On</string>
     <string name="keyboard_off">Keyboard Off</string>
     <string name="reboot_application">Reboot application</string>
@@ -24,14 +23,50 @@
     <string name="horizontal_scroll">Horizontal Scroll</string>
     <string name="absolute_mouse">Absolute Mouse</string>
     <string name="triple_tap_to_exit">Triple tap to exit</string>
+    <string name="abs_mouse_default_coords">X: 0 Y: 0</string>
+
+    <!-- Mouse Strings -->
+    <string name="touchpad">Touchpad</string>
+
+    <!-- Gamepad Strings -->
+    <string name="gamepad_l3">L3</string>
+    <string name="gamepad_r3">R3</string>
+    <string name="gamepad_lb">LB</string>
+    <string name="gamepad_lt">LT</string>
+    <string name="gamepad_rb">RB</string>
+    <string name="gamepad_rt">RT</string>
+    <string name="gamepad_bt0">BT0</string>
+    <string name="gamepad_bt1">BT1</string>
+    <string name="gamepad_bt2">BT2</string>
+    <string name="gamepad_bt3">BT3</string>
+    <string name="gamepad_menu">MENU</string>
+    <string name="gamepad_start">START</string>
+    <string name="gamepad_l_stick">L-STICK</string>
+    <string name="gamepad_r_stick">R-STICK</string>
+    <string name="gamepad_touch">TOUCH</string>
+    <string name="gamepad_lock">LOCK</string>
+
+    <!-- Keyboard Locks & Shortcuts -->
+    <string name="keyboard_num">NUM</string>
+    <string name="keyboard_caps">CAPS</string>
+    <string name="keyboard_scrl">SCRL</string>
+    <string name="keyboard_shortcuts_title">Shortcuts (CTRL+)</string>
+    <string name="shortcut_undo">Undo (Z)</string>
+    <string name="shortcut_redo">Redo (Y)</string>
+    <string name="shortcut_save">Save (S)</string>
+    <string name="shortcut_paste">Paste (V)</string>
+    <string name="shortcut_cut">Cut (X)</string>
+    <string name="shortcut_copy">Copy (C)</string>
+    <string name="shortcut_all">All (A)</string>
+    <string name="shortcut_find">Find (F)</string>
+    <string name="shortcut_replace">Replace (H)</string>
 
     <!-- Blockly Strings -->
     <string name="blockly_run">RUN</string>
     <string name="blockly_stop">STOP</string>
-    <string name="blockly_background_on">BG: ON</string>
-    <string name="blockly_background_off">BG: OFF</string>
     <string name="blockly_save">Save</string>
     <string name="blockly_load">Load</string>
+    <string name="blockly_clear_workspace">Clear Workspace</string>
     <string name="blockly_macro_saved">Macro saved</string>
     <string name="blockly_no_macro">No saved macro found</string>
 </resources>

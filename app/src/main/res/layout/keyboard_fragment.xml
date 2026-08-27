@@ -140,7 +140,7 @@
                             android:layout_weight="1"
                             android:layout_margin="2dp"
                             android:checkable="true"
-                            android:text="NUM"
+                            android:text="@string/keyboard_num"
                             android:textSize="10sp" />
 
                         <com.google.android.material.button.MaterialButton
@@ -151,7 +151,7 @@
                             android:layout_weight="1"
                             android:layout_margin="2dp"
                             android:checkable="true"
-                            android:text="CAPS"
+                            android:text="@string/keyboard_caps"
                             android:textSize="10sp" />
 
                         <com.google.android.material.button.MaterialButton
@@ -162,7 +162,7 @@
                             android:layout_weight="1"
                             android:layout_margin="2dp"
                             android:checkable="true"
-                            android:text="SCRL"
+                            android:text="@string/keyboard_scrl"
                             android:textSize="10sp" />
                     </LinearLayout>
                 </LinearLayout>
@@ -189,7 +189,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="4dp"
-                        android:text="Shortcuts (CTRL+)"
+                        android:text="@string/keyboard_shortcuts_title"
                         android:textAlignment="center"
                         android:textColor="@color/colorOnSurface"
                         android:textSize="12sp" />
@@ -206,7 +206,7 @@
                             android:layout_height="40dp"
                             android:layout_columnWeight="1"
                             android:layout_margin="2dp"
-                            android:text="Undo (Z)"
+                            android:text="@string/shortcut_undo"
                             android:textSize="10sp" />
 
                         <com.google.android.material.button.MaterialButton
@@ -216,7 +216,7 @@
                             android:layout_height="40dp"
                             android:layout_columnWeight="1"
                             android:layout_margin="2dp"
-                            android:text="Redo (Y)"
+                            android:text="@string/shortcut_redo"
                             android:textSize="10sp" />
 
                         <com.google.android.material.button.MaterialButton
@@ -226,7 +226,7 @@
                             android:layout_height="40dp"
                             android:layout_columnWeight="1"
                             android:layout_margin="2dp"
-                            android:text="Save (S)"
+                            android:text="@string/shortcut_save"
                             android:textSize="10sp" />
 
                         <com.google.android.material.button.MaterialButton
@@ -236,7 +236,7 @@
                             android:layout_height="40dp"
                             android:layout_columnWeight="1"
                             android:layout_margin="2dp"
-                            android:text="Paste (V)"
+                            android:text="@string/shortcut_paste"
                             android:textSize="10sp" />
 
                         <com.google.android.material.button.MaterialButton
@@ -246,7 +246,7 @@
                             android:layout_height="40dp"
                             android:layout_columnWeight="1"
                             android:layout_margin="2dp"
-                            android:text="Cut (X)"
+                            android:text="@string/shortcut_cut"
                             android:textSize="10sp" />
 
                         <com.google.android.material.button.MaterialButton
@@ -256,7 +256,7 @@
                             android:layout_height="40dp"
                             android:layout_columnWeight="1"
                             android:layout_margin="2dp"
-                            android:text="Copy (C)"
+                            android:text="@string/shortcut_copy"
                             android:textSize="10sp" />
 
                         <com.google.android.material.button.MaterialButton
@@ -266,7 +266,7 @@
                             android:layout_height="40dp"
                             android:layout_columnWeight="1"
                             android:layout_margin="2dp"
-                            android:text="All (A)"
+                            android:text="@string/shortcut_all"
                             android:textSize="10sp" />
 
                         <com.google.android.material.button.MaterialButton
@@ -276,7 +276,7 @@
                             android:layout_height="40dp"
                             android:layout_columnWeight="1"
                             android:layout_margin="2dp"
-                            android:text="Find (F)"
+                            android:text="@string/shortcut_find"
                             android:textSize="10sp" />
 
                         <com.google.android.material.button.MaterialButton
@@ -286,7 +286,7 @@
                             android:layout_height="40dp"
                             android:layout_columnWeight="1"
                             android:layout_margin="2dp"
-                            android:text="Replace (H)"
+                            android:text="@string/shortcut_replace"
                             android:textSize="10sp" />
                     </GridLayout>
                 </LinearLayout>

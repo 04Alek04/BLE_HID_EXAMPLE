@@ -34,10 +34,6 @@ final class UUIDs {
     public static final String SERVICE_BAS = "0000180F-0000-1000-8000-00805F9B34FB";
     public static final String CHAR_BATTERY_LEVEL = "00002A19-0000-1000-8000-00805F9B34FB";
 
-    // Generic Attribute related UUIDs
-    public static final String SERVICE_GENERIC_ATTRIBUTE = "00001801-0000-1000-8000-00805F9B34FB";
-    public static final String CHAR_SERVICE_CHANGED = "00002A05-0000-1000-8000-00805F9B34FB";
-
     private UUIDs() {
     }
 }

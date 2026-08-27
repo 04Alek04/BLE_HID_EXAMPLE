@@ -19,17 +19,13 @@ import android.view.KeyEvent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 final class KeyboardUsage {
     static final byte META_LEFT_CONTROL = (byte) 0x01;
     static final byte META_LEFT_SHIFT = (byte) 0x02;
     static final byte META_LEFT_ALT = (byte) 0x04;
     static final byte META_LEFT_META = (byte) 0x08;
-    static final byte META_RIGHT_CONTROL = (byte) 0x10;
-    static final byte META_RIGHT_SHIFT = (byte) 0x20;
     static final byte META_RIGHT_ALT = (byte) 0x40;
-    static final byte META_RIGHT_META = (byte) 0x80;
 
     static final KeyboardUsage[] KEYBOARD_USAGES = {
             new KeyboardUsage(KeyEvent.KEYCODE_A, (byte) 0x04, 'a'),
@@ -216,15 +212,6 @@ final class KeyboardUsage {
 
     private KeyboardUsage(int kc, byte u, char c) {
         this(kc, u, c, (byte) 0, false);
-    }
-
-    static public byte getUsage(String d) {
-        for (KeyboardUsage KEYBOARD_USAGE : KEYBOARD_USAGES) {
-            if (Objects.equals(KEYBOARD_USAGE.description, d)) {
-                return KEYBOARD_USAGE.usage;
-            }
-        }
-        return 0;
     }
 
     static public List<String> getUsageNames() {
