@@ -110,6 +110,14 @@ public class BlocklyFragment extends Fragment {
         webView.evaluateJavascript("stopCode()", null);
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (isRunning) {
+            stopScript();
+        }
+    }
+
     public void onScriptFinished() {
         isRunning = false;
         btnRun.setText(R.string.blockly_run);

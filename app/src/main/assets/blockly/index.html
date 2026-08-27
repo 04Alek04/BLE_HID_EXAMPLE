@@ -176,9 +176,18 @@
           init: function() {
             this.appendDummyInput().appendField("Key")
                 .appendField(new Blockly.FieldDropdown([
-                    ["ENTER","40"], ["TAB","43"], ["ESC","41"], ["SPACE","44"],
-                    ["BACKSPACE","42"], ["DEL","76"], ["HOME","74"], ["END","77"],
-                    ["UP","82"], ["DOWN","81"], ["LEFT","80"], ["RIGHT","79"],
+                    ["Enter","40"], ["Escape","41"], ["Backspace","42"], ["Tab","43"], ["Space","44"],
+                    ["Insert","73"], ["Delete","76"], ["Home","74"], ["End","77"],
+                    ["Page Up","75"], ["Page Down","78"],
+                    ["Up","82"], ["Down","81"], ["Left","80"], ["Right","79"],
+                    ["F1","58"], ["F2","59"], ["F3","60"], ["F4","61"],
+                    ["F5","62"], ["F6","63"], ["F7","64"], ["F8","65"],
+                    ["F9","66"], ["F10","67"], ["F11","68"], ["F12","69"],
+                    ["Caps Lock","57"], ["Num Lock","83"], ["Scroll Lock","71"],
+                    ["SysRq / PrintScreen","70"], ["Pause","72"],
+                    ["KP /","84"], ["KP *","85"], ["KP -","86"], ["KP +","87"], ["KP Enter","88"],
+                    ["KP 1","89"], ["KP 2","90"], ["KP 3","91"], ["KP 4","92"], ["KP 5","93"],
+                    ["KP 6","94"], ["KP 7","95"], ["KP 8","96"], ["KP 9","97"], ["KP 0","98"], ["KP .","99"],
                     ["ż (PL)","29"]
                 ]), "KEY")
                 .appendField(new Blockly.FieldDropdown([
@@ -316,8 +325,9 @@
           init: function() {
             this.appendDummyInput().appendField("Gamepad")
                 .appendField(new Blockly.FieldDropdown([
-                    ["Button 1","1"], ["Button 2","2"], ["Button 3","3"], ["Button 4","4"],
-                    ["Button 5","5"], ["Button 6","6"], ["Button 7","7"], ["Button 8","8"]
+                    ["bt0","1"], ["bt1","2"], ["bt2","3"], ["bt3","4"],
+                    ["LB","5"], ["RB","6"], ["LT","7"], ["RT","8"],
+                    ["MENU","9"], ["START","10"], ["L3","11"], ["R3","12"]
                 ]), "BTN")
                 .appendField(new Blockly.FieldDropdown([
                     ["Click","CLICK"], ["Press","DOWN"], ["Release","UP"]

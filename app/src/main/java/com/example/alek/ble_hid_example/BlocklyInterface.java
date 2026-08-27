@@ -179,6 +179,8 @@ public class BlocklyInterface {
         activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
         // Release Mouse Buttons
         activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0);
+        // Release Absolute Mouse
+        activity.sendAbsMouseReport(0, 0, 0);
         // Release Gamepad Buttons and reset sticks
         activity.sendGamepadNotification(0, 0, 0, 0, 0);
         currentGamepadButtons = 0;
