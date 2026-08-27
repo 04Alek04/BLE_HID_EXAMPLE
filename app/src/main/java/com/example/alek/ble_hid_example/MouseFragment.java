@@ -81,7 +81,7 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
                         float dx = currentX - lastX;
                         lastX = currentX;
 
-                        float sensitivity = 0.2f; // Zmniejszono z 0.5f dla wolniejszego scrollowania
+                        float sensitivity = 0.2f; // Decreased from 0.5f for slower scrolling
                         float moveX = dx * sensitivity + remainderX;
                         int intX = Math.round(moveX);
 

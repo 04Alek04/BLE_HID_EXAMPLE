@@ -671,10 +671,10 @@ public class HidBleService extends Service {
                 (byte) 0x81, (byte) 0x03, /* Input (Const, Var, Abs) */
                 // 4 Joysticks (0x30, 0x31, 0x32, 0x35)
                 (byte) 0x05, 0x01, /* Usage Page (Generic Desktop) */
-                (byte) 0x09, 0x30, /* Usage (X - Lewa gałka Poziom) */
-                (byte) 0x09, 0x31, /* Usage (Y - Lewa gałka Pion) */
-                (byte) 0x09, 0x32, /* Usage (Z - Prawa gałka Poziom) */
-                (byte) 0x09, 0x35, /* Usage (Rz - Prawa gałka Pion) */
+                (byte) 0x09, 0x30, /* Usage (X - Left Stick Horizontal) */
+                (byte) 0x09, 0x31, /* Usage (Y - Left Stick Vertical) */
+                (byte) 0x09, 0x32, /* Usage (Z - Right Stick Horizontal) */
+                (byte) 0x09, 0x35, /* Usage (Rz - Right Stick Vertical) */
                 (byte) 0x15, (byte) 0x81, /* Logical Minimum (-127) */
                 (byte) 0x25, 0x7F, /* Logical Maximum (127) */
                 (byte) 0x75, 0x08, /* Report Size (8) */
