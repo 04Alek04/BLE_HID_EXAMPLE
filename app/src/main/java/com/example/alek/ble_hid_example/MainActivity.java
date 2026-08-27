@@ -54,6 +54,20 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
     public PagerAdapter pagerAdapter = null;
     private volatile List<BluetoothDevice> devices = new ArrayList<>();
     
+    public boolean isDeviceEnabled(BluetoothDevice device) {
+        return mService == null || mService.isDeviceEnabled(device);
+    }
+
+    public void setDeviceEnabled(BluetoothDevice device, boolean enabled) {
+        if (mService != null) {
+            mService.setDeviceEnabled(device, enabled);
+        }
+    }
+
+    public List<BluetoothDevice> getEnabledDevices() {
+        return mService != null ? mService.getEnabledDevices() : new ArrayList<>(devices);
+    }
+
     private final Runnable deviceLayoutUpdate = new Runnable() {
         private List<BluetoothDevice> lastDevices = new ArrayList<>();
         private LinearLayout lastLayout = null;
@@ -81,27 +95,31 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                 @Override
                 public void run() {
                     ll.removeAllViews();
+                    android.view.LayoutInflater inflater = android.view.LayoutInflater.from(MainActivity.this);
                     for (BluetoothDevice bd : currentDevices) {
-                        TextView textView = new TextView(getApplicationContext());
-                        textView.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
-                        
-                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                                LinearLayout.LayoutParams.MATCH_PARENT,
-                                LinearLayout.LayoutParams.WRAP_CONTENT);
-                        params.setMargins(0, 4, 0, 4);
-                        textView.setLayoutParams(params);
-                        
-                        textView.setPadding(16, 24, 16, 24);
-                        textView.setBackgroundResource(R.drawable.device_info_bg);
-                        textView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorWhite));
-                        textView.setTextSize(14);
-                        
+                        View itemView = inflater.inflate(R.layout.device_item, ll, false);
+                        TextView infoView = itemView.findViewById(R.id.device_item_info);
+                        androidx.appcompat.widget.SwitchCompat switchView = itemView.findViewById(R.id.device_item_switch);
+
                         String name = "Unknown Device";
                         try {
                             name = bd.getName() != null ? bd.getName() : "Unknown Device";
                         } catch (SecurityException ignored) {}
-                        textView.setText(name + "\n" + bd.getAddress());
-                        ll.addView(textView);
+
+                        if (infoView != null) {
+                            infoView.setText(name + "\n" + bd.getAddress());
+                        }
+
+                        if (switchView != null) {
+                            switchView.setOnCheckedChangeListener(null);
+                            switchView.setChecked(isDeviceEnabled(bd));
+                            switchView.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                                setDeviceEnabled(bd, isChecked);
+                                threadHandler.removeCallbacks(deviceFieldUpdate);
+                                threadHandler.post(deviceFieldUpdate);
+                            });
+                        }
+                        ll.addView(itemView);
                     }
                 }
             });
@@ -115,7 +133,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
 
         public void run() {
             final long refreshTextViewPeriodMs = 1200;
-            final List<BluetoothDevice> currentDevices = new ArrayList<>(devices);
+            final List<BluetoothDevice> currentDevices = getEnabledDevices();
             
             String text;
             int text_color;
@@ -137,7 +155,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                 }
                 i = (i + 1) % currentDevices.size();
             } else {
-                text = "Device not connected ";
+                text = getString(R.string.device_not_connected) + " ";
                 text_color = ContextCompat.getColor(getApplicationContext(), R.color.colorGrey);
                 bg_color = 0;
                 i = 0;

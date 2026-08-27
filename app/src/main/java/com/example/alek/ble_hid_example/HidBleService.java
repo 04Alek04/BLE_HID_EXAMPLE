@@ -177,6 +177,7 @@ public class HidBleService extends Service {
     private final List<BluetoothGattService> servicesToAdd = Collections.synchronizedList(new ArrayList<>());
     private final Map<String, Map<String, byte[]>> mDeviceDescriptorValues = new ConcurrentHashMap<>();
     private final Map<BluetoothDevice, Integer> mNotificationMasks = new ConcurrentHashMap<>();
+    private final java.util.Set<String> mDisabledDeviceAddresses = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
     
     /* Call proper methods on some BLE events  */
     private MainActivity mainActivity;
@@ -231,6 +232,10 @@ public class HidBleService extends Service {
             }
 
             for (BluetoothDevice device : targetDevices) {
+                if (!isDeviceEnabled(device)) {
+                    continue;
+                }
+
                 Integer mask = mNotificationMasks.get(device);
                 if (mask == null || (mask & maskBit) == 0) {
                     continue;
@@ -865,6 +870,7 @@ public class HidBleService extends Service {
                         devices.add(device);
                     }
                     
+                    setDeviceEnabled(device, true);
                     updateNotificationMask(device);
 
                     if (devices.size() == 1) {
@@ -1185,6 +1191,47 @@ public class HidBleService extends Service {
         return devices;
     }
 
+    public boolean isDeviceEnabled(BluetoothDevice device) {
+        if (device == null) return false;
+        String resAddr = getResolvedAddress(device);
+        String rawAddr = device.getAddress();
+        return !mDisabledDeviceAddresses.contains(resAddr) && !mDisabledDeviceAddresses.contains(rawAddr);
+    }
+
+    public void setDeviceEnabled(BluetoothDevice device, boolean enabled) {
+        if (device == null) return;
+        String resAddr = getResolvedAddress(device);
+        String rawAddr = device.getAddress();
+        if (enabled) {
+            mDisabledDeviceAddresses.remove(resAddr);
+            mDisabledDeviceAddresses.remove(rawAddr);
+        } else {
+            mDisabledDeviceAddresses.add(resAddr);
+            mDisabledDeviceAddresses.add(rawAddr);
+            synchronized (pendingNotifications) {
+                List<NotificationData> toRemove = new ArrayList<>();
+                for (NotificationData data : pendingNotifications) {
+                    if (data.device.equals(device) || getResolvedAddress(data.device).equalsIgnoreCase(resAddr)) {
+                        toRemove.add(data);
+                    }
+                }
+                pendingNotifications.removeAll(toRemove);
+            }
+        }
+    }
+
+    public List<BluetoothDevice> getEnabledDevices() {
+        List<BluetoothDevice> enabledList = new ArrayList<>();
+        synchronized (devices) {
+            for (BluetoothDevice d : devices) {
+                if (isDeviceEnabled(d)) {
+                    enabledList.add(d);
+                }
+            }
+        }
+        return enabledList;
+    }
+
     public void setActivity(MainActivity ma) {
         mainActivity = ma;
     }
@@ -1197,13 +1244,7 @@ public class HidBleService extends Service {
         array[2] = (byte) ((x >> 8) & 0xFF);
         array[3] = (byte) (y & 0xFF);
         array[4] = (byte) ((y >> 8) & 0xFF);
-        
-        synchronized (pendingNotifications) {
-            for (BluetoothDevice device : devices) {
-                pendingNotifications.add(new NotificationData(device, charReportAbsMouse, array));
-            }
-        }
-        processNotificationQueue();
+        sendReport(charReportAbsMouse, array, ReportField.REP_ABS_MOUSE, false, SendTo.SEND_TO_ALL);
     }
 
     /* Service handling-related methods */
