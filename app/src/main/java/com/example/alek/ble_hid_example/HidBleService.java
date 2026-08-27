@@ -1041,9 +1041,41 @@ public class HidBleService extends Service {
         };
     }
 
+    private String getResolvedAddress(BluetoothDevice device) {
+        if (device == null) return "";
+        try {
+            Method m = device.getClass().getMethod("getIdentityAddress");
+            String identity = (String) m.invoke(device);
+            if (identity != null && !identity.isEmpty()) {
+                return identity;
+            }
+        } catch (Exception ignored) {}
+
+        String address = device.getAddress();
+        try {
+            BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+            BluetoothAdapter adapter = bm != null ? bm.getAdapter() : BluetoothAdapter.getDefaultAdapter();
+            if (adapter != null) {
+                java.util.Set<BluetoothDevice> bondedDevices = adapter.getBondedDevices();
+                if (bondedDevices != null) {
+                    for (BluetoothDevice bonded : bondedDevices) {
+                        if (bonded.getAddress().equalsIgnoreCase(address)) {
+                            return bonded.getAddress();
+                        }
+                    }
+                    if (device.getBondState() == BluetoothDevice.BOND_BONDED && bondedDevices.size() == 1) {
+                        return bondedDevices.iterator().next().getAddress();
+                    }
+                }
+            }
+        } catch (SecurityException ignored) {}
+
+        return address;
+    }
+
     private void saveDescriptorValue(BluetoothDevice device, BluetoothGattDescriptor descriptor, byte[] value) {
         descriptor.setValue(value);
-        String deviceAddress = device.getAddress();
+        String deviceAddress = getResolvedAddress(device);
         String charUuid = descriptor.getCharacteristic().getUuid().toString();
         String descUuid = descriptor.getUuid().toString();
 
@@ -1065,7 +1097,7 @@ public class HidBleService extends Service {
 
     private byte[] getDescriptorValue(BluetoothDevice device, BluetoothGattDescriptor descriptor) {
         if (descriptor == null) return null;
-        String deviceAddress = device.getAddress();
+        String deviceAddress = getResolvedAddress(device);
         String charUuid = descriptor.getCharacteristic().getUuid().toString();
         String descUuid = descriptor.getUuid().toString();
 
@@ -1088,7 +1120,11 @@ public class HidBleService extends Service {
                 map.put(charUuid, value);
                 return value;
             }
-            // For CCCD, if no value is stored, it MUST be disabled by default (0x00, 0x00)
+            // For bonded HID devices, default to notifications ENABLED (0x01, 0x00) if no value stored
+            if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
+                return new byte[]{1, 0};
+            }
+            // For unbonded CCCD, if no value is stored, default disabled (0x00, 0x00)
             return new byte[]{0, 0};
         }
         return descriptor.getValue();
