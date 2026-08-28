@@ -234,7 +234,9 @@
         Blockly.Blocks['hid_mouse_click'] = {
           init: function() {
             this.appendDummyInput().appendField("Mouse")
-                .appendField(new Blockly.FieldDropdown([["Left","1"], ["Right","2"]]), "BTN")
+                .appendField(new Blockly.FieldDropdown([
+                    ["Left","1"], ["Right","2"], ["Middle","4"], ["Button 4","8"], ["Button 5","16"]
+                ]), "BTN")
                 .appendField(new Blockly.FieldDropdown([
                     ["Click","CLICK"], ["Press","DOWN"], ["Release","UP"]
                 ]), "ACTION");
@@ -246,15 +248,12 @@
           var btn = block.getFieldValue('BTN');
           var action = block.getFieldValue('ACTION');
           var code = 'if(executionCancelled) return;\n';
-          if (action == 'CLICK' || action == 'DOWN') {
-              code += 'AndroidHID.mouseClick(' + btn + ');\n';
-          }
           if (action == 'CLICK') {
-              code += 'await new Promise(r => setTimeout(r, 50));\n';
-              code += 'AndroidHID.mouseClick(0);\n';
-          }
-          if (action == 'UP') {
-              code += 'AndroidHID.mouseClick(0);\n';
+              code += 'AndroidHID.mouseClick(' + btn + ');\n';
+          } else if (action == 'DOWN') {
+              code += 'AndroidHID.setMouseButtons(' + btn + ');\n';
+          } else if (action == 'UP') {
+              code += 'AndroidHID.setMouseButtons(0);\n';
           }
           return code;
         };

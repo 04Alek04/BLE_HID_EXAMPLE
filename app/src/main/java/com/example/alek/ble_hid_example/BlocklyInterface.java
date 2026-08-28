@@ -43,6 +43,11 @@ public class BlocklyInterface {
     }
 
     @JavascriptInterface
+    public void setMouseButtons(int buttons) {
+        activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, buttons);
+    }
+
+    @JavascriptInterface
     public void mouseClick(int buttons) {
         activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, buttons);
         // Auto-release after click for simplicity in blocks
