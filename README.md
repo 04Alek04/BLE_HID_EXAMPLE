@@ -1,14 +1,23 @@
 # BLE_HID_EXAMPLE
-Example of HID over GATT (Bluetooth Low Energy) Android Application. The application emulates a peripheral BLE device (mouse, keyboard, or remote) that can be connected to a PC, tablet, or smartphone.
+Example of HID over GATT (Bluetooth Low Energy) Android Application. The application emulates a peripheral BLE device (mouse, keyboard, gamepad, digitizer, and consumer remote) that can be connected to a PC, tablet, or smartphone.
 
-In version 2.0, the legacy "basic mode" has been removed to provide a unified, high-performance experience. The application consists of 5 full-screen fragments. When more than one device is connected, notifications are sent to all connected devices simultaneously.
+The application consists of 7 full-screen fragments. When more than one device is connected, notifications can be routed to all connected devices simultaneously or toggled individually per host.
+
+## Blockly fragment (Automation & Macros)
+![](screenshots/blockly.jpg)
+
+- **Visual Programming Workspace** - drag-and-drop Google Blockly interface to build custom HID macros and automated scripts.
+- **Rich Block Library** - includes blocks for keyboard text/keys, mouse movement, clicks, scrolling, absolute positioning, gamepad sticks/buttons, consumer media controls, delays, loops, and conditional logic.
+- **Run / Stop Execution** - execute programmed scripts in real-time or stop execution with a single tap.
+- **Save & Load** - save macros to internal storage and reload them whenever needed.
+- **Stash Bar** - quick access bar for frequently used blocks.
 
 ## Configuration fragment
 ![](screenshots/configuration.jpg)
 
 - **Reboot application button** - restarts the application and the Bluetooth stack. Useful for refreshing the connection state if any issues occur.
 - **Clear configs button** - deletes saved device pairings and configurations if connection issues occur.
-- **List of currently connected devices** - shows the names and addresses of all connected hosts.
+- **List of connected devices with toggles** - displays connected hosts with individual switches to enable or disable HID notification routing per device.
 
 ## Consumer control fragment
 ![](screenshots/consumer.jpg)
@@ -22,23 +31,48 @@ In version 2.0, the legacy "basic mode" has been removed to provide a unified, h
 ## Mouse fragment
 ![](screenshots/mouse.jpg)
 
-- **Buttons (1, 2, 3, 4, 5)** - emulates standard mouse button clicks.
+- **Buttons (1, 2, 3, 4, 5)** - emulates standard mouse button clicks (Left, Right, Middle, Button 4, Button 5).
 - **Touchpad area** - move the cursor; double-tap emulates a left-click.
-- **Volume buttons** - the phone's physical volume up/down buttons emulate the mouse scroll wheel.
+- **Horizontal Scroll bar** - smooth horizontal panning/scrolling (h-scroll / tilt wheel).
+- **Volume buttons** - the phone's physical volume up/down buttons emulate the vertical mouse scroll wheel.
 
 ## Keyboard fragment
-![](screenshots/keyboard.jpg) ![](screenshots/keyboard2.jpg)
+![](screenshots/keyboard.jpg)
 
 - **Send text** - type a phrase and send it to the computer all at once.
 - **Send character** - a dropdown list to select and send a single special character or function key.
-- **Keyboard shortcuts** - dedicated buttons for common actions like copy, paste, and select all.
-- **LED indicators** - shows and toggles the status of Caps Lock, Num Lock, and Scroll Lock received from the host.
-- **Keyboard On/Off** - enables or disables the software keyboard for direct character input.
+- **Keyboard shortcuts** - dedicated buttons for common actions like Ctrl+C, Ctrl+V, Ctrl+Z, Ctrl+A, and more.
+- **LED indicators** - shows the real-time status of Caps Lock, Num Lock, and Scroll Lock received from the host.
+- **Keyboard On/Off** - enables or disables the software keyboard for direct live typing with smart Caps Lock synchronization.
 
-## D-Pad fragment
-![](screenshots/d_pad.jpg)
+## Gamepad fragment
+![](screenshots/gamepad.jpg)
 
-- **Arrow buttons** - sends up/down/left/right arrow keys. Perfect for presentations or simple navigation.
+- **Dual Analog Sticks / D-Pad** - virtual L-Stick and R-Stick with octagonal bases, double-tap for L3/R3 clicks, and toggles to switch between analog stick or digital D-Pad / button modes.
+- **Action Buttons (BT0 - BT3)** - standard ABXY style action button diamond.
+- **Shoulder Buttons & Triggers** - dedicated LB, RB, LT, and RT buttons.
+- **Touchpad & System Keys** - integrated central touchpad area and MENU / START system buttons.
+- **Control Toggles** - independent toggles for L-Stick, Touchpad, Tab Swiping Lock, and R-Stick.
+
+## Absolute Mouse fragment
+![](screenshots/absolute_mouse.jpg)
+
+- **Full-Screen Touch Surface** - absolute 0–32767 coordinate mapping for touchscreen and digitizer emulation.
+- **Triple-Tap Exit** - triple-tap anywhere inside the touch frame to exit back to standard mouse mode.
+- **Physical Volume Buttons** - physical volume up/down buttons map to primary and secondary touch/click states.
+- **Real-Time Coordinate Feedback** - displays live X/Y absolute coordinates.
+
+---
+
+## What's new in version 2.5
+- **Blockly Visual Automation Engine:** Integrated Google Blockly for creating, editing, saving, and executing automated HID macros and scripts (keyboard, mouse, gamepad, consumer controls, delays, loops, and conditional logic) over BLE.
+- **Full Virtual Gamepad Mode:** Added a full-featured gamepad controller with dual analog sticks (L-Stick, R-Stick), D-Pad, L3/R3, ABXY buttons, LB/RB/LT/RT triggers, MENU/START, and an integrated touchpad.
+- **Absolute Mouse / Digitizer:** Introduced a dedicated full-screen absolute positioning mode (0–32767 range) for touchscreen/digitizer emulation with a triple-tap exit gesture.
+- **Horizontal Mouse Scroll:** Added horizontal scrolling/panning (h-scroll) support to the Mouse fragment.
+- **Per-Device Management:** Ability to toggle HID notifications on or off for individual connected Bluetooth hosts directly from the configuration screen.
+- **HID Battery Reporting:** Added Battery System HID report (Report ID 4) and live Battery Level service notifications.
+- **Smart Keyboard Typing:** Smart Caps Lock synchronization with automatic Shift XOR logic and seamless background text input.
+- **BLE Performance & Modern UI:** Implemented low-latency BLE connection requests (`HIGH_PRIORITY`) and redesigned the interface with a modern dark theme.
 
 ---
 
