@@ -4,7 +4,7 @@ Example of HID over GATT (Bluetooth Low Energy) Android Application. The applica
 The application consists of 7 full-screen fragments. When more than one device is connected, notifications can be routed to all connected devices simultaneously or toggled individually per host.
 
 ## Blockly fragment (Automation & Macros)
-![](screenshots/blockly.jpg)
+<img src="screenshots/blockly.jpg" width="300" />
 
 - **Visual Programming Workspace** - drag-and-drop Google Blockly interface to build custom HID macros and automated scripts.
 - **Rich Block Library** - includes blocks for keyboard text/keys, mouse movement, clicks, scrolling, absolute positioning, gamepad sticks/buttons, consumer media controls, delays, loops, and conditional logic.
@@ -13,14 +13,14 @@ The application consists of 7 full-screen fragments. When more than one device i
 - **Stash Bar** - quick access bar for frequently used blocks.
 
 ## Configuration fragment
-![](screenshots/configuration.jpg)
+<img src="screenshots/configuration.jpg" width="300" />
 
 - **Reboot application button** - restarts the application and the Bluetooth stack. Useful for refreshing the connection state if any issues occur.
 - **Clear configs button** - deletes saved device pairings and configurations if connection issues occur.
 - **List of connected devices with toggles** - displays connected hosts with individual switches to enable or disable HID notification routing per device.
 
 ## Consumer control fragment
-![](screenshots/consumer.jpg)
+<img src="screenshots/consumer.jpg" width="300" />
 
 - **Music/player control** - buttons for previous track, stop, play/pause, and next track.
 - **Volume & Brightness** - quick adjustments for sound and screen brightness.
@@ -29,7 +29,7 @@ The application consists of 7 full-screen fragments. When more than one device i
 - **Application control** - perform actions like "help" or "search" in the currently focused app. Note: these actions are highly application-specific.
 
 ## Mouse fragment
-![](screenshots/mouse.jpg)
+<img src="screenshots/mouse.jpg" width="300" />
 
 - **Buttons (1, 2, 3, 4, 5)** - emulates standard mouse button clicks (Left, Right, Middle, Button 4, Button 5).
 - **Touchpad area** - move the cursor; double-tap emulates a left-click.
@@ -37,7 +37,7 @@ The application consists of 7 full-screen fragments. When more than one device i
 - **Volume buttons** - the phone's physical volume up/down buttons emulate the vertical mouse scroll wheel.
 
 ## Keyboard fragment
-![](screenshots/keyboard.jpg)
+<img src="screenshots/keyboard.jpg" width="300" />
 
 - **Send text** - type a phrase and send it to the computer all at once.
 - **Send character** - a dropdown list to select and send a single special character or function key.
@@ -46,7 +46,7 @@ The application consists of 7 full-screen fragments. When more than one device i
 - **Keyboard On/Off** - enables or disables the software keyboard for direct live typing with smart Caps Lock synchronization.
 
 ## Gamepad fragment
-![](screenshots/gamepad.jpg)
+<img src="screenshots/gamepad.jpg" width="300" />
 
 - **Dual Analog Sticks / D-Pad** - virtual L-Stick and R-Stick with octagonal bases, double-tap for L3/R3 clicks, and toggles to switch between analog stick or digital D-Pad / button modes.
 - **Action Buttons (BT0 - BT3)** - standard ABXY style action button diamond.
@@ -55,7 +55,7 @@ The application consists of 7 full-screen fragments. When more than one device i
 - **Control Toggles** - independent toggles for L-Stick, Touchpad, Tab Swiping Lock, and R-Stick.
 
 ## Absolute Mouse fragment
-![](screenshots/absolute_mouse.jpg)
+<img src="screenshots/absolute_mouse.jpg" width="300" />
 
 - **Full-Screen Touch Surface** - absolute 0–32767 coordinate mapping for touchscreen and digitizer emulation.
 - **Triple-Tap Exit** - triple-tap anywhere inside the touch frame to exit back to standard mouse mode.
