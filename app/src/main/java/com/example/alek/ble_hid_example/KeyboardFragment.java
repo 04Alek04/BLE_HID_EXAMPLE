@@ -327,6 +327,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         short toSend = 0;
         int value = ConsumerControlUsage.getUsage(v.getId());
         MainActivity activity = (MainActivity) getActivity();
+        if (activity == null) return false;
 
         if (value == 0) {
             return false;
@@ -334,7 +335,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             toSend |= value;
-        } else if (event.getAction() == MotionEvent.ACTION_UP) {
+        } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
             toSend &= ~value;
             toSend &= 0xffff;
         } else {

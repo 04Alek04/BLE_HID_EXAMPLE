@@ -424,7 +424,12 @@ public class HidBleService extends Service {
         }
 
         // Configure a short name starting with (HID)
-        String originalName = bluetoothAdapter.getName();
+        String originalName = null;
+        try {
+            originalName = bluetoothAdapter.getName();
+        } catch (SecurityException e) {
+            Log.e("BLE", "Missing BLUETOOTH_CONNECT permission to get adapter name", e);
+        }
         if (mOriginalName == null && originalName != null && !originalName.startsWith("(HID) ")) {
             mOriginalName = originalName;
         }
@@ -442,7 +447,11 @@ public class HidBleService extends Service {
 
         if (!newName.equals(originalName)) {
             Log.i("BLE", "Setting device name to: " + newName);
-            bluetoothAdapter.setName(newName);
+            try {
+                bluetoothAdapter.setName(newName);
+            } catch (SecurityException e) {
+                Log.e("BLE", "Missing BLUETOOTH_CONNECT permission to set adapter name", e);
+            }
         }
 
         BluetoothLeAdvertiser advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
@@ -1247,17 +1256,6 @@ public class HidBleService extends Service {
 
     public void setActivity(MainActivity ma) {
         mainActivity = ma;
-    }
-
-    public void sendAbsMouseReport(int buttons, int x, int y) {
-        if (charReportAbsMouse == null) return;
-        byte[] array = new byte[5];
-        array[0] = (byte) (buttons & 0xFF);
-        array[1] = (byte) (x & 0xFF);
-        array[2] = (byte) ((x >> 8) & 0xFF);
-        array[3] = (byte) (y & 0xFF);
-        array[4] = (byte) ((y >> 8) & 0xFF);
-        sendReport(charReportAbsMouse, array, ReportField.REP_ABS_MOUSE, false, SendTo.SEND_TO_ALL);
     }
 
     /* Service handling-related methods */

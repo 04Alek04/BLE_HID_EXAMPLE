@@ -61,18 +61,19 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
         getActivity().findViewById(R.id.mouse_button_mouse_5).setOnTouchListener(this);
 
         getActivity().findViewById(R.id.mouse_h_scroll).setOnTouchListener(new View.OnTouchListener() {
-            final MainActivity activity = (MainActivity) getActivity();
             private float lastX;
             private float remainderX;
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                CustomViewPager pager = getActivity().findViewById(R.id.viewPager);
+                MainActivity activity = (MainActivity) getActivity();
+                if (activity == null) return false;
+                CustomViewPager pager = activity.findViewById(R.id.viewPager);
                 int action = event.getActionMasked();
 
                 switch (action) {
                     case MotionEvent.ACTION_DOWN:
-                        pager.swipePossible(false);
+                        if (pager != null) pager.swipePossible(false);
                         lastX = event.getX();
                         remainderX = 0;
                         break;
@@ -94,7 +95,7 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
                         break;
                     case MotionEvent.ACTION_UP:
                     case MotionEvent.ACTION_CANCEL:
-                        pager.swipePossible(true);
+                        if (pager != null) pager.swipePossible(true);
                         break;
                 }
                 return true;
@@ -102,13 +103,15 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
         });
 
         getActivity().findViewById(R.id.mouse_mouse_cursor).setOnTouchListener(new View.OnTouchListener() {
-            final MainActivity activity = (MainActivity) getActivity();
             private final GestureDetector gestureDetector = new GestureDetector(getContext(),
                     new GestureDetector.SimpleOnGestureListener() {
                         @Override
                         public boolean onDoubleTap(MotionEvent e) {
-                            activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0x01);
-                            activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0x00);
+                            MainActivity activity = (MainActivity) getActivity();
+                            if (activity != null) {
+                                activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0x01);
+                                activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0x00);
+                            }
                             return super.onDoubleTap(e);
                         }
                     });
@@ -117,13 +120,15 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                CustomViewPager pager = getActivity().findViewById(R.id.viewPager);
+                MainActivity activity = (MainActivity) getActivity();
+                if (activity == null) return false;
+                CustomViewPager pager = activity.findViewById(R.id.viewPager);
 
                 int action = event.getActionMasked();
 
                 switch (action) {
                     case MotionEvent.ACTION_DOWN:
-                        pager.swipePossible(false);
+                        if (pager != null) pager.swipePossible(false);
                         lastX = event.getX();
                         lastY = event.getY();
                         remainderX = 0;
@@ -159,7 +164,8 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
                         }
                         break;
                     case MotionEvent.ACTION_UP:
-                        pager.swipePossible(true);
+                    case MotionEvent.ACTION_CANCEL:
+                        if (pager != null) pager.swipePossible(true);
                         break;
                 }
 

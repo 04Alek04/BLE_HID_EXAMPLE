@@ -137,7 +137,6 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             
             String text;
             int text_color;
-            int bg_color;
 
             if (!currentDevices.isEmpty()) {
                 if (i >= currentDevices.size()) i = 0;
@@ -148,7 +147,6 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                 } catch (SecurityException ignored) {}
                 text = name + "  (" + d.getAddress() + ")";
                 text_color = ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary);
-                bg_color = 0; // Not used but kept for signature
 
                 if (currentDevices.size() > 1) {
                     text += " [" + (i + 1) + " / " + currentDevices.size() + "]";
@@ -157,11 +155,10 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             } else {
                 text = getString(R.string.device_not_connected) + " ";
                 text_color = ContextCompat.getColor(getApplicationContext(), R.color.colorGrey);
-                bg_color = 0;
                 i = 0;
             }
 
-            updateDeviceInfoField(text, text_color, bg_color);
+            updateDeviceInfoField(text, text_color);
             threadHandler.postDelayed(this, refreshTextViewPeriodMs);
         }
     };
@@ -215,7 +212,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         }
     }
 
-    private void updateDeviceInfoField(final String text, final int text_color, final int bg_color) {
+    private void updateDeviceInfoField(final String text, final int text_color) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

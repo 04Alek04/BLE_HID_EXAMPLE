@@ -10,7 +10,6 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ToggleButton;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -19,7 +18,6 @@ public class BlocklyFragment extends Fragment {
 
     private WebView webView;
     private Button btnRun;
-    private ToggleButton toggleBackground;
     private boolean isRunning = false;
 
     public static BlocklyFragment newInstance() {
