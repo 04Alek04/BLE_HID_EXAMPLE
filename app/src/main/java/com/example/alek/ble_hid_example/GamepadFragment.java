@@ -517,13 +517,15 @@ public class GamepadFragment extends Fragment {
         if (activity != null) activity.sendGamepadNotification(buttonsState, analogLX, analogLY, analogRX, analogRY);
     }
 
-    private void setupButton(View root, int id, final int bit, final MainActivity activity) {
+    private void setupButton(View root, int id, final int bit, final MainActivity paramActivity) {
         final View btn = root.findViewById(id);
         if (btn == null) return;
         final View lockToggle = root.findViewById(R.id.gamepad_lock_toggle);
         btn.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                MainActivity activity = (MainActivity) getActivity();
+                if (activity == null) activity = paramActivity;
                 if (activity == null) return false;
                 int action = event.getActionMasked();
                 if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
@@ -557,13 +559,15 @@ public class GamepadFragment extends Fragment {
         }
     }
 
-    private void setupDpadButton(View root, int id, final int xVal, final int yVal, final boolean isRightStick, final MainActivity activity) {
+    private void setupDpadButton(View root, int id, final int xVal, final int yVal, final boolean isRightStick, final MainActivity paramActivity) {
         final View btn = root.findViewById(id);
         if (btn == null) return;
         final View lockToggle = root.findViewById(R.id.gamepad_lock_toggle);
         btn.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                MainActivity activity = (MainActivity) getActivity();
+                if (activity == null) activity = paramActivity;
                 if (activity == null) return false;
                 if (lockToggle != null && lockToggle.isSelected()) {
                     v.getParent().requestDisallowInterceptTouchEvent(true);

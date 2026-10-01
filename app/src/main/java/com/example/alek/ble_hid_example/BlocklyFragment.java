@@ -14,10 +14,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.example.alek.ble_hid_example.databinding.BlocklyFragmentBinding;
+
 public class BlocklyFragment extends Fragment {
 
-    private WebView webView;
-    private Button btnRun;
+    private BlocklyFragmentBinding binding;
     private boolean isRunning = false;
 
     public static BlocklyFragment newInstance() {
@@ -27,56 +28,61 @@ public class BlocklyFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.blockly_fragment, container, false);
+        binding = BlocklyFragmentBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        webView = view.findViewById(R.id.blockly_webview);
-        btnRun = view.findViewById(R.id.btn_run_script);
-        ImageButton btnClear = view.findViewById(R.id.btn_clear_blocks);
-        ImageButton btnSave = view.findViewById(R.id.btn_save_blocks);
-        ImageButton btnLoad = view.findViewById(R.id.btn_load_blocks);
+        if (binding == null) return;
         
-        // ... (settings remain the same)
-        
-        btnClear.setOnClickListener(v -> {
+        binding.btnClearBlocks.setOnClickListener(v -> {
             new android.app.AlertDialog.Builder(getContext())
                 .setTitle("Clear Workspace")
                 .setMessage("Are you sure you want to delete all blocks?")
-                .setPositiveButton("Yes", (dialog, which) -> webView.loadUrl("javascript:clearWorkspace()"))
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    if (binding != null && binding.blocklyWebview != null) {
+                        binding.blocklyWebview.loadUrl("javascript:clearWorkspace()");
+                    }
+                })
                 .setNegativeButton("No", null)
                 .show();
         });
 
-        WebSettings settings = webView.getSettings();
+        WebSettings settings = binding.blocklyWebview.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
 
         // Prevent opening links in external browser
-        webView.setWebViewClient(new WebViewClient());
+        binding.blocklyWebview.setWebViewClient(new WebViewClient());
         
         // FIX: Force file refresh (clear cache)
-        webView.clearCache(true);
+        binding.blocklyWebview.clearCache(true);
 
         // Blockly interface bridge (Java-JS bridge)
-        webView.addJavascriptInterface(new BlocklyInterface((MainActivity) getActivity()), "AndroidHID");
+        binding.blocklyWebview.addJavascriptInterface(new BlocklyInterface((MainActivity) getActivity()), "AndroidHID");
 
         // FIX: Prevent swiping tabs (ViewPager) while working in Blockly
-        webView.setOnTouchListener((v, event) -> {
-            if (v.getId() == R.id.blockly_webview) {
-                v.getParent().requestDisallowInterceptTouchEvent(true);
+        binding.blocklyWebview.setOnTouchListener((v, event) -> {
+            if (binding != null && binding.blocklyWebview != null && binding.blocklyWebview.getParent() != null) {
+                binding.blocklyWebview.getParent().requestDisallowInterceptTouchEvent(true);
             }
             return false;
         });
 
         // Loading the main Blockly file
-        webView.loadUrl("file:///android_asset/blockly/index.html");
+        binding.blocklyWebview.loadUrl("file:///android_asset/blockly/index.html");
 
-        btnRun.setOnClickListener(v -> {
+        binding.btnRunScript.setOnClickListener(v -> {
             if (!isRunning) {
                 startScript();
             } else {
@@ -84,28 +90,35 @@ public class BlocklyFragment extends Fragment {
             }
         });
 
-        btnSave.setOnClickListener(v -> {
+        binding.btnSaveBlocks.setOnClickListener(v -> {
             android.util.Log.i("Blockly", "Java: SAVE button clicked");
-            webView.evaluateJavascript("saveToAndroid()", null);
+            if (binding != null && binding.blocklyWebview != null) {
+                binding.blocklyWebview.evaluateJavascript("saveToAndroid()", null);
+            }
         });
-        btnLoad.setOnClickListener(v -> {
+        binding.btnLoadBlocks.setOnClickListener(v -> {
             android.util.Log.i("Blockly", "Java: LOAD button clicked");
-            ((MainActivity)getActivity()).openFilePickerForBlockly();
+            MainActivity activity = (MainActivity) getActivity();
+            if (activity != null) {
+                activity.openFilePickerForBlockly();
+            }
         });
     }
 
     private void startScript() {
+        if (binding == null) return;
         isRunning = true;
-        btnRun.setText(R.string.blockly_stop);
-        btnRun.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF44336));
-        webView.evaluateJavascript("runCode()", null);
+        binding.btnRunScript.setText(R.string.blockly_stop);
+        binding.btnRunScript.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF44336));
+        binding.blocklyWebview.evaluateJavascript("runCode()", null);
     }
 
     private void stopScript() {
+        if (binding == null) return;
         isRunning = false;
-        btnRun.setText(R.string.blockly_run);
-        btnRun.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF4CAF50));
-        webView.evaluateJavascript("stopCode()", null);
+        binding.btnRunScript.setText(R.string.blockly_run);
+        binding.btnRunScript.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF4CAF50));
+        binding.blocklyWebview.evaluateJavascript("stopCode()", null);
     }
 
     @Override
@@ -117,16 +130,17 @@ public class BlocklyFragment extends Fragment {
     }
 
     public void onScriptFinished() {
+        if (binding == null) return;
         isRunning = false;
-        btnRun.setText(R.string.blockly_run);
-        btnRun.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF4CAF50));
+        binding.btnRunScript.setText(R.string.blockly_run);
+        binding.btnRunScript.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF4CAF50));
     }
 
     public void loadBlocksToWorkspace(String xml) {
-        if (webView != null) {
+        if (binding != null && binding.blocklyWebview != null) {
             android.util.Log.i("Blockly", "Java: Loading blocks to workspace. XML size: " + xml.length());
             String encodedXml = android.util.Base64.encodeToString(xml.getBytes(), android.util.Base64.NO_WRAP);
-            webView.post(() -> webView.evaluateJavascript("loadBlocksFromBase64('" + encodedXml + "')", null));
+            binding.blocklyWebview.post(() -> binding.blocklyWebview.evaluateJavascript("loadBlocksFromBase64('" + encodedXml + "')", null));
         } else {
             android.util.Log.e("Blockly", "Java: Cannot load blocks, WebView is null");
         }

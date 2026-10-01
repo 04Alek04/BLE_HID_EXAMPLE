@@ -48,10 +48,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.alek.ble_hid_example.databinding.ActivityMainBinding;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends FragmentActivity implements KeyEvent.Callback {
+    private ActivityMainBinding binding;
     private final Handler threadHandler = new Handler(Looper.getMainLooper());
     public ViewPager2 pager = null;
     public PagerAdapter pagerAdapter = null;
@@ -355,14 +357,16 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         hideSystemUI();
 
         checkPermissions();
         
         pagerAdapter = new PagerAdapter(this);
-        pager = findViewById(R.id.viewPager);
+        pager = binding.viewPager;
         pager.setAdapter(pagerAdapter);
+        pager.setOffscreenPageLimit(6);
         
         // Restore last used fragment
         int lastTab = getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getInt("last_tab", 1);
@@ -565,6 +569,8 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         static final int GAMEPAD = 5;
         static final int ABS_MOUSE = 6;
 
+        private final SparseArray<Fragment> fragments = new SparseArray<>();
+
         public PagerAdapter(FragmentActivity fa) {
             super(fa);
         }
@@ -572,19 +578,24 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         @NonNull
         @Override
         public Fragment createFragment(int position) {
+            Fragment f;
             switch (position) {
-                case BLOCKLY: return BlocklyFragment.newInstance();
-                case CONFIGURATION: return ConfigurationFragment.newInstance();
-                case CONSUMER: return ConsumerFragment.newInstance();
-                case MOUSE: return MouseFragment.newInstance();
-                case KEYBOARD: return KeyboardFragment.newInstance();
-                case GAMEPAD: return GamepadFragment.newInstance();
-                case ABS_MOUSE: return AbsoluteMouseFragment.newInstance();
-                default: return BlocklyFragment.newInstance();
+                case BLOCKLY: f = BlocklyFragment.newInstance(); break;
+                case CONFIGURATION: f = ConfigurationFragment.newInstance(); break;
+                case CONSUMER: f = ConsumerFragment.newInstance(); break;
+                case MOUSE: f = MouseFragment.newInstance(); break;
+                case KEYBOARD: f = KeyboardFragment.newInstance(); break;
+                case GAMEPAD: f = GamepadFragment.newInstance(); break;
+                case ABS_MOUSE: f = AbsoluteMouseFragment.newInstance(); break;
+                default: f = BlocklyFragment.newInstance(); break;
             }
+            fragments.put(position, f);
+            return f;
         }
 
         public Fragment getRegisteredFragment(int position) {
+            Fragment f = fragments.get(position);
+            if (f != null && f.isAdded()) return f;
             return getSupportFragmentManager().findFragmentByTag("f" + position);
         }
 

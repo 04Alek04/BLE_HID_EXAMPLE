@@ -9,8 +9,11 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.example.alek.ble_hid_example.databinding.AbsoluteMouseFragmentBinding;
+
 public class AbsoluteMouseFragment extends Fragment {
 
+    private AbsoluteMouseFragmentBinding binding;
     private int tapCount = 0;
     private long lastTapTime = 0;
 
@@ -20,17 +23,22 @@ public class AbsoluteMouseFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.absolute_mouse_fragment, container, false);
+        binding = AbsoluteMouseFragmentBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         final MainActivity activity = (MainActivity) getActivity();
-        final TextView debugText = view.findViewById(R.id.abs_mouse_debug);
-        final View touchSurface = view.findViewById(R.id.abs_mouse_touch_surface);
 
-        if (touchSurface != null) {
-            touchSurface.setOnTouchListener(new View.OnTouchListener() {
+        if (binding != null && binding.absMouseTouchSurface != null) {
+            binding.absMouseTouchSurface.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
                     if (activity == null) return false;
@@ -71,10 +79,6 @@ public class AbsoluteMouseFragment extends Fragment {
                         }
 
                         // Scaling to 0-32767
-                        // Phone is in portrait, but labels are rotated 90 deg (suggesting left rotation).
-                        // When the phone is rotated left to landscape:
-                        // New X (horizontal) is original Y
-                        // New Y (vertical) is original (Width - X)
                         int absX = Math.round((y / height) * 32767); 
                         int absY = Math.round((1 - (x / width)) * 32767);
 
@@ -82,8 +86,8 @@ public class AbsoluteMouseFragment extends Fragment {
                         absX = Math.max(0, Math.min(32767, absX));
                         absY = Math.max(0, Math.min(32767, absY));
 
-                        if (debugText != null) {
-                            debugText.setText("X: " + absX + " Y: " + absY);
+                        if (binding != null && binding.absMouseDebug != null) {
+                            binding.absMouseDebug.setText("X: " + absX + " Y: " + absY);
                         }
                         activity.sendAbsMouseReport(activity.getAbsMouseButtons(), absX, absY);
                     }

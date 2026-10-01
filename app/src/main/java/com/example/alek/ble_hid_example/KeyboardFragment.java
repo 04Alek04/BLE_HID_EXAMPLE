@@ -59,23 +59,26 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        getActivity().findViewById(R.id.keyboard_button_send).setOnClickListener(this);
+        View btnSend = view.findViewById(R.id.keyboard_button_send);
+        if (btnSend != null) btnSend.setOnClickListener(this);
 
         // Keyboard character spinner configuration
         List<String> kbList = new ArrayList<>();
         kbList.add("SELECT VALUE");
         kbList.addAll(KeyboardUsage.getUsageNames());
 
-        Spinner spinner_kb = getActivity().findViewById(R.id.keyboard_spinner_character);
-        spinner_kb.setOnItemSelectedListener(this);
-        ArrayAdapter<String> dataAdapter_kb = new ArrayAdapter<>(getContext(),
-                R.layout.spinner_item, kbList);
-        dataAdapter_kb.setDropDownViewResource(R.layout.spinner_dropdown_item);
-        spinner_kb.setAdapter(dataAdapter_kb);
-        spinner_kb.setSelection(0);
+        Spinner spinner_kb = view.findViewById(R.id.keyboard_spinner_character);
+        if (spinner_kb != null) {
+            spinner_kb.setOnItemSelectedListener(this);
+            ArrayAdapter<String> dataAdapter_kb = new ArrayAdapter<>(getContext(),
+                    R.layout.spinner_item, kbList);
+            dataAdapter_kb.setDropDownViewResource(R.layout.spinner_dropdown_item);
+            spinner_kb.setAdapter(dataAdapter_kb);
+            spinner_kb.setSelection(0);
+        }
 
-        final TextInputEditText editText = getActivity().findViewById(R.id.keyboard_edit_text);
-        final MaterialButton toggleBtn = getActivity().findViewById(R.id.keyboard_toggle_kb);
+        final TextInputEditText editText = view.findViewById(R.id.keyboard_edit_text);
+        final MaterialButton toggleBtn = view.findViewById(R.id.keyboard_toggle_kb);
 
         // Dummy invisible input view for live typing so 'enter text' is NOT focused/highlighted
         final android.widget.EditText dummyEditText = new android.widget.EditText(getContext());
@@ -216,9 +219,9 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
             }
         });
 
-        numLockBtn = (MaterialButton) getActivity().findViewById(R.id.keyboard_lock_num);
-        capsLockBtn = (MaterialButton) getActivity().findViewById(R.id.keyboard_lock_caps);
-        scrollLockBtn = (MaterialButton) getActivity().findViewById(R.id.keyboard_lock_scroll);
+        numLockBtn = (MaterialButton) view.findViewById(R.id.keyboard_lock_num);
+        capsLockBtn = (MaterialButton) view.findViewById(R.id.keyboard_lock_caps);
+        scrollLockBtn = (MaterialButton) view.findViewById(R.id.keyboard_lock_scroll);
 
         View.OnClickListener lockClickListener = new View.OnClickListener() {
             @Override
@@ -271,15 +274,15 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
             }
         };
 
-        getActivity().findViewById(R.id.kb_short_undo).setOnClickListener(shortcutClickListener);
-        getActivity().findViewById(R.id.kb_short_redo).setOnClickListener(shortcutClickListener);
-        getActivity().findViewById(R.id.kb_short_save).setOnClickListener(shortcutClickListener);
-        getActivity().findViewById(R.id.kb_short_all).setOnClickListener(shortcutClickListener);
-        getActivity().findViewById(R.id.kb_short_cut).setOnClickListener(shortcutClickListener);
-        getActivity().findViewById(R.id.kb_short_copy).setOnClickListener(shortcutClickListener);
-        getActivity().findViewById(R.id.kb_short_paste).setOnClickListener(shortcutClickListener);
-        getActivity().findViewById(R.id.kb_short_find).setOnClickListener(shortcutClickListener);
-        getActivity().findViewById(R.id.kb_short_replace).setOnClickListener(shortcutClickListener);
+        int[] shortcutIds = {
+                R.id.kb_short_undo, R.id.kb_short_redo, R.id.kb_short_save,
+                R.id.kb_short_all, R.id.kb_short_cut, R.id.kb_short_copy,
+                R.id.kb_short_paste, R.id.kb_short_find, R.id.kb_short_replace
+        };
+        for (int sId : shortcutIds) {
+            View sBtn = view.findViewById(sId);
+            if (sBtn != null) sBtn.setOnClickListener(shortcutClickListener);
+        }
 
         MainActivity activity = (MainActivity) getActivity();
         if (activity != null) {
@@ -315,10 +318,13 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
     public void onPause() {
         super.onPause();
 
-        ((MaterialButton) getActivity().findViewById(R.id.keyboard_toggle_kb)).setChecked(false);
-        Spinner spinner_kb = getActivity().findViewById(R.id.keyboard_spinner_character);
-        if (spinner_kb != null) {
-            spinner_kb.setSelection(0);
+        if (getView() != null) {
+            MaterialButton toggleKb = getView().findViewById(R.id.keyboard_toggle_kb);
+            if (toggleKb != null) toggleKb.setChecked(false);
+            Spinner spinner_kb = getView().findViewById(R.id.keyboard_spinner_character);
+            if (spinner_kb != null) {
+                spinner_kb.setSelection(0);
+            }
         }
     }
 
@@ -386,9 +392,10 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
     @Override
     public void onClick(View v) {
         MainActivity activity = (MainActivity) getActivity();
+        if (activity == null) return;
 
-        if (v.getId() == R.id.keyboard_button_send) {
-            TextInputEditText editText = (TextInputEditText) getActivity().findViewById(R.id.keyboard_edit_text);
+        if (v.getId() == R.id.keyboard_button_send && getView() != null) {
+            TextInputEditText editText = getView().findViewById(R.id.keyboard_edit_text);
             if (editText != null && editText.getText() != null) {
                 activity.sendKeyboardText(editText.getText().toString());
                 editText.setText(""); // Clear field after sending

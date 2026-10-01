@@ -25,7 +25,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 
+import com.example.alek.ble_hid_example.databinding.MouseFragmentBinding;
+
 public class MouseFragment extends Fragment implements View.OnTouchListener {
+
+    private MouseFragmentBinding binding;
 
     public static MouseFragment newInstance() {
         return new MouseFragment();
@@ -33,7 +37,14 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.mouse_fragment, container, false);
+        binding = MouseFragmentBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 
     @Override
@@ -44,23 +55,21 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
         observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                View mc = getActivity().findViewById(R.id.mouse_mouse_cursor);
-
-                if (mc != null) {
-                    mc.setMinimumHeight(mc.getWidth());
+                if (binding != null && binding.mouseMouseCursor != null) {
+                    binding.mouseMouseCursor.setMinimumHeight(binding.mouseMouseCursor.getWidth());
                 }
 
                 final_view.getViewTreeObserver().removeOnGlobalLayoutListener(this);
             }
         });
 
-        getActivity().findViewById(R.id.mouse_button_mouse_1).setOnTouchListener(this);
-        getActivity().findViewById(R.id.mouse_button_mouse_2).setOnTouchListener(this);
-        getActivity().findViewById(R.id.mouse_button_mouse_3).setOnTouchListener(this);
-        getActivity().findViewById(R.id.mouse_button_mouse_4).setOnTouchListener(this);
-        getActivity().findViewById(R.id.mouse_button_mouse_5).setOnTouchListener(this);
+        binding.mouseButtonMouse1.setOnTouchListener(this);
+        binding.mouseButtonMouse2.setOnTouchListener(this);
+        binding.mouseButtonMouse3.setOnTouchListener(this);
+        binding.mouseButtonMouse4.setOnTouchListener(this);
+        binding.mouseButtonMouse5.setOnTouchListener(this);
 
-        getActivity().findViewById(R.id.mouse_h_scroll).setOnTouchListener(new View.OnTouchListener() {
+        binding.mouseHScroll.setOnTouchListener(new View.OnTouchListener() {
             private float lastX;
             private float remainderX;
 
@@ -101,7 +110,7 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
             }
         });
 
-        getActivity().findViewById(R.id.mouse_mouse_cursor).setOnTouchListener(new View.OnTouchListener() {
+        binding.mouseMouseCursor.setOnTouchListener(new View.OnTouchListener() {
             private final GestureDetector gestureDetector = new GestureDetector(getContext(),
                     new GestureDetector.SimpleOnGestureListener() {
                         @Override
