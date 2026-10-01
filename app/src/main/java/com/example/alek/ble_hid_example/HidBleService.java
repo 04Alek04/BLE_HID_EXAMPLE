@@ -348,11 +348,9 @@ public class HidBleService extends Service {
             NotificationData toSend = pendingNotifications.remove(0);
 
             if (devices.contains(toSend.device)) {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                    if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                        Log.e("BLE", "Missing BLUETOOTH_CONNECT permission for notification");
-                        return;
-                    }
+                if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    Log.e("BLE", "Missing BLUETOOTH_CONNECT permission for notification");
+                    return;
                 }
 
                 toSend.characteristic.setValue(toSend.value);
@@ -476,8 +474,12 @@ public class HidBleService extends Service {
                 .addServiceUuid(new ParcelUuid(UUID.fromString(SERVICE_BAS)))
                 .build();
 
-        advertiser.stopAdvertising(advertisingCallback);
-        advertiser.startAdvertising(settings, advData, scanResponse, advertisingCallback);
+        try {
+            advertiser.stopAdvertising(advertisingCallback);
+            advertiser.startAdvertising(settings, advData, scanResponse, advertisingCallback);
+        } catch (SecurityException e) {
+            Log.e("BLE", "Missing BLUETOOTH_ADVERTISE permission to start advertising", e);
+        }
     }
 
     private void createGattDatabase(BluetoothGattServer gattServer, int level) {
@@ -491,7 +493,11 @@ public class HidBleService extends Service {
         final int PERM_READ_WRITE = PERM_READ | PERM_WRITE;
 
         // Clear current attributes database - avoid adding the same services to database
-        gattServer.clearServices();
+        try {
+            gattServer.clearServices();
+        } catch (SecurityException e) {
+            Log.e("BLE", "Missing BLUETOOTH_CONNECT permission to clear services", e);
+        }
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         // HID Service
@@ -1316,7 +1322,7 @@ public class HidBleService extends Service {
         }
     }
 
-    private final android.os.Handler mHandler = new android.os.Handler();
+    private final android.os.Handler mHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
     @Override
     public void onCreate() {
@@ -1340,12 +1346,10 @@ public class HidBleService extends Service {
             BluetoothAdapter bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
             if (bluetoothAdapter != null) {
                 Log.i("BLE", "Restoring original device name: " + mOriginalName);
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                    if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    try {
                         bluetoothAdapter.setName(mOriginalName);
-                    }
-                } else {
-                    bluetoothAdapter.setName(mOriginalName);
+                    } catch (SecurityException ignored) {}
                 }
             }
         }

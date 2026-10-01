@@ -23,16 +23,19 @@ import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.IBinder;
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.os.Build;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.KeyEvent;
@@ -49,10 +52,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends FragmentActivity implements KeyEvent.Callback {
-    private final Handler threadHandler = new Handler();
-    public CustomViewPager pager = null;
+    private final Handler threadHandler = new Handler(Looper.getMainLooper());
+    public ViewPager2 pager = null;
     public PagerAdapter pagerAdapter = null;
     private volatile List<BluetoothDevice> devices = new ArrayList<>();
+
+    public void swipePossible(boolean enable) {
+        if (pager != null) {
+            pager.setUserInputEnabled(enable);
+        }
+    }
     
     public boolean isDeviceEnabled(BluetoothDevice device) {
         return mService == null || mService.isDeviceEnabled(device);
@@ -192,23 +201,12 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
     }
 
     private void hideSystemUI() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Window window = getWindow();
-            window.setDecorFitsSystemWindows(false);
-            WindowInsetsController controller = window.getInsetsController();
-            if (controller != null) {
-                controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-                controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-            }
-        } else {
-            // Older Android versions
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN);
+        Window window = getWindow();
+        window.setDecorFitsSystemWindows(false);
+        WindowInsetsController controller = window.getInsetsController();
+        if (controller != null) {
+            controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+            controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
         }
     }
 
@@ -284,7 +282,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             @Override
             public void run() {
                 if (pagerAdapter != null) {
-                    for (int i = 0; i < pagerAdapter.getCount(); i++) {
+                    for (int i = 0; i < pagerAdapter.getItemCount(); i++) {
                         Fragment f = pagerAdapter.getRegisteredFragment(i);
                         if (f instanceof KeyboardFragment) {
                             ((KeyboardFragment) f).updateLedStatus(status);
@@ -316,8 +314,8 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             @Override
             public void run() {
                 if (pager != null) {
-                    pager.swipePossible(true);
-                    pager.setCurrentItem(PagerAdapter.MOUSE);
+                    swipePossible(true);
+                    pager.setCurrentItem(PagerAdapter.MOUSE, false);
                 }
             }
         });
@@ -362,36 +360,30 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
 
         checkPermissions();
         
-        pagerAdapter = new PagerAdapter(getSupportFragmentManager());
+        pagerAdapter = new PagerAdapter(this);
         pager = findViewById(R.id.viewPager);
         pager.setAdapter(pagerAdapter);
         
         // Restore last used fragment
         int lastTab = getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getInt("last_tab", 1);
-        pager.setCurrentItem(lastTab);
+        pager.setCurrentItem(lastTab, false);
         
-        pager.addOnPageChangeListener(new androidx.viewpager.widget.ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
-
+        pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
                 // Save last used fragment
                 getSharedPreferences("app_prefs", Context.MODE_PRIVATE).edit().putInt("last_tab", position).apply();
 
                 if (position == PagerAdapter.ABS_MOUSE) {
-                    pager.swipePossible(false);
+                    swipePossible(false);
                 } else if (position == PagerAdapter.GAMEPAD) {
                     boolean lockChecked = getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getBoolean("gamepad_lock", false);
-                    pager.swipePossible(!lockChecked);
+                    swipePossible(!lockChecked);
                 } else {
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                    pager.swipePossible(true);
+                    swipePossible(true);
                 }
             }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {}
         });
 
         Intent intent = new Intent(this, HidBleService.class);
@@ -504,16 +496,19 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         return super.onKeyUp(keyCode, event);
     }
 
+    private final ActivityResultLauncher<Intent> enableBluetoothLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    restartGattDatabase();
+                }
+            });
+
     private void checkPermissions() {
-        ArrayList<String> permissions = new ArrayList<>();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            permissions.add(Manifest.permission.BLUETOOTH_SCAN);
-            permissions.add(Manifest.permission.BLUETOOTH_CONNECT);
-            permissions.add(Manifest.permission.BLUETOOTH_ADVERTISE);
-        } else {
-            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
-            permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
-        }
+        String[] permissions = new String[]{
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_ADVERTISE
+        };
 
         ArrayList<String> permissionsToRequest = new ArrayList<>();
         for (String p : permissions) {
@@ -534,18 +529,9 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         android.bluetooth.BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
         if (ba != null && !ba.isEnabled()) {
             Intent intent = new Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED ||
-                Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                startActivityForResult(intent, 1);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+                enableBluetoothLauncher.launch(intent);
             }
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1 && resultCode == RESULT_OK) {
-            restartGattDatabase();
         }
     }
 
@@ -570,7 +556,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         super.onDestroy();
     }
 
-    class PagerAdapter extends FragmentPagerAdapter {
+    class PagerAdapter extends FragmentStateAdapter {
         static final int BLOCKLY = 0;
         static final int CONFIGURATION = 1;
         static final int CONSUMER = 2;
@@ -578,15 +564,14 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         static final int KEYBOARD = 4;
         static final int GAMEPAD = 5;
         static final int ABS_MOUSE = 6;
-        
-        private final SparseArray<Fragment> registeredFragments = new SparseArray<>();
 
-        public PagerAdapter(FragmentManager fm) {
-            super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+        public PagerAdapter(FragmentActivity fa) {
+            super(fa);
         }
 
+        @NonNull
         @Override
-        public Fragment getItem(int position) {
+        public Fragment createFragment(int position) {
             switch (position) {
                 case BLOCKLY: return BlocklyFragment.newInstance();
                 case CONFIGURATION: return ConfigurationFragment.newInstance();
@@ -599,25 +584,12 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             }
         }
 
-        @Override
-        public Object instantiateItem(ViewGroup container, int position) {
-            Fragment fragment = (Fragment) super.instantiateItem(container, position);
-            registeredFragments.put(position, fragment);
-            return fragment;
-        }
-
-        @Override
-        public void destroyItem(ViewGroup container, int position, Object object) {
-            registeredFragments.remove(position);
-            super.destroyItem(container, position, object);
-        }
-
         public Fragment getRegisteredFragment(int position) {
-            return registeredFragments.get(position);
+            return getSupportFragmentManager().findFragmentByTag("f" + position);
         }
 
         @Override
-        public int getCount() {
+        public int getItemCount() {
             return 7;
         }
     }

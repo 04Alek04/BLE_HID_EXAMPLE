@@ -68,12 +68,11 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
             public boolean onTouch(View v, MotionEvent event) {
                 MainActivity activity = (MainActivity) getActivity();
                 if (activity == null) return false;
-                CustomViewPager pager = activity.findViewById(R.id.viewPager);
                 int action = event.getActionMasked();
 
                 switch (action) {
                     case MotionEvent.ACTION_DOWN:
-                        if (pager != null) pager.swipePossible(false);
+                        activity.swipePossible(false);
                         lastX = event.getX();
                         remainderX = 0;
                         break;
@@ -95,7 +94,7 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
                         break;
                     case MotionEvent.ACTION_UP:
                     case MotionEvent.ACTION_CANCEL:
-                        if (pager != null) pager.swipePossible(true);
+                        activity.swipePossible(true);
                         break;
                 }
                 return true;
@@ -122,13 +121,12 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
             public boolean onTouch(View v, MotionEvent event) {
                 MainActivity activity = (MainActivity) getActivity();
                 if (activity == null) return false;
-                CustomViewPager pager = activity.findViewById(R.id.viewPager);
 
                 int action = event.getActionMasked();
 
                 switch (action) {
                     case MotionEvent.ACTION_DOWN:
-                        if (pager != null) pager.swipePossible(false);
+                        activity.swipePossible(false);
                         lastX = event.getX();
                         lastY = event.getY();
                         remainderX = 0;
@@ -165,7 +163,7 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
                         break;
                     case MotionEvent.ACTION_UP:
                     case MotionEvent.ACTION_CANCEL:
-                        if (pager != null) pager.swipePossible(true);
+                        activity.swipePossible(true);
                         break;
                 }
 

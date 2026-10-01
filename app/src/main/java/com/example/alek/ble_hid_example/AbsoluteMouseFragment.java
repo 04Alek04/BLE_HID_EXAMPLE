@@ -39,7 +39,7 @@ public class AbsoluteMouseFragment extends Fragment {
 
                     // Triple Tap Exit - only works within the frame
                     if (action == MotionEvent.ACTION_DOWN) {
-                        if (activity.pager != null) activity.pager.swipePossible(false);
+                        activity.swipePossible(false);
                         
                         long now = System.currentTimeMillis();
                         if (now - lastTapTime < 500) tapCount++;
@@ -53,7 +53,7 @@ public class AbsoluteMouseFragment extends Fragment {
                     }
 
                     if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                        if (activity.pager != null) activity.pager.swipePossible(true);
+                        activity.swipePossible(true);
                     }
 
                     // Movement logic
@@ -67,7 +67,7 @@ public class AbsoluteMouseFragment extends Fragment {
 
                         // Lock during move
                         if (action == MotionEvent.ACTION_MOVE) {
-                            if (activity.pager != null) activity.pager.swipePossible(false);
+                            activity.swipePossible(false);
                         }
 
                         // Scaling to 0-32767

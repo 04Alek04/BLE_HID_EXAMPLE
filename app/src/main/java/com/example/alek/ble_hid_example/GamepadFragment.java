@@ -74,7 +74,7 @@ public class GamepadFragment extends Fragment {
             }
             if (lockToggle != null) {
                 lockToggle.setSelected(lockChecked);
-                if (activity != null && activity.pager != null) activity.pager.swipePossible(!lockChecked);
+                if (activity != null) activity.swipePossible(!lockChecked);
             }
             if (rStickToggle != null) {
                 rStickToggle.setSelected(rStickChecked);
@@ -120,7 +120,7 @@ public class GamepadFragment extends Fragment {
                 if (getContext() != null) {
                     getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE).edit().putBoolean("gamepad_lock", newState).apply();
                 }
-                if (activity != null && activity.pager != null) activity.pager.swipePossible(!newState);
+                if (activity != null) activity.swipePossible(!newState);
             });
         }
 
@@ -199,7 +199,7 @@ public class GamepadFragment extends Fragment {
 
                     if (lockToggle != null && lockToggle.isSelected()) {
                         v.getParent().requestDisallowInterceptTouchEvent(true);
-                        if (activity.pager != null) activity.pager.swipePossible(false);
+                        activity.swipePossible(false);
                     }
 
                     if (action == MotionEvent.ACTION_MOVE) {
@@ -233,8 +233,8 @@ public class GamepadFragment extends Fragment {
                             activity.sendGamepadNotification(buttonsState, analogLX, analogLY, analogRX, analogRY);
                         }
                     } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                        if (activity.pager != null && (lockToggle == null || !lockToggle.isSelected())) {
-                            activity.pager.swipePossible(true);
+                        if (lockToggle == null || !lockToggle.isSelected()) {
+                            activity.swipePossible(true);
                         }
                         isDragging = false;
                         isTouchValid = false;
@@ -306,7 +306,7 @@ public class GamepadFragment extends Fragment {
 
                     if (lockToggle != null && lockToggle.isSelected()) {
                         v.getParent().requestDisallowInterceptTouchEvent(true);
-                        if (activity.pager != null) activity.pager.swipePossible(false);
+                        activity.swipePossible(false);
                     }
 
                     if (action == MotionEvent.ACTION_MOVE) {
@@ -340,8 +340,8 @@ public class GamepadFragment extends Fragment {
                             activity.sendGamepadNotification(buttonsState, analogLX, analogLY, analogRX, analogRY);
                         }
                     } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                        if (activity.pager != null && (lockToggle == null || !lockToggle.isSelected())) {
-                            activity.pager.swipePossible(true);
+                        if (lockToggle == null || !lockToggle.isSelected()) {
+                            activity.swipePossible(true);
                         }
                         isDragging = false;
                         isTouchValid = false;
@@ -426,8 +426,8 @@ public class GamepadFragment extends Fragment {
                         isDragging = false;
 
                         v.getParent().requestDisallowInterceptTouchEvent(true);
-                        if (lockToggle != null && lockToggle.isSelected() && activity.pager != null) {
-                            activity.pager.swipePossible(false);
+                        if (lockToggle != null && lockToggle.isSelected()) {
+                            activity.swipePossible(false);
                         }
                     } else if (action == MotionEvent.ACTION_MOVE) {
                         float x = event.getX();
@@ -481,8 +481,8 @@ public class GamepadFragment extends Fragment {
                             }
                         }
                     } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                        if (activity.pager != null && (lockToggle == null || !lockToggle.isSelected())) {
-                            activity.pager.swipePossible(true);
+                        if (lockToggle == null || !lockToggle.isSelected()) {
+                            activity.swipePossible(true);
                         }
                         isDragging = false;
 
@@ -505,9 +505,9 @@ public class GamepadFragment extends Fragment {
 
     private void syncLockWithPager() {
         MainActivity activity = (MainActivity) getActivity();
-        if (activity != null && activity.pager != null && getContext() != null) {
+        if (activity != null && getContext() != null) {
             boolean lockChecked = getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getBoolean("gamepad_lock", false);
-            activity.pager.swipePossible(!lockChecked);
+            activity.swipePossible(!lockChecked);
         }
     }
 
@@ -529,15 +529,15 @@ public class GamepadFragment extends Fragment {
                 if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
                     if (lockToggle != null && lockToggle.isSelected()) {
                         v.getParent().requestDisallowInterceptTouchEvent(true);
-                        if (activity.pager != null) activity.pager.swipePossible(false);
+                        activity.swipePossible(false);
                     }
                     buttonsState |= bit;
                     btn.setPressed(true);
                 } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_CANCEL) {
                     buttonsState &= ~bit;
                     btn.setPressed(false);
-                    if (activity.pager != null && (lockToggle == null || !lockToggle.isSelected())) {
-                        activity.pager.swipePossible(true);
+                    if (lockToggle == null || !lockToggle.isSelected()) {
+                        activity.swipePossible(true);
                     }
                 }
                 activity.sendGamepadNotification(buttonsState, analogLX, analogLY, analogRX, analogRY);
@@ -567,7 +567,7 @@ public class GamepadFragment extends Fragment {
                 if (activity == null) return false;
                 if (lockToggle != null && lockToggle.isSelected()) {
                     v.getParent().requestDisallowInterceptTouchEvent(true);
-                    if (activity.pager != null) activity.pager.swipePossible(false);
+                    activity.swipePossible(false);
                 }
                 int action = event.getActionMasked();
                 if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
@@ -580,8 +580,8 @@ public class GamepadFragment extends Fragment {
                     }
                     btn.setPressed(true);
                 } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_CANCEL) {
-                    if (activity.pager != null && (lockToggle == null || !lockToggle.isSelected())) {
-                        activity.pager.swipePossible(true);
+                    if (lockToggle == null || !lockToggle.isSelected()) {
+                        activity.swipePossible(true);
                     }
                     if (isRightStick) {
                         if (xVal != 0) analogRX = 0;
