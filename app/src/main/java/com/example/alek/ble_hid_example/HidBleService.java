@@ -29,8 +29,10 @@ import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.bluetooth.BluetoothProfile;
 import android.os.BatteryManager;
 import android.os.Binder;
@@ -205,11 +207,21 @@ public class HidBleService extends Service {
         }
     };
 
-    private byte readBatteryLevel() {
-        BatteryManager batteryManager = (BatteryManager) getSystemService(BATTERY_SERVICE);
-        int batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+    private byte lastBatteryLevel = -1;
 
-        return (byte) batteryLevel;
+    private byte readBatteryLevel() {
+        if (lastBatteryLevel >= 0) {
+            return lastBatteryLevel;
+        }
+        BatteryManager batteryManager = (BatteryManager) getSystemService(BATTERY_SERVICE);
+        if (batteryManager != null) {
+            int batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+            if (batteryLevel >= 0) {
+                lastBatteryLevel = (byte) batteryLevel;
+                return lastBatteryLevel;
+            }
+        }
+        return 100;
     }
 
     private void sendReport(BluetoothGattCharacteristic characteristic, byte[] value, int maskBit, boolean canMerge, SendTo st) {
@@ -1285,51 +1297,76 @@ public class HidBleService extends Service {
         pendingNotifications.clear();
     }
 
-    private final Runnable batteryUpdateTask = new Runnable() {
+    private final BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
         @Override
-        public void run() {
-            updateBatteryLevel();
-            mHandler.postDelayed(this, 60000); // Update every minute
+        public void onReceive(Context context, Intent intent) {
+            updateBatteryFromIntent(intent);
         }
     };
 
-    private void updateBatteryLevel() {
+    private void updateBatteryFromIntent(Intent intent) {
+        if (intent == null) return;
+        int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        if (level >= 0 && scale > 0) {
+            byte batteryPct = (byte) Math.round((level / (float) scale) * 100);
+            if (batteryPct != lastBatteryLevel) {
+                lastBatteryLevel = batteryPct;
+                notifyBatteryLevelChanged(lastBatteryLevel);
+            }
+        }
+    }
+
+    private void notifyBatteryLevelChanged(byte level) {
         if (gattServer == null || devices.isEmpty()) return;
-        byte level = readBatteryLevel();
-        
+
         // Update standard BAS
         if (charBatteryLevel != null) {
             charBatteryLevel.setValue(new byte[]{level});
             synchronized (devices) {
                 for (BluetoothDevice device : devices) {
                     if (isNotificationEnabled(device, charBatteryLevel)) {
-                        gattServer.notifyCharacteristicChanged(device, charBatteryLevel, false);
+                        if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                            try {
+                                gattServer.notifyCharacteristicChanged(device, charBatteryLevel, false);
+                            } catch (SecurityException ignored) {}
+                        }
                     }
                 }
             }
         }
-        
+
         // Update HID Battery Report (ID 4)
         if (charReportBattery != null) {
             charReportBattery.setValue(new byte[]{level});
             synchronized (devices) {
                 for (BluetoothDevice device : devices) {
                     if (isNotificationEnabled(device, charReportBattery)) {
-                        gattServer.notifyCharacteristicChanged(device, charReportBattery, false);
+                        if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                            try {
+                                gattServer.notifyCharacteristicChanged(device, charReportBattery, false);
+                            } catch (SecurityException ignored) {}
+                        }
                     }
                 }
             }
         }
     }
 
-    private final android.os.Handler mHandler = new android.os.Handler(android.os.Looper.getMainLooper());
-
     @Override
     public void onCreate() {
         super.onCreate();
 
         initializeLE();
-        mHandler.post(batteryUpdateTask);
+
+        IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent stickyIntent = androidx.core.content.ContextCompat.registerReceiver(this, batteryReceiver, batteryFilter, androidx.core.content.ContextCompat.RECEIVER_EXPORTED);
+        if (stickyIntent != null) {
+            updateBatteryFromIntent(stickyIntent);
+        } else {
+            lastBatteryLevel = readBatteryLevel();
+            notifyBatteryLevelChanged(lastBatteryLevel);
+        }
     }
 
     @Override
@@ -1340,7 +1377,10 @@ public class HidBleService extends Service {
 
     @Override
     public void onDestroy() {
-        mHandler.removeCallbacks(batteryUpdateTask);
+        try {
+            unregisterReceiver(batteryReceiver);
+        } catch (IllegalArgumentException ignored) {}
+
         if (mOriginalName != null) {
             BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             BluetoothAdapter bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
