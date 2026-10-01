@@ -170,10 +170,11 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
         });
     }
 
+    private int buttonsState = 0;
+
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         MainActivity activity = (MainActivity) getActivity();
-        short toSend = 0;
         int value;
 
         int id = v.getId();
@@ -193,20 +194,19 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             v.setPressed(true);
-            toSend |= value;
+            buttonsState |= value;
         } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
             v.setPressed(false);
             if (event.getAction() == MotionEvent.ACTION_UP) {
-                toSend &= ~value;
-                toSend &= 0xffff;
+                buttonsState &= ~value;
             } else {
-                return false;
+                buttonsState &= ~value; // Cancel should also release
             }
         } else {
             return false;
         }
 
-        activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, toSend);
+        activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, buttonsState);
 
         return true;
     }

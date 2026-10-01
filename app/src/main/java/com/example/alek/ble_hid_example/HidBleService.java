@@ -247,9 +247,11 @@ public class HidBleService extends Service {
                     for (int i = pendingNotifications.size() - 1; i >= 0; i--) {
                         NotificationData data = pendingNotifications.get(i);
                         if (data.device.equals(device) && data.characteristic == characteristic) {
-                            data.value[1] = (byte) Math.max(-128, Math.min(127, data.value[1] + value[1]));
-                            data.value[2] = (byte) Math.max(-128, Math.min(127, data.value[2] + value[2]));
-                            merged = true;
+                            if (data.value[0] == value[0]) {
+                                data.value[1] = (byte) Math.max(-128, Math.min(127, data.value[1] + value[1]));
+                                data.value[2] = (byte) Math.max(-128, Math.min(127, data.value[2] + value[2]));
+                                merged = true;
+                            }
                             break;
                         }
                     }
@@ -281,8 +283,15 @@ public class HidBleService extends Service {
         sendReport(charReportKeyboard, array, ReportField.REP_KEYBOARD, false, st);
     }
 
+    private int mouseButtonState = 0;
+
     public void sendMouseNotification(ReportField rf, int value, SendTo st) {
         byte[] array = new byte[5];
+        
+        if (rf == ReportField.REPORT_FIELD_MOUSE_BUTTONS || rf == ReportField.REPORT_FIELD_MOUSE_BUTTONS_XY) {
+            mouseButtonState = value & 0xFF;
+        }
+        
         int tempVal = value;
         for (int i = rf.byte_offset; i < rf.byte_offset + rf.byte_size; i++) {
             if (i < array.length) {
@@ -290,7 +299,11 @@ public class HidBleService extends Service {
                 tempVal >>= 8;
             }
         }
-        sendReport(charReportMouse, array, ReportField.REP_MOUSE, rf == ReportField.REPORT_FIELD_MOUSE_XY, st);
+        
+        // Ensure buttons state is preserved in every mouse report
+        array[0] = (byte) mouseButtonState;
+        
+        sendReport(charReportMouse, array, ReportField.REP_MOUSE, rf == ReportField.REPORT_FIELD_MOUSE_XY || rf == ReportField.REPORT_FIELD_MOUSE_BUTTONS_XY, st);
     }
 
     public void sendConsumerNotification(ReportField rf, int value, SendTo st) {
