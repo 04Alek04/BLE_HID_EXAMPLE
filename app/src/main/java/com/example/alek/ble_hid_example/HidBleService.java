@@ -33,6 +33,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.bluetooth.BluetoothProfile;
 import android.os.BatteryManager;
 import android.os.Binder;
@@ -195,15 +196,18 @@ public class HidBleService extends Service {
     private BluetoothGattCharacteristic charBatteryLevel;
     private byte lastKeyboardLedStatus = 0; // Bit 0: NumLock, Bit 1: CapsLock, Bit 2: ScrollLock
     private String mOriginalName = null;
+    private volatile boolean isAdvertising = false;
     private final AdvertiseCallback advertisingCallback = new AdvertiseCallback() {
         @Override
         public void onStartSuccess(AdvertiseSettings settingsInEffect) {
             Log.i("BLE", "Advertisement started successfully");
+            isAdvertising = true;
         }
 
         @Override
         public void onStartFailure(int errorCode) {
             Log.i("BLE", "Advertisement not started - error: " + errorCode);
+            isAdvertising = false;
         }
     };
 
@@ -424,44 +428,91 @@ public class HidBleService extends Service {
         sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
     }
 
+    private boolean ensureHidDeviceName() {
+        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
+
+        if (bluetoothAdapter == null) {
+            return false;
+        }
+
+        SharedPreferences prefs = getSharedPreferences("ble_device_prefs", Context.MODE_PRIVATE);
+        String savedOriginalName = prefs.getString("original_device_name", null);
+
+        String currentName = null;
+        try {
+            currentName = bluetoothAdapter.getName();
+        } catch (SecurityException e) {
+            Log.e("BLE", "Missing BLUETOOTH_CONNECT permission to get adapter name", e);
+        }
+
+        if (currentName != null) {
+            if (!currentName.startsWith("(HID) ")) {
+                // User changed name in system settings or app started fresh with clean name
+                savedOriginalName = currentName;
+                prefs.edit().putString("original_device_name", savedOriginalName).apply();
+            } else if (savedOriginalName == null) {
+                // Name has (HID) from a previous unclosed instance; strip prefix to recover clean name
+                savedOriginalName = currentName.substring(6).trim();
+                prefs.edit().putString("original_device_name", savedOriginalName).apply();
+            }
+        }
+
+        mOriginalName = savedOriginalName;
+
+        String baseName = mOriginalName != null ? mOriginalName : "Device";
+
+        String prefix = "(HID) ";
+        String newName;
+        if (baseName.startsWith(prefix)) {
+            newName = baseName;
+        } else {
+            String shortName = baseName.length() > 10 ? baseName.substring(0, 10) : baseName;
+            newName = prefix + shortName;
+        }
+
+        if (currentName == null || !currentName.equals(newName)) {
+            Log.i("BLE", "Setting device name to: " + newName);
+            try {
+                bluetoothAdapter.setName(newName);
+                return true;
+            } catch (SecurityException e) {
+                Log.e("BLE", "Missing BLUETOOTH_CONNECT permission to set adapter name", e);
+            }
+        }
+        return false;
+    }
+
+    private void stopAdvertising() {
+        if (!isAdvertising) return;
+        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
+
+        if (bluetoothAdapter != null) {
+            BluetoothLeAdvertiser advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
+            if (advertiser != null) {
+                try {
+                    advertiser.stopAdvertising(advertisingCallback);
+                } catch (SecurityException e) {
+                    Log.e("BLE", "Missing BLUETOOTH_ADVERTISE permission to stop advertising", e);
+                }
+            }
+        }
+        isAdvertising = false;
+    }
+
     private void startAdvertising() {
+        if (isAdvertising) {
+            Log.d("BLE", "Advertising is already active, skipping startAdvertising()");
+            return;
+        }
+
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
 
         if (bluetoothAdapter == null) {
             Log.e("BLE", "BluetoothAdapter is null");
             return;
-        }
-
-        // Configure a short name starting with (HID)
-        String originalName = null;
-        try {
-            originalName = bluetoothAdapter.getName();
-        } catch (SecurityException e) {
-            Log.e("BLE", "Missing BLUETOOTH_CONNECT permission to get adapter name", e);
-        }
-        if (mOriginalName == null && originalName != null && !originalName.startsWith("(HID) ")) {
-            mOriginalName = originalName;
-        }
-
-        if (originalName == null) originalName = "Device";
-
-        String prefix = "(HID) ";
-        String newName;
-        if (originalName.startsWith(prefix)) {
-            newName = originalName;
-        } else {
-            String shortName = originalName.length() > 10 ? originalName.substring(0, 10) : originalName;
-            newName = prefix + shortName;
-        }
-
-        if (!newName.equals(originalName)) {
-            Log.i("BLE", "Setting device name to: " + newName);
-            try {
-                bluetoothAdapter.setName(newName);
-            } catch (SecurityException e) {
-                Log.e("BLE", "Missing BLUETOOTH_CONNECT permission to set adapter name", e);
-            }
         }
 
         BluetoothLeAdvertiser advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
@@ -487,7 +538,6 @@ public class HidBleService extends Service {
                 .build();
 
         try {
-            advertiser.stopAdvertising(advertisingCallback);
             advertiser.startAdvertising(settings, advData, scanResponse, advertisingCallback);
         } catch (SecurityException e) {
             Log.e("BLE", "Missing BLUETOOTH_ADVERTISE permission to start advertising", e);
@@ -922,6 +972,7 @@ public class HidBleService extends Service {
                     new Handler(Looper.getMainLooper()).postDelayed(() -> requestLowLatency(device), 1500);
                     
                     // Resume advertising to allow more devices to connect
+                    isAdvertising = false;
                     startAdvertising();
                 } else if (newState == STATE_DISCONNECTED) {
                     if (devices.contains(device)) {
@@ -936,6 +987,7 @@ public class HidBleService extends Service {
                     }
 
                     // Resume advertising to allow new connections
+                    isAdvertising = false;
                     startAdvertising();
                 }
 
@@ -1287,14 +1339,25 @@ public class HidBleService extends Service {
         }
 
         ReportField.updateValues();
+        boolean nameChanged = ensureHidDeviceName();
         gattServerCbInit();
         mManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         if (gattServer != null) {
             gattServer.close();
         }
         gattServer = mManager.openGattServer(this, mGattServerCallback);
-        createGattDatabase(gattServer, SecurityLevel.SECURITY_LEVEL_2.ordinal());
         pendingNotifications.clear();
+
+        if (nameChanged) {
+            // Wait 300ms for Bluetooth hardware stack to update local name before creating GATT database and advertising
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (gattServer != null) {
+                    createGattDatabase(gattServer, SecurityLevel.SECURITY_LEVEL_2.ordinal());
+                }
+            }, 300);
+        } else {
+            createGattDatabase(gattServer, SecurityLevel.SECURITY_LEVEL_2.ordinal());
+        }
     }
 
     private final BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
@@ -1353,6 +1416,21 @@ public class HidBleService extends Service {
         }
     }
 
+    private final BroadcastReceiver nameChangeReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED.equals(intent.getAction())) {
+                String newName = intent.getStringExtra(BluetoothAdapter.EXTRA_LOCAL_NAME);
+                if (newName != null && !newName.startsWith("(HID) ")) {
+                    Log.i("BLE", "System device name changed by user to: " + newName);
+                    mOriginalName = newName;
+                    getSharedPreferences("ble_device_prefs", Context.MODE_PRIVATE)
+                            .edit().putString("original_device_name", newName).apply();
+                }
+            }
+        }
+    };
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -1367,6 +1445,9 @@ public class HidBleService extends Service {
             lastBatteryLevel = readBatteryLevel();
             notifyBatteryLevelChanged(lastBatteryLevel);
         }
+
+        IntentFilter nameFilter = new IntentFilter(BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED);
+        androidx.core.content.ContextCompat.registerReceiver(this, nameChangeReceiver, nameFilter, androidx.core.content.ContextCompat.RECEIVER_EXPORTED);
     }
 
     @Override
@@ -1377,18 +1458,28 @@ public class HidBleService extends Service {
 
     @Override
     public void onDestroy() {
+        stopAdvertising();
+
         try {
             unregisterReceiver(batteryReceiver);
         } catch (IllegalArgumentException ignored) {}
 
-        if (mOriginalName != null) {
+        try {
+            unregisterReceiver(nameChangeReceiver);
+        } catch (IllegalArgumentException ignored) {}
+
+        SharedPreferences prefs = getSharedPreferences("ble_device_prefs", Context.MODE_PRIVATE);
+        String nameToRestore = mOriginalName != null ? mOriginalName : prefs.getString("original_device_name", null);
+
+        if (nameToRestore != null) {
             BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             BluetoothAdapter bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
             if (bluetoothAdapter != null) {
-                Log.i("BLE", "Restoring original device name: " + mOriginalName);
+                Log.i("BLE", "Restoring original device name: " + nameToRestore);
                 if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
                     try {
-                        bluetoothAdapter.setName(mOriginalName);
+                        bluetoothAdapter.setName(nameToRestore);
+                        prefs.edit().remove("original_device_name").apply();
                     } catch (SecurityException ignored) {}
                 }
             }
