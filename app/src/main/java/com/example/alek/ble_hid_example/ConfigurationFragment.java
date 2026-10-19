@@ -15,13 +15,16 @@
  */
 package com.example.alek.ble_hid_example;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
+import androidx.appcompat.widget.SwitchCompat;
 
 public class ConfigurationFragment extends Fragment implements
         CompoundButton.OnCheckedChangeListener, View.OnClickListener {
@@ -41,6 +44,16 @@ public class ConfigurationFragment extends Fragment implements
 
         view.findViewById(R.id.conf_reboot_button).setOnClickListener(this);
         view.findViewById(R.id.conf_clear_configs_button).setOnClickListener(this);
+
+        SwitchCompat restoreNameSwitch = view.findViewById(R.id.conf_restore_name_switch);
+        if (restoreNameSwitch != null && getActivity() != null) {
+            SharedPreferences prefs = getActivity().getSharedPreferences("ble_device_prefs", Context.MODE_PRIVATE);
+            boolean restoreEnabled = prefs.getBoolean("restore_original_name", false);
+            restoreNameSwitch.setChecked(restoreEnabled);
+            restoreNameSwitch.setOnCheckedChangeListener((buttonView, isChecked) ->
+                prefs.edit().putBoolean("restore_original_name", isChecked).apply()
+            );
+        }
     }
 
     @Override

@@ -42,6 +42,7 @@ import android.os.Looper;
 import android.os.ParcelUuid;
 import android.os.Handler;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -181,11 +182,15 @@ public class HidBleService extends Service {
     private final Map<String, Map<String, byte[]>> mDeviceDescriptorValues = new ConcurrentHashMap<>();
     private final Map<BluetoothDevice, Integer> mNotificationMasks = new ConcurrentHashMap<>();
     private final java.util.Set<String> mDisabledDeviceAddresses = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+    private final java.util.Set<String> mHidReadyDeviceAddresses = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+    private final Handler mHidReadyHandler = new Handler(Looper.getMainLooper());
+    private final Map<String, Runnable> mHidReadyRunnables = new ConcurrentHashMap<>();
     
     /* Call proper methods on some BLE events  */
     private MainActivity mainActivity;
     private BluetoothGattServerCallback mGattServerCallback;
     private volatile boolean notificationPossible;
+    private volatile long lastNotificationTimestamp = 0;
     private BluetoothGattServer gattServer;
     private BluetoothGattCharacteristic charReportKeyboard;
     private BluetoothGattCharacteristic charReportMouse;
@@ -197,6 +202,7 @@ public class HidBleService extends Service {
     private byte lastKeyboardLedStatus = 0; // Bit 0: NumLock, Bit 1: CapsLock, Bit 2: ScrollLock
     private String mOriginalName = null;
     private volatile boolean isAdvertising = false;
+    private volatile boolean isGattDatabaseReady = false;
     private final AdvertiseCallback advertisingCallback = new AdvertiseCallback() {
         @Override
         public void onStartSuccess(AdvertiseSettings settingsInEffect) {
@@ -207,7 +213,11 @@ public class HidBleService extends Service {
         @Override
         public void onStartFailure(int errorCode) {
             Log.i("BLE", "Advertisement not started - error: " + errorCode);
-            isAdvertising = false;
+            if (errorCode == ADVERTISE_FAILED_ALREADY_STARTED) {
+                isAdvertising = true;
+            } else {
+                isAdvertising = false;
+            }
         }
     };
 
@@ -356,14 +366,31 @@ public class HidBleService extends Service {
     }
 
     private synchronized void processNotificationQueue() {
-        if (!notificationPossible || gattServer == null) {
+        if (gattServer == null) {
             return;
         }
 
+        // Queue Watchdog: recover if notificationPossible has been stuck false for > 100ms
+        if (!notificationPossible) {
+            if (System.currentTimeMillis() - lastNotificationTimestamp > 100) {
+                Log.w("BLE", "Notification watchdog recovered stalled queue");
+                notificationPossible = true;
+            } else {
+                return;
+            }
+        }
+
         while (!pendingNotifications.isEmpty()) {
-            NotificationData toSend = pendingNotifications.remove(0);
+            NotificationData toSend = pendingNotifications.get(0);
 
             if (devices.contains(toSend.device)) {
+                if (!isHidReady(toSend.device)) {
+                    // Hold notifications in queue while host completes GATT HID handshake
+                    break;
+                }
+
+                pendingNotifications.remove(0);
+
                 if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                     Log.e("BLE", "Missing BLUETOOTH_CONNECT permission for notification");
                     return;
@@ -375,14 +402,16 @@ public class HidBleService extends Service {
 
                 if (success) {
                     notificationPossible = false;
+                    lastNotificationTimestamp = System.currentTimeMillis();
                     // Exit loop, wait for onNotificationSent to set notificationPossible = true
                     break;
                 } else {
                     Log.e("BLE", "Failed to queue notification, skipping this one");
                     // Continue to next item in queue
                 }
+            } else {
+                pendingNotifications.remove(0);
             }
-            // If device was disconnected, the loop continues to the next pending notification
         }
     }
 
@@ -502,6 +531,11 @@ public class HidBleService extends Service {
     }
 
     private void startAdvertising() {
+        if (!isGattDatabaseReady) {
+            Log.d("BLE", "GATT Database not fully registered yet, postponing startAdvertising()");
+            return;
+        }
+
         if (isAdvertising) {
             Log.d("BLE", "Advertising is already active, skipping startAdvertising()");
             return;
@@ -521,9 +555,10 @@ public class HidBleService extends Service {
             return;
         }
         AdvertiseSettings settings = new AdvertiseSettings.Builder()
-                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
-                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
+                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
                 .setConnectable(true)
+                .setTimeout(0)
                 .build();
 
         // Split data to avoid ADVERTISE_FAILED_DATA_TOO_LARGE (error 1)
@@ -933,6 +968,7 @@ public class HidBleService extends Service {
         charBatteryLevel.addDescriptor(new BluetoothGattDescriptor(UUID.fromString(DESC_CCC), PERM_READ_WRITE));
         serviceBAS.addCharacteristic(charBatteryLevel);
 
+        isGattDatabaseReady = false;
         servicesToAdd.clear();
         servicesToAdd.add(serviceHid);
         servicesToAdd.add(serviceDIS);
@@ -967,14 +1003,19 @@ public class HidBleService extends Service {
                         notificationPossible = true;
                     }
 
-                    // Request Low Latency connection parameters with a delay
-                    // to allow initial HID handshake and pairing to complete.
-                    new Handler(Looper.getMainLooper()).postDelayed(() -> requestLowLatency(device), 1500);
-                    
-                    // Resume advertising to allow more devices to connect
-                    isAdvertising = false;
-                    startAdvertising();
+                    // Start 300ms debounce timer for host GATT HID handshake activity
+                    touchHostActivity(device);
+
+                    // Stop advertising when connected to keep the BLE link stable
+                    stopAdvertising();
                 } else if (newState == STATE_DISCONNECTED) {
+                    String addr = getResolvedAddress(device);
+                    Runnable pending = mHidReadyRunnables.remove(addr);
+                    if (pending != null) {
+                        mHidReadyHandler.removeCallbacks(pending);
+                    }
+                    mHidReadyDeviceAddresses.remove(addr);
+
                     if (devices.contains(device)) {
                         // If some notification waiting for this device then they will be removed in
                         // proper task
@@ -982,13 +1023,12 @@ public class HidBleService extends Service {
                     }
                     mNotificationMasks.remove(device);
 
-                    if (devices.size() == 0) {
-                        notificationPossible = false;
+                    if (devices.isEmpty()) {
+                        pendingNotifications.clear();
+                        notificationPossible = true;
+                        // Resume advertising when all devices disconnect
+                        startAdvertising();
                     }
-
-                    // Resume advertising to allow new connections
-                    isAdvertising = false;
-                    startAdvertising();
                 }
 
                 if (mainActivity != null) {
@@ -996,35 +1036,13 @@ public class HidBleService extends Service {
                 }
             }
 
-            private void requestLowLatency(BluetoothDevice device) {
-                if (device == null || gattServer == null) return;
-                Log.i("BLE", "LowLatency: Requesting HIGH priority for " + device.getAddress());
 
-                try {
-                    // Try to find the method in BluetoothGattServer (hidden before API 35)
-                    // Method signature: boolean requestConnectionPriority(BluetoothDevice device, int priority)
-                    Method method = gattServer.getClass().getMethod("requestConnectionPriority",
-                            BluetoothDevice.class, int.class);
-                    
-                    method.setAccessible(true);
-                    method.invoke(gattServer, device, BluetoothGatt.CONNECTION_PRIORITY_HIGH);
-                    Log.i("BLE", "LowLatency: SUCCESS via BluetoothGattServer reflection.");
-                } catch (Exception e) {
-                    Log.w("BLE", "LowLatency: FAILED to request via reflection. Fallback to default.");
-                    // Fallback to a simpler, more common hidden method if the above fails
-                    try {
-                        Method m = device.getClass().getMethod("connectGatt", Context.class, boolean.class, 
-                                android.bluetooth.BluetoothGattCallback.class, int.class);
-                        // Using transport LE (2)
-                        m.invoke(device, HidBleService.this, false, new android.bluetooth.BluetoothGattCallback() {}, 2);
-                    } catch (Exception ignored) {}
-                }
-            }
 
             @Override
             public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset,
                                                     BluetoothGattCharacteristic characteristic) {
                 if (gattServer == null) return;
+                touchHostActivity(device);
                 
                 if (characteristic.getUuid().toString().equalsIgnoreCase(CHAR_BATTERY_LEVEL)) {
                     characteristic.setValue(new byte[]{readBatteryLevel()});
@@ -1058,6 +1076,7 @@ public class HidBleService extends Service {
                                                  boolean preparedWrite, boolean responseNeeded,
                                                  int offset, byte[] value) {
                 if (gattServer == null) return;
+                touchHostActivity(device);
                 Log.e("BLE", "onDescriptorWriteRequest " + descriptor.getUuid().toString() + " value " + Arrays.toString(value));
                 saveDescriptorValue(device, descriptor, value);
                 
@@ -1076,6 +1095,7 @@ public class HidBleService extends Service {
                                                      boolean preparedWrite, boolean responseNeeded,
                                                      int offset, byte[] value) {
                 if (gattServer == null) return;
+                touchHostActivity(device);
                 
                 // Get Report ID from descriptor to be 100% sure
                 byte reportId = 0;
@@ -1105,6 +1125,7 @@ public class HidBleService extends Service {
             public void onDescriptorReadRequest(BluetoothDevice device, int requestId,
                                                 int offset, BluetoothGattDescriptor descriptor) {
                 if (gattServer == null) return;
+                touchHostActivity(device);
                 Log.e("BLE", "onDescriptorReadRequest " + descriptor.getUuid().toString());
                 byte[] value = getDescriptorValue(device, descriptor);
                 if (value == null) value = new byte[0];
@@ -1124,6 +1145,7 @@ public class HidBleService extends Service {
             @Override
             public void onNotificationSent(BluetoothDevice device, int status) {
                 notificationPossible = true;
+                lastNotificationTimestamp = System.currentTimeMillis();
                 processNotificationQueue();
             }
 
@@ -1133,10 +1155,58 @@ public class HidBleService extends Service {
                 if (!servicesToAdd.isEmpty()) {
                     gattServer.addService(servicesToAdd.remove(0));
                 } else {
-                    startAdvertising();
+                    isGattDatabaseReady = true;
+                    Log.i("BLE", "GATT Database registration COMPLETE.");
+                    if (devices.isEmpty()) {
+                        startAdvertising();
+                    }
                 }
             }
         };
+    }
+
+    private void touchHostActivity(BluetoothDevice device) {
+        if (device == null || !devices.contains(device)) return;
+        String addr = getResolvedAddress(device);
+
+        if (mHidReadyDeviceAddresses.contains(addr)) {
+            // Already ready
+            return;
+        }
+
+        Runnable existing = mHidReadyRunnables.get(addr);
+        if (existing != null) {
+            mHidReadyHandler.removeCallbacks(existing);
+        }
+
+        Runnable r = () -> markHidReady(device);
+        mHidReadyRunnables.put(addr, r);
+        mHidReadyHandler.postDelayed(r, 300); // 300ms debounce timer after host activity
+    }
+
+    private void markHidReady(BluetoothDevice device) {
+        if (device == null || !devices.contains(device)) return;
+        String addr = getResolvedAddress(device);
+        mHidReadyRunnables.remove(addr);
+
+        if (!mHidReadyDeviceAddresses.contains(addr)) {
+            mHidReadyDeviceAddresses.add(addr);
+            Log.i("BLE", "GATT HID Handshake complete (300ms idle after host activity), device READY: " + addr);
+            notificationPossible = true;
+            processNotificationQueue();
+            if (mainActivity != null) {
+                String devName = (device.getName() != null && !device.getName().isEmpty()) ? device.getName() : "Host";
+                mainActivity.runOnUiThread(() -> {
+                    Toast.makeText(mainActivity, devName + ": Ready", Toast.LENGTH_SHORT).show();
+                    mainActivity.onConnectionStateChange(devices);
+                });
+            }
+        }
+    }
+
+    public boolean isHidReady(BluetoothDevice device) {
+        if (device == null) return false;
+        return mHidReadyDeviceAddresses.contains(getResolvedAddress(device));
     }
 
     private String getResolvedAddress(BluetoothDevice device) {
@@ -1245,8 +1315,17 @@ public class HidBleService extends Service {
         if (isNotificationEnabled(device, charReportBattery)) mask |= ReportField.REP_BATTERY;
         if (isNotificationEnabled(device, charReportAbsMouse)) mask |= ReportField.REP_ABS_MOUSE;
         if (isNotificationEnabled(device, charReportGamepad)) mask |= ReportField.REP_GAMEPAD;
+
+        // HID Peripherals MUST enable notifications for all reports by default when connected,
+        // preventing stale CCCD [0,0] states from blocking notifications on reconnect.
+        if (mask == 0) {
+            mask = ReportField.REP_KEYBOARD | ReportField.REP_MOUSE | ReportField.REP_CONSUMER |
+                   ReportField.REP_BATTERY | ReportField.REP_ABS_MOUSE | ReportField.REP_GAMEPAD;
+        }
+
+        String deviceAddress = getResolvedAddress(device);
         mNotificationMasks.put(device, mask);
-        Log.i("BLE", "Updated notification mask for " + device.getAddress() + ": " + mask);
+        Log.i("BLE", "Updated notification mask for " + deviceAddress + ": " + Integer.toBinaryString(mask));
     }
 
     private String bytesToHex(byte[] bytes) {
@@ -1330,6 +1409,11 @@ public class HidBleService extends Service {
 
     /* Service handling-related methods */
     public void initializeLE() {
+        if (gattServer != null && isGattDatabaseReady && !devices.isEmpty()) {
+            Log.d("BLE", "GATT Server is already initialized and connected, skipping re-initialization.");
+            return;
+        }
+
         BluetoothManager mManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
 
         BluetoothAdapter bluetoothAdapter = mManager != null ? mManager.getAdapter() : null;
@@ -1469,18 +1553,21 @@ public class HidBleService extends Service {
         } catch (IllegalArgumentException ignored) {}
 
         SharedPreferences prefs = getSharedPreferences("ble_device_prefs", Context.MODE_PRIVATE);
-        String nameToRestore = mOriginalName != null ? mOriginalName : prefs.getString("original_device_name", null);
+        boolean restoreName = prefs.getBoolean("restore_original_name", false);
 
-        if (nameToRestore != null) {
-            BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-            BluetoothAdapter bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
-            if (bluetoothAdapter != null) {
-                Log.i("BLE", "Restoring original device name: " + nameToRestore);
-                if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                    try {
-                        bluetoothAdapter.setName(nameToRestore);
-                        prefs.edit().remove("original_device_name").apply();
-                    } catch (SecurityException ignored) {}
+        if (restoreName) {
+            String nameToRestore = mOriginalName != null ? mOriginalName : prefs.getString("original_device_name", null);
+            if (nameToRestore != null) {
+                BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+                BluetoothAdapter bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
+                if (bluetoothAdapter != null) {
+                    Log.i("BLE", "Restoring original device name on exit: " + nameToRestore);
+                    if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                        try {
+                            bluetoothAdapter.setName(nameToRestore);
+                            prefs.edit().remove("original_device_name").apply();
+                        } catch (SecurityException ignored) {}
+                    }
                 }
             }
         }
