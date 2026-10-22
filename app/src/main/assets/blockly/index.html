@@ -126,6 +126,12 @@
                 <value name="TIMES"><block type="math_number"><field name="NUM">10</field></block></value>
             </block>
             <block type="controls_whileUntil"></block>
+            <block type="controls_for">
+                <value name="FROM"><block type="math_number"><field name="NUM">1</field></block></value>
+                <value name="TO"><block type="math_number"><field name="NUM">10</field></block></value>
+                <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
+            </block>
+            <block type="controls_flow_statements"></block>
         </category>
         <category name="Math" colour="230">
             <block type="math_number"></block>
@@ -135,6 +141,7 @@
             <block type="text"></block>
             <block type="text_join"></block>
         </category>
+        <category name="Variables" colour="330" custom="VARIABLE"></category>
         <category name="Time" colour="230">
             <block type="hid_delay"></block>
         </category>
@@ -162,14 +169,14 @@
 
         Blockly.Blocks['hid_keyboard_text_input'] = {
           init: function() {
-            this.appendValueInput("TEXT").setCheck("String").appendField("Type text (input)");
+            this.appendValueInput("TEXT").appendField("Type text (input)");
             this.setPreviousStatement(true, null); this.setNextStatement(true, null);
             this.setColour(160);
           }
         };
         javascript.javascriptGenerator.forBlock['hid_keyboard_text_input'] = function(block) {
           var text = javascript.javascriptGenerator.valueToCode(block, 'TEXT', javascript.javascriptGenerator.ORDER_ATOMIC) || "''";
-          return 'if(executionCancelled) return; AndroidHID.typeText(' + text + ');\n';
+          return 'if(executionCancelled) return; AndroidHID.typeText(String(' + text + '));\n';
         };
 
         Blockly.Blocks['hid_keyboard_key'] = {
@@ -494,8 +501,9 @@
             'hid_media_playback': '#a5a55b', 'hid_media_volume': '#a5a55b',
             'hid_delay': '#a55b5b',
             // Kolory dla standardowych klocków
-            'controls_if': '#5b80a5', 'controls_repeat_ext': '#5ba55b',
-            'logic_compare': '#5b80a5', 'math_number': '#5b67a5', 'text': '#5ba58c'
+            'controls_if': '#5b80a5', 'controls_repeat_ext': '#5ba55b', 'controls_for': '#5ba55b',
+            'logic_compare': '#5b80a5', 'math_number': '#5b67a5', 'text': '#5ba58c',
+            'variables_get': '#a55b80', 'variables_set': '#a55b80'
         };
 
         // XML definitions for stashed blocks to include default values
@@ -506,7 +514,8 @@
             'hid_abs_mouse_new': '<block type="hid_abs_mouse_new"><value name="X"><block type="math_number"><field name="NUM">16384</field></block></value><value name="Y"><block type="math_number"><field name="NUM">16384</field></block></value></block>',
             'hid_gamepad_stick': '<block type="hid_gamepad_stick"><value name="X"><block type="math_number"><field name="NUM">0</field></block></value><value name="Y"><block type="math_number"><field name="NUM">0</field></block></value></block>',
             'hid_delay': '<block type="hid_delay"><field name="MS">500</field></block>',
-            'hid_keyboard_text': '<block type="hid_keyboard_text"><field name="TEXT">Hello</field></block>'
+            'hid_keyboard_text': '<block type="hid_keyboard_text"><field name="TEXT">Hello</field></block>',
+            'controls_for': '<block type="controls_for"><value name="FROM"><block type="math_number"><field name="NUM">1</field></block></value><value name="TO"><block type="math_number"><field name="NUM">10</field></block></value><value name="BY"><block type="math_number"><field name="NUM">1</field></block></value></block>'
         };
 
         function updateStashUI() {
