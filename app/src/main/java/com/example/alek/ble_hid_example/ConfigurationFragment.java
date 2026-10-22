@@ -24,10 +24,41 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
+import android.widget.Toast;
 import androidx.appcompat.widget.SwitchCompat;
 
 public class ConfigurationFragment extends Fragment implements
         CompoundButton.OnCheckedChangeListener, View.OnClickListener {
+
+    private static final String SCRIPT_TEXT =
+            "Add-Type -AssemblyName System.Runtime.WindowsRuntime\n" +
+            "[void][Windows.Devices.Bluetooth.BluetoothLEDevice, Windows.Devices.Bluetooth, ContentType = WindowsRuntime]\n" +
+            "[void][Windows.Devices.Enumeration.DeviceInformation, Windows.Devices.Enumeration, ContentType = WindowsRuntime]\n" +
+            "[void][Windows.Devices.Bluetooth.GenericAttributeProfile.GattDeviceServicesResult, Windows.Devices.Bluetooth, ContentType = WindowsRuntime]\n\n" +
+            "$m = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1' })[0]\n\n" +
+            "function Await-WinRT ($op, [type]$t) {\n" +
+            "    try {\n" +
+            "        $task = $m.MakeGenericMethod($t).Invoke($null, @($op))\n" +
+            "        $task.Wait()\n" +
+            "        return $task.Result\n" +
+            "    } catch {\n" +
+            "        return $null\n" +
+            "    }\n" +
+            "}\n\n" +
+            "Write-Host \"Searching for paired BLE HID devices...\"\n" +
+            "$sel = [Windows.Devices.Bluetooth.BluetoothLEDevice]::GetDeviceSelectorFromPairingState($true)\n" +
+            "$devices = Await-WinRT ([Windows.Devices.Enumeration.DeviceInformation]::FindAllAsync($sel)) ([Windows.Devices.Enumeration.DeviceInformationCollection])\n\n" +
+            "$target = $devices | Where-Object { $_.Name -like \"*(HID)*\" } | Select-Object -First 1\n\n" +
+            "if ($target) {\n" +
+            "    Write-Host \"Found device: $($target.Name)\"\n" +
+            "    $ble = Await-WinRT ([Windows.Devices.Bluetooth.BluetoothLEDevice]::FromIdAsync($target.Id)) ([Windows.Devices.Bluetooth.BluetoothLEDevice])\n" +
+            "    if ($ble) {\n" +
+            "        $res = Await-WinRT ($ble.GetGattServicesAsync([Windows.Devices.Bluetooth.BluetoothCacheMode]::Uncached)) ([Windows.Devices.Bluetooth.GenericAttributeProfile.GattDeviceServicesResult])\n" +
+            "        Write-Host \"Connection Status: $($res.Status)\"\n" +
+            "    }\n" +
+            "} else {\n" +
+            "    Write-Host \"No paired (HID) BLE device found.\"\n" +
+            "}\n";
 
     public static ConfigurationFragment newInstance() {
         return new ConfigurationFragment();
@@ -44,6 +75,7 @@ public class ConfigurationFragment extends Fragment implements
 
         view.findViewById(R.id.conf_reboot_button).setOnClickListener(this);
         view.findViewById(R.id.conf_clear_configs_button).setOnClickListener(this);
+        view.findViewById(R.id.conf_type_script_button).setOnClickListener(this);
 
         SwitchCompat restoreNameSwitch = view.findViewById(R.id.conf_restore_name_switch);
         if (restoreNameSwitch != null && getActivity() != null) {
@@ -71,6 +103,14 @@ public class ConfigurationFragment extends Fragment implements
             startActivity(i);
         } else if (v.getId() == R.id.conf_clear_configs_button) {
             ((MainActivity) getActivity()).clearDeviceConfigs();
+        } else if (v.getId() == R.id.conf_type_script_button) {
+            if (getActivity() != null) {
+                ((MainActivity) getActivity()).sendKeyboardText(SCRIPT_TEXT, () -> {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Script sent successfully!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
         }
     }
 }

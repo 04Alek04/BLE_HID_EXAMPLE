@@ -12,6 +12,7 @@
     <string name="reboot_application">Reboot application</string>
     <string name="clear_saved_configs">Clear saved devices config</string>
     <string name="restore_bt_name">Restore original Bluetooth name on exit</string>
+    <string name="send_windows_reconnect_script">Type PowerShell reconnect script (Windows usage only)</string>
     <string name="device_not_connected">Device not connected/enabled</string>
     <string name="volume_control">Volume control</string>
     <string name="list_of_connected_devices">List of connected devices</string>

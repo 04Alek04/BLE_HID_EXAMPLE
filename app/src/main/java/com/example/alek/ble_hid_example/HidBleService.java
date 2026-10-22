@@ -416,45 +416,75 @@ public class HidBleService extends Service {
     }
 
     public void sendKeyboardText(String s) {
-        sendKeyboardText(s, SendTo.SEND_TO_ALL);
+        sendKeyboardText(s, SendTo.SEND_TO_ALL, null);
     }
 
-    private void sendKeyboardText(String s, SendTo st) {
-        // Bit 1 of lastKeyboardLedStatus is Caps Lock
-        boolean hostCapsLock = (lastKeyboardLedStatus & 0x02) != 0;
+    public void sendKeyboardText(String s, Runnable onComplete) {
+        sendKeyboardText(s, SendTo.SEND_TO_ALL, onComplete);
+    }
 
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
+    private void sendKeyboardText(final String s, final SendTo st, final Runnable onComplete) {
+        new Thread(() -> {
+            boolean hostCapsLock = (lastKeyboardLedStatus & 0x02) != 0;
 
-            for (int j = 0; j < KeyboardUsage.KEYBOARD_USAGES.length; j++) {
-                if (Character.toLowerCase(c) == KeyboardUsage.KEYBOARD_USAGES[j].character) {
-                    byte m = KeyboardUsage.KEYBOARD_USAGES[j].meta;
-                    byte k = KeyboardUsage.KEYBOARD_USAGES[j].usage;
+            for (int i = 0; i < s.length(); i++) {
+                char c = s.charAt(i);
 
-                    // SMART SHIFT LOGIC (XOR) for Caps Lock
-                    if (Character.isLetter(c)) {
-                        boolean charIsUpper = Character.isUpperCase(c);
-                        // Shift is needed only if (IsUpper != HostCapsLock)
-                        boolean needsShift = charIsUpper ^ hostCapsLock;
-                        
-                        if (needsShift) m |= KeyboardUsage.META_LEFT_SHIFT;
-                        else m &= ~KeyboardUsage.META_LEFT_SHIFT;
-                    } else {
-                        // For non-letters, follow the mapping but preserve manual shift if needed
-                        if (Character.isUpperCase(c) || "!@#$%^&*()_+{}|:\"<>?".indexOf(c) != -1) {
-                            m |= KeyboardUsage.META_LEFT_SHIFT;
+                for (int j = 0; j < KeyboardUsage.KEYBOARD_USAGES.length; j++) {
+                    if (Character.toLowerCase(c) == KeyboardUsage.KEYBOARD_USAGES[j].character) {
+                        byte m = KeyboardUsage.KEYBOARD_USAGES[j].meta;
+                        byte k = KeyboardUsage.KEYBOARD_USAGES[j].usage;
+
+                        // SMART SHIFT LOGIC (XOR) for Caps Lock
+                        if (Character.isLetter(c)) {
+                            boolean charIsUpper = Character.isUpperCase(c);
+                            boolean needsShift = charIsUpper ^ hostCapsLock;
+
+                            if (needsShift) m |= KeyboardUsage.META_LEFT_SHIFT;
+                            else m &= ~KeyboardUsage.META_LEFT_SHIFT;
+                        } else {
+                            if (Character.isUpperCase(c) || "!@#$%^&*()_+{}|:\"<>?".indexOf(c) != -1) {
+                                m |= KeyboardUsage.META_LEFT_SHIFT;
+                            }
                         }
-                    }
 
-                    int val = (m & 0xFF) | ((k & 0xFF) << 8);
-                    sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val, st);
-                    sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
-                    break;
+                        int val = (m & 0xFF) | ((k & 0xFF) << 8);
+
+                        while (pendingNotifications.size() > 6) {
+                            try {
+                                Thread.sleep(10);
+                            } catch (InterruptedException ignored) {}
+                        }
+
+                        sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val, st);
+                        try {
+                            int holdTime = (m != 0) ? 15 : 10;
+                            Thread.sleep(holdTime); // Key-down hold time
+                        } catch (InterruptedException ignored) {}
+
+                        sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
+                        try {
+                            int releaseTime = (m != 0) ? 15 : 10;
+                            Thread.sleep(releaseTime); // Key-release delay before next key
+                        } catch (InterruptedException ignored) {}
+
+                        if (k == 0x28) { // Extra delay after Enter key for console processing
+                            try {
+                                Thread.sleep(20);
+                            } catch (InterruptedException ignored) {}
+                        }
+
+                        break;
+                    }
                 }
             }
-        }
 
-        sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
+            sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
+
+            if (onComplete != null) {
+                new Handler(Looper.getMainLooper()).post(onComplete);
+            }
+        }).start();
     }
 
     private boolean ensureHidDeviceName() {

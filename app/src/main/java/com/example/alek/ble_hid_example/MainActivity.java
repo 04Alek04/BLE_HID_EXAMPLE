@@ -345,6 +345,12 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         }
     }
 
+    public void sendKeyboardText(String s, Runnable onComplete) {
+        if (mService != null) {
+            mService.sendKeyboardText(s, onComplete);
+        }
+    }
+
     public void restartGattDatabase() {
         if (mService != null) mService.initializeLE();
     }
