@@ -406,8 +406,11 @@ public class HidBleService extends Service {
                     // Exit loop, wait for onNotificationSent to set notificationPossible = true
                     break;
                 } else {
-                    Log.e("BLE", "Failed to queue notification, skipping this one");
-                    // Continue to next item in queue
+                    Log.e("BLE", "Failed to queue notification, re-enqueuing for retry");
+                    pendingNotifications.add(0, toSend);
+                    notificationPossible = false;
+                    lastNotificationTimestamp = System.currentTimeMillis() - 80; // Allow watchdog retry in 20ms
+                    break;
                 }
             } else {
                 pendingNotifications.remove(0);
@@ -479,6 +482,11 @@ public class HidBleService extends Service {
                 }
             }
 
+            // Send double safety key-release at the end to guarantee no keys remain stuck
+            sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
+            try {
+                Thread.sleep(15);
+            } catch (InterruptedException ignored) {}
             sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
 
             if (onComplete != null) {
