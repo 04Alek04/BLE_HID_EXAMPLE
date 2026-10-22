@@ -324,15 +324,15 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
     }
 
     public void sendKeyboardNotification(ReportField rf, int value) {
-        if (mService != null) mService.sendKeyboardNotification(rf, value, SendTo.SEND_TO_ALL);
+        if (mService != null) mService.sendKeyboardNotification(rf, value);
     }
 
     public void sendMouseNotification(ReportField rf, int value) {
-        if (mService != null) mService.sendMouseNotification(rf, value, SendTo.SEND_TO_ALL);
+        if (mService != null) mService.sendMouseNotification(rf, value);
     }
 
     public void sendConsumerNotification(ReportField rf, int value) {
-        if (mService != null) mService.sendConsumerNotification(rf, value, SendTo.SEND_TO_ALL);
+        if (mService != null) mService.sendConsumerNotification(rf, value);
     }
 
     public void sendGamepadNotification(int buttons, int lx, int ly, int rx, int ry) {

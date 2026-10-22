@@ -76,12 +76,6 @@ import static com.example.alek.ble_hid_example.UUIDs.SERVICE_BAS;
 import static com.example.alek.ble_hid_example.UUIDs.SERVICE_DIS;
 import static com.example.alek.ble_hid_example.UUIDs.SERVICE_HID;
 
-enum SendTo {
-    SEND_TO_FIRST,
-    SEND_TO_LAST,
-    SEND_TO_ALL,
-}
-
 enum SecurityLevel {
     SECURITY_LEVEL_1,   // None
     SECURITY_LEVEL_2,   // Encryption
@@ -238,23 +232,13 @@ public class HidBleService extends Service {
         return 100;
     }
 
-    private void sendReport(BluetoothGattCharacteristic characteristic, byte[] value, int maskBit, boolean canMerge, SendTo st) {
+    private void sendReport(BluetoothGattCharacteristic characteristic, byte[] value, int maskBit, boolean canMerge) {
         if (devices.isEmpty() || gattServer == null || characteristic == null) return;
 
         synchronized (pendingNotifications) {
-            List<BluetoothDevice> targetDevices = new ArrayList<>();
+            List<BluetoothDevice> targetDevices;
             synchronized (devices) {
-                switch (st) {
-                    case SEND_TO_FIRST:
-                        if (!devices.isEmpty()) targetDevices.add(devices.get(0));
-                        break;
-                    case SEND_TO_LAST:
-                        if (!devices.isEmpty()) targetDevices.add(devices.get(devices.size() - 1));
-                        break;
-                    case SEND_TO_ALL:
-                        targetDevices.addAll(devices);
-                        break;
-                }
+                targetDevices = new ArrayList<>(devices);
             }
 
             for (BluetoothDevice device : targetDevices) {
@@ -292,7 +276,7 @@ public class HidBleService extends Service {
         processNotificationQueue();
     }
 
-    public void sendKeyboardNotification(ReportField rf, int value, SendTo st) {
+    public void sendKeyboardNotification(ReportField rf, int value) {
         byte[] array = new byte[8];
         if (rf == ReportField.REPORT_FIELD_KEYBOARD_ALL) {
             array[0] = (byte) (value & 0xff);
@@ -306,12 +290,12 @@ public class HidBleService extends Service {
                 }
             }
         }
-        sendReport(charReportKeyboard, array, ReportField.REP_KEYBOARD, false, st);
+        sendReport(charReportKeyboard, array, ReportField.REP_KEYBOARD, false);
     }
 
     private int mouseButtonState = 0;
 
-    public void sendMouseNotification(ReportField rf, int value, SendTo st) {
+    public void sendMouseNotification(ReportField rf, int value) {
         byte[] array = new byte[5];
         
         if (rf == ReportField.REPORT_FIELD_MOUSE_BUTTONS || rf == ReportField.REPORT_FIELD_MOUSE_BUTTONS_XY) {
@@ -329,10 +313,10 @@ public class HidBleService extends Service {
         // Ensure buttons state is preserved in every mouse report
         array[0] = (byte) mouseButtonState;
         
-        sendReport(charReportMouse, array, ReportField.REP_MOUSE, rf == ReportField.REPORT_FIELD_MOUSE_XY || rf == ReportField.REPORT_FIELD_MOUSE_BUTTONS_XY, st);
+        sendReport(charReportMouse, array, ReportField.REP_MOUSE, rf == ReportField.REPORT_FIELD_MOUSE_XY || rf == ReportField.REPORT_FIELD_MOUSE_BUTTONS_XY);
     }
 
-    public void sendConsumerNotification(ReportField rf, int value, SendTo st) {
+    public void sendConsumerNotification(ReportField rf, int value) {
         byte[] array = new byte[6];
         int tempVal = value;
         for (int i = rf.byte_offset; i < rf.byte_offset + rf.byte_size; i++) {
@@ -341,7 +325,7 @@ public class HidBleService extends Service {
                 tempVal >>= 8;
             }
         }
-        sendReport(charReportConsumer, array, ReportField.REP_CONSUMER, false, st);
+        sendReport(charReportConsumer, array, ReportField.REP_CONSUMER, false);
     }
 
     public void sendAbsMouseNotification(int buttons, int x, int y) {
@@ -351,7 +335,7 @@ public class HidBleService extends Service {
         array[2] = (byte) ((x >> 8) & 0xFF);
         array[3] = (byte) (y & 0xFF);
         array[4] = (byte) ((y >> 8) & 0xFF);
-        sendReport(charReportAbsMouse, array, ReportField.REP_ABS_MOUSE, false, SendTo.SEND_TO_ALL);
+        sendReport(charReportAbsMouse, array, ReportField.REP_ABS_MOUSE, false);
     }
 
     public void sendGamepadNotification(int buttons, int lx, int ly, int rx, int ry) {
@@ -362,7 +346,7 @@ public class HidBleService extends Service {
         array[3] = (byte) (ly & 0xFF);
         array[4] = (byte) (rx & 0xFF);
         array[5] = (byte) (ry & 0xFF);
-        sendReport(charReportGamepad, array, ReportField.REP_GAMEPAD, false, SendTo.SEND_TO_ALL);
+        sendReport(charReportGamepad, array, ReportField.REP_GAMEPAD, false);
     }
 
     private synchronized void processNotificationQueue() {
@@ -419,14 +403,10 @@ public class HidBleService extends Service {
     }
 
     public void sendKeyboardText(String s) {
-        sendKeyboardText(s, SendTo.SEND_TO_ALL, null);
+        sendKeyboardText(s, null);
     }
 
-    public void sendKeyboardText(String s, Runnable onComplete) {
-        sendKeyboardText(s, SendTo.SEND_TO_ALL, onComplete);
-    }
-
-    private void sendKeyboardText(final String s, final SendTo st, final Runnable onComplete) {
+    public void sendKeyboardText(final String s, final Runnable onComplete) {
         new Thread(() -> {
             boolean hostCapsLock = (lastKeyboardLedStatus & 0x02) != 0;
 
@@ -459,13 +439,13 @@ public class HidBleService extends Service {
                             } catch (InterruptedException ignored) {}
                         }
 
-                        sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val, st);
+                        sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val);
                         try {
                             int holdTime = (m != 0) ? 15 : 10;
                             Thread.sleep(holdTime); // Key-down hold time
                         } catch (InterruptedException ignored) {}
 
-                        sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
+                        sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
                         try {
                             int releaseTime = (m != 0) ? 15 : 10;
                             Thread.sleep(releaseTime); // Key-release delay before next key
@@ -483,11 +463,11 @@ public class HidBleService extends Service {
             }
 
             // Send double safety key-release at the end to guarantee no keys remain stuck
-            sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
+            sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
             try {
                 Thread.sleep(15);
             } catch (InterruptedException ignored) {}
-            sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0, st);
+            sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
 
             if (onComplete != null) {
                 new Handler(Looper.getMainLooper()).post(onComplete);
