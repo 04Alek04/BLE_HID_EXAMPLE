@@ -43,7 +43,6 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
-import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -459,7 +458,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             if (event.isMetaPressed()) meta_key |= KeyboardUsage.META_LEFT_META;
             
             short val = (short) (meta_key + (key << 8));
-            sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, (int) val);
+            sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val);
             return true;
         }
 

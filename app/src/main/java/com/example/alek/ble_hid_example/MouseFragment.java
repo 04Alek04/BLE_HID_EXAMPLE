@@ -219,7 +219,9 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
             return false;
         }
 
-        activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, buttonsState);
+        if (activity != null) {
+            activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, buttonsState);
+        }
 
         return true;
     }

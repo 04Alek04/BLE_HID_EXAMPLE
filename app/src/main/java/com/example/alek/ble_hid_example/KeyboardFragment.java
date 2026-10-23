@@ -215,32 +215,29 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
                         }
                     }
                 }
-                return false;
+                 return false;
             }
         });
 
-        numLockBtn = (MaterialButton) view.findViewById(R.id.keyboard_lock_num);
-        capsLockBtn = (MaterialButton) view.findViewById(R.id.keyboard_lock_caps);
-        scrollLockBtn = (MaterialButton) view.findViewById(R.id.keyboard_lock_scroll);
+        numLockBtn = view.findViewById(R.id.keyboard_lock_num);
+        capsLockBtn = view.findViewById(R.id.keyboard_lock_caps);
+        scrollLockBtn = view.findViewById(R.id.keyboard_lock_scroll);
 
-        View.OnClickListener lockClickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                byte usage = 0;
-                int id = v.getId();
-                if (id == R.id.keyboard_lock_num) {
-                    usage = (byte) 0x53;
-                } else if (id == R.id.keyboard_lock_caps) {
-                    usage = (byte) 0x39;
-                } else if (id == R.id.keyboard_lock_scroll) {
-                    usage = (byte) 0x47;
-                }
+        View.OnClickListener lockClickListener = v -> {
+            byte usage = 0;
+            int id = v.getId();
+            if (id == R.id.keyboard_lock_num) {
+                usage = (byte) 0x53;
+            } else if (id == R.id.keyboard_lock_caps) {
+                usage = (byte) 0x39;
+            } else if (id == R.id.keyboard_lock_scroll) {
+                usage = (byte) 0x47;
+            }
 
-                if (usage != 0) {
-                    MainActivity activity = (MainActivity) getActivity();
-                    // Send key press
+            if (usage != 0) {
+                MainActivity activity = (MainActivity) getActivity();
+                if (activity != null) {
                     activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, usage << 8);
-                    // Send key release
                     activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
                 }
             }
@@ -250,23 +247,22 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         capsLockBtn.setOnClickListener(lockClickListener);
         scrollLockBtn.setOnClickListener(lockClickListener);
 
-        View.OnClickListener shortcutClickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                byte usage = 0;
-                int id = v.getId();
-                if (id == R.id.kb_short_undo) usage = 0x1d; // Z
-                else if (id == R.id.kb_short_redo) usage = 0x1c; // Y
-                else if (id == R.id.kb_short_save) usage = 0x16; // S
-                else if (id == R.id.kb_short_all) usage = 0x04; // A
-                else if (id == R.id.kb_short_cut) usage = 0x1b; // X
-                else if (id == R.id.kb_short_copy) usage = 0x06; // C
-                else if (id == R.id.kb_short_paste) usage = 0x19; // V
-                else if (id == R.id.kb_short_find) usage = 0x09; // F
-                else if (id == R.id.kb_short_replace) usage = 0x0b; // H
+        View.OnClickListener shortcutClickListener = v -> {
+            byte usage = 0;
+            int id = v.getId();
+            if (id == R.id.kb_short_undo) usage = 0x1d; // Z
+            else if (id == R.id.kb_short_redo) usage = 0x1c; // Y
+            else if (id == R.id.kb_short_save) usage = 0x16; // S
+            else if (id == R.id.kb_short_all) usage = 0x04; // A
+            else if (id == R.id.kb_short_cut) usage = 0x1b; // X
+            else if (id == R.id.kb_short_copy) usage = 0x06; // C
+            else if (id == R.id.kb_short_paste) usage = 0x19; // V
+            else if (id == R.id.kb_short_find) usage = 0x09; // F
+            else if (id == R.id.kb_short_replace) usage = 0x0b; // H
 
-                if (usage != 0) {
-                    MainActivity activity = (MainActivity) getActivity();
+            if (usage != 0) {
+                MainActivity activity = (MainActivity) getActivity();
+                if (activity != null) {
                     short val = (short) (KeyboardUsage.META_LEFT_CONTROL | (usage << 8));
                     activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val);
                     activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
