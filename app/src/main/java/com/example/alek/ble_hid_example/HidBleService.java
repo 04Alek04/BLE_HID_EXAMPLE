@@ -76,12 +76,6 @@ import static com.example.alek.ble_hid_example.UUIDs.SERVICE_BAS;
 import static com.example.alek.ble_hid_example.UUIDs.SERVICE_DIS;
 import static com.example.alek.ble_hid_example.UUIDs.SERVICE_HID;
 
-enum SecurityLevel {
-    SECURITY_LEVEL_1,   // None
-    SECURITY_LEVEL_2,   // Encryption
-    SECURITY_LEVEL_3,   // Authentication
-}
-
 enum ReportField {
     /* Consumer (Report ID 3) */
     REPORT_FIELD_CONSUMER_CONTROL(0, 2),
@@ -597,14 +591,10 @@ public class HidBleService extends Service {
         }
     }
 
-    private void createGattDatabase(BluetoothGattServer gattServer, int level) {
+    private void createGattDatabase(BluetoothGattServer gattServer) {
         // Set characteristics' permissions
-        final int PERM_READ = (level == SecurityLevel.SECURITY_LEVEL_3.ordinal()) ?
-                PERMISSION_READ_ENCRYPTED_MITM : ((level == SecurityLevel.SECURITY_LEVEL_2.ordinal()) ?
-                PERMISSION_READ_ENCRYPTED : PERMISSION_READ);
-        final int PERM_WRITE = (level == SecurityLevel.SECURITY_LEVEL_3.ordinal()) ?
-                PERMISSION_WRITE_ENCRYPTED_MITM : ((level == SecurityLevel.SECURITY_LEVEL_2.ordinal()) ?
-                PERMISSION_WRITE_ENCRYPTED : PERMISSION_WRITE);
+        final int PERM_READ = PERMISSION_READ_ENCRYPTED; // Use PERMISSION_READ_ENCRYPTED_MITM for Security Level 3
+        final int PERM_WRITE = PERMISSION_WRITE_ENCRYPTED; // Use PERMISSION_WRITE_ENCRYPTED_MITM for Security Level 3
         final int PERM_READ_WRITE = PERM_READ | PERM_WRITE;
 
         // Clear current attributes database - avoid adding the same services to database
@@ -1454,11 +1444,11 @@ public class HidBleService extends Service {
             // Wait 300ms for Bluetooth hardware stack to update local name before creating GATT database and advertising
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 if (gattServer != null) {
-                    createGattDatabase(gattServer, SecurityLevel.SECURITY_LEVEL_2.ordinal());
+                    createGattDatabase(gattServer);
                 }
             }, 300);
         } else {
-            createGattDatabase(gattServer, SecurityLevel.SECURITY_LEVEL_2.ordinal());
+            createGattDatabase(gattServer);
         }
     }
 
