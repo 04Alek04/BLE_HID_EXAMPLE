@@ -71,7 +71,7 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
 
         binding.mouseHScroll.setOnTouchListener(new View.OnTouchListener() {
             private float lastX;
-            private float remainderX;
+            private final TouchInputCalculator scrollCalculator = new TouchInputCalculator();
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -83,22 +83,16 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
                     case MotionEvent.ACTION_DOWN:
                         activity.swipePossible(false);
                         lastX = event.getX();
-                        remainderX = 0;
+                        scrollCalculator.resetRemainder();
                         break;
                     case MotionEvent.ACTION_MOVE:
                         float currentX = event.getX();
                         float dx = currentX - lastX;
                         lastX = currentX;
 
-                        float sensitivity = 0.2f; // Decreased from 0.5f for slower scrolling
-                        float moveX = dx * sensitivity + remainderX;
-                        int intX = Math.round(moveX);
-
-                        if (intX != 0) {
-                            remainderX = moveX - intX;
-                            activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_HSCROLL, intX);
-                        } else {
-                            remainderX = moveX;
+                        int stepX = scrollCalculator.calculateScrollStep(dx, 0.2f);
+                        if (stepX != 0) {
+                            activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_HSCROLL, stepX);
                         }
                         break;
                     case MotionEvent.ACTION_UP:
@@ -117,14 +111,14 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
                         public boolean onDoubleTap(MotionEvent e) {
                             MainActivity activity = (MainActivity) getActivity();
                             if (activity != null) {
-                                activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0x01);
-                                activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0x00);
+                                activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, HidMouseCodes.BUTTON_LEFT);
+                                activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0);
                             }
                             return super.onDoubleTap(e);
                         }
                     });
             private float lastX, lastY;
-            private float remainderX, remainderY;
+            private final TouchInputCalculator cursorCalculator = new TouchInputCalculator();
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -138,8 +132,7 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
                         activity.swipePossible(false);
                         lastX = event.getX();
                         lastY = event.getY();
-                        remainderX = 0;
-                        remainderY = 0;
+                        cursorCalculator.resetRemainder();
                         break;
                     case MotionEvent.ACTION_MOVE:
                         float currentX = event.getX();
@@ -149,25 +142,9 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
                         lastX = currentX;
                         lastY = currentY;
 
-                        float sensitivity = 1.5f; // Adjust sensitivity for better feel
-                        float moveX = dx * sensitivity + remainderX;
-                        float moveY = dy * sensitivity + remainderY;
-
-                        int intX = Math.round(moveX);
-                        int intY = Math.round(moveY);
-
-                        if (intX != 0 || intY != 0) {
-                            remainderX = moveX - intX;
-                            remainderY = moveY - intY;
-
-                            byte _x = (byte) Math.max(-128, Math.min(127, intX));
-                            byte _y = (byte) Math.max(-128, Math.min(127, intY));
-                            int toSend = (_x & 0xFF) | ((_y & 0xFF) << 8);
-
+                        int toSend = cursorCalculator.calculateRelativeDelta(dx, dy, 1.5f);
+                        if (toSend != 0) {
                             activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_XY, toSend);
-                        } else {
-                            remainderX = moveX;
-                            remainderY = moveY;
                         }
                         break;
                     case MotionEvent.ACTION_UP:

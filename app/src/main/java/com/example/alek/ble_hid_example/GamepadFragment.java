@@ -218,10 +218,9 @@ public class GamepadFragment extends Fragment {
                                 lStickView.setTranslationY(dy);
                             }
 
-                            analogLX = Math.round((dy / radius) * HidGamepadCodes.STICK_AXIS_MAX);
-                            analogLY = Math.round((1 - (dx / radius)) * HidGamepadCodes.STICK_AXIS_MAX) - HidGamepadCodes.STICK_AXIS_MAX;
-                            analogLX = Math.max(HidGamepadCodes.STICK_AXIS_MIN, Math.min(HidGamepadCodes.STICK_AXIS_MAX, analogLX));
-                            analogLY = Math.max(HidGamepadCodes.STICK_AXIS_MIN, Math.min(HidGamepadCodes.STICK_AXIS_MAX, analogLY));
+                            android.graphics.Point stickPoint = TouchInputCalculator.calculateJoystickAxis(dy, -dx, radius);
+                            analogLX = stickPoint.x;
+                            analogLY = stickPoint.y;
 
                             activity.sendGamepadNotification(buttonsState, analogLX, analogLY, analogRX, analogRY);
                         }
@@ -325,10 +324,9 @@ public class GamepadFragment extends Fragment {
                                 rStickView.setTranslationY(dy);
                             }
 
-                            analogRX = Math.round((dy / radius) * 127);
-                            analogRY = Math.round((1 - (dx / radius)) * 127) - 127;
-                            analogRX = Math.max(-127, Math.min(127, analogRX));
-                            analogRY = Math.max(-127, Math.min(127, analogRY));
+                            android.graphics.Point stickPoint = TouchInputCalculator.calculateJoystickAxis(dy, -dx, radius);
+                            analogRX = stickPoint.x;
+                            analogRY = stickPoint.y;
 
                             activity.sendGamepadNotification(buttonsState, analogLX, analogLY, analogRX, analogRY);
                         }
@@ -385,16 +383,16 @@ public class GamepadFragment extends Fragment {
             touchpadView.setOnTouchListener(new View.OnTouchListener() {
                 private float touchDownX, touchDownY;
                 private float lastX, lastY;
-                private float remainderX, remainderY;
                 private boolean isDragging = false;
                 private boolean isLeftClickPressed = false;
+                private final TouchInputCalculator gamepadTouchpadCalculator = new TouchInputCalculator();
 
                 private final GestureDetector touchpadDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
                     @Override
                     public boolean onDoubleTap(@NonNull MotionEvent e) {
                         isLeftClickPressed = true;
                         if (activity != null) {
-                            activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0x01);
+                            activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, HidMouseCodes.BUTTON_LEFT);
                         }
                         return true;
                     }
@@ -414,8 +412,7 @@ public class GamepadFragment extends Fragment {
                         touchDownY = event.getY();
                         lastX = touchDownX;
                         lastY = touchDownY;
-                        remainderX = 0;
-                        remainderY = 0;
+                        gamepadTouchpadCalculator.resetRemainder();
                         isDragging = false;
 
                         v.getParent().requestDisallowInterceptTouchEvent(true);
@@ -431,7 +428,7 @@ public class GamepadFragment extends Fragment {
                         if (isOutOfBounds) {
                             if (isLeftClickPressed) {
                                 isLeftClickPressed = false;
-                                activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0x00);
+                                activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0);
                             }
                         } else {
                             if (!isDragging) {
@@ -449,27 +446,11 @@ public class GamepadFragment extends Fragment {
                                 lastX = x;
                                 lastY = y;
 
-                                float sensitivity = 1.5f;
-                                // Swapped touchpad axes (screen dy -> mouse X, screen dx -> mouse Y inverted)
-                                float moveX = rawDy * sensitivity + remainderX;
-                                float moveY = -rawDx * sensitivity + remainderY;
-
-                                int intX = Math.round(moveX);
-                                int intY = Math.round(moveY);
-
-                                if (intX != 0 || intY != 0) {
-                                    remainderX = moveX - intX;
-                                    remainderY = moveY - intY;
-
-                                    byte _x = (byte) Math.max(-128, Math.min(127, intX));
-                                    byte _y = (byte) Math.max(-128, Math.min(127, intY));
-                                    int btn = isLeftClickPressed ? 0x01 : 0x00;
-                                    int toSend = (btn & 0xFF) | ((_x & 0xFF) << 8) | ((_y & 0xFF) << 16);
-
+                                int delta = gamepadTouchpadCalculator.calculateRelativeDelta(rawDy, -rawDx, 1.5f);
+                                if (delta != 0) {
+                                    int btn = isLeftClickPressed ? HidMouseCodes.BUTTON_LEFT : 0;
+                                    int toSend = (btn & 0xFF) | ((delta & 0xFFFF) << 8);
                                     activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS_XY, toSend);
-                                } else {
-                                    remainderX = moveX;
-                                    remainderY = moveY;
                                 }
                             }
                         }

@@ -64,33 +64,17 @@ public class AbsoluteMouseFragment extends Fragment {
                         activity.swipePossible(true);
                     }
 
-                    // Movement logic
-                    float width = (float) v.getWidth();
-                    float height = (float) v.getHeight();
-                    
-                    if (width > 0 && height > 0) {
-                        // Coordinates are already relative to 'v' (touchSurface)
-                        float x = event.getX();
-                        float y = event.getY();
-
-                        // Lock during move
-                        if (action == MotionEvent.ACTION_MOVE) {
-                            activity.swipePossible(false);
-                        }
-
-                        // Scaling to 0-32767 (ABS_MOUSE_MAX_COORD)
-                        int absX = Math.round((y / height) * HidMouseCodes.ABS_MOUSE_MAX_COORD); 
-                        int absY = Math.round((1 - (x / width)) * HidMouseCodes.ABS_MOUSE_MAX_COORD);
-
-                        // Clamp to be sure
-                        absX = Math.max(0, Math.min(HidMouseCodes.ABS_MOUSE_MAX_COORD, absX));
-                        absY = Math.max(0, Math.min(HidMouseCodes.ABS_MOUSE_MAX_COORD, absY));
-
-                        if (binding != null && binding.absMouseDebug != null) {
-                            binding.absMouseDebug.setText("X: " + absX + " Y: " + absY);
-                        }
-                        activity.sendAbsMouseReport(activity.getAbsMouseButtons(), absX, absY);
+                    if (action == MotionEvent.ACTION_MOVE) {
+                        activity.swipePossible(false);
                     }
+
+                    android.graphics.Point coords = TouchInputCalculator.calculateAbsoluteCoordinates(
+                            event.getX(), event.getY(), (float) v.getWidth(), (float) v.getHeight());
+
+                    if (binding != null && binding.absMouseDebug != null) {
+                        binding.absMouseDebug.setText("X: " + coords.x + " Y: " + coords.y);
+                    }
+                    activity.sendAbsMouseReport(activity.getAbsMouseButtons(), coords.x, coords.y);
 
                     return true;
                 }
