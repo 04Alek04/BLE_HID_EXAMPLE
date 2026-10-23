@@ -489,46 +489,23 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
                 }
             });
 
+    private PermissionManager permissionManager;
+
     private void checkPermissions() {
-        String[] permissions = new String[]{
-                Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.BLUETOOTH_CONNECT,
-                Manifest.permission.BLUETOOTH_ADVERTISE
-        };
-
-        ArrayList<String> permissionsToRequest = new ArrayList<>();
-        for (String p : permissions) {
-            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
-                permissionsToRequest.add(p);
-            }
+        if (permissionManager == null) {
+            permissionManager = new PermissionManager(this);
         }
-
-        if (!permissionsToRequest.isEmpty()) {
-            ActivityCompat.requestPermissions(this, permissionsToRequest.toArray(new String[0]), 2);
-        } else {
-            checkBluetoothEnabled();
-        }
-    }
-
-    private void checkBluetoothEnabled() {
-        android.bluetooth.BluetoothManager bm = (android.bluetooth.BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        android.bluetooth.BluetoothAdapter ba = bm != null ? bm.getAdapter() : null;
-        if (ba != null && !ba.isEnabled()) {
-            Intent intent = new Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
-                enableBluetoothLauncher.launch(intent);
-            }
-        }
+        permissionManager.checkAndRequestPermissions(() -> permissionManager.checkBluetoothEnabled(enableBluetoothLauncher));
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 2) {
+        if (requestCode == PermissionManager.PERMISSION_REQUEST_CODE) {
             boolean allGranted = true;
             for (int r : grantResults) if (r != PackageManager.PERMISSION_GRANTED) allGranted = false;
-            if (allGranted) {
-                checkBluetoothEnabled();
+            if (allGranted && permissionManager != null) {
+                permissionManager.checkBluetoothEnabled(enableBluetoothLauncher);
                 restartGattDatabase();
             }
         }
