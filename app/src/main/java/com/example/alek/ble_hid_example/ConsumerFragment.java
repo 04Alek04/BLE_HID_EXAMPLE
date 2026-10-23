@@ -177,30 +177,25 @@ public class ConsumerFragment extends Fragment implements Button.OnTouchListener
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         MainActivity activity = (MainActivity) getActivity();
-        short value;
 
         if (parent.getChildAt(0) != null) {
             ((TextView) parent.getChildAt(0)).setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
 
             int parentId = parent.getId();
             if (parentId == R.id.cons_spinner_al) {
-                if (position == 0) {
-                    /* Dummy item */
-                    return;
+                ApplicationLaunchButtonsUsage alUsage = ApplicationLaunchButtonsUsage.getUsageByPosition(position);
+                if (alUsage != null && activity != null) {
+                    activity.sendConsumerNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, alUsage.usage);
+                    activity.sendConsumerNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, 0);
+                    parent.setSelection(0);
                 }
-
-                value = ApplicationLaunchButtonsUsage.AL_USAGES[position - 1].usage;
-                activity.sendConsumerNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, value);
-                activity.sendConsumerNotification(ReportField.REPORT_FIELD_LAUNCHER_BUTTON, 0);
             } else if (parentId == R.id.cons_spinner_ac) {
-                if (position == 0) {
-                    /* Dummy item */
-                    return;
+                ApplicationControlUsage acUsage = ApplicationControlUsage.getUsageByPosition(position);
+                if (acUsage != null && activity != null) {
+                    activity.sendConsumerNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, acUsage.usage);
+                    activity.sendConsumerNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, 0);
+                    parent.setSelection(0);
                 }
-
-                value = ApplicationControlUsage.AC_USAGES[position - 1].usage;
-                activity.sendConsumerNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, value);
-                activity.sendConsumerNotification(ReportField.REPORT_FIELD_CONTROL_BUTTON, 0);
             }
         }
     }

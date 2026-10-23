@@ -169,7 +169,14 @@ public class ApplicationControlUsage {
         name = n;
     }
 
-    static public List<String> getUsageNames() {
+    public static ApplicationControlUsage getUsageByPosition(int position) {
+        if (position > 0 && position <= AC_USAGES.length) {
+            return AC_USAGES[position - 1];
+        }
+        return null;
+    }
+
+    public static List<String> getUsageNames() {
         List<String> l = new ArrayList<>();
 
         for (ApplicationControlUsage AC_USAGE : AC_USAGES) {

@@ -214,10 +214,28 @@ final class KeyboardUsage {
         this(kc, u, c, (byte) 0, false);
     }
 
+    public static KeyboardUsage findByKeyCode(int keyCode) {
+        for (KeyboardUsage usage : KEYBOARD_USAGES) {
+            if (usage.key_code == keyCode) {
+                return usage;
+            }
+        }
+        return null;
+    }
+
+    public static KeyboardUsage findByDescription(String description) {
+        if (description == null) return null;
+        for (KeyboardUsage usage : KEYBOARD_USAGES) {
+            if (description.equals(usage.description)) {
+                return usage;
+            }
+        }
+        return null;
+    }
+
     static public List<String> getUsageNames() {
         List<String> l = new ArrayList<>();
         for (KeyboardUsage KEYBOARD_USAGE : KEYBOARD_USAGES) {
-            // Only function keys with a readable description
             if (KEYBOARD_USAGE.non_keyboard && KEYBOARD_USAGE.description.length() > 1) {
                 l.add(KEYBOARD_USAGE.description);
             }

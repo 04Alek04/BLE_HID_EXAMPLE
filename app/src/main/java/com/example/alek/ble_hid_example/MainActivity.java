@@ -439,17 +439,11 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         }
 
         // Optimized keyboard mapping logic
-        byte key = 0;
-        byte meta_key = 0;
-        for (int i = 0; i < KeyboardUsage.KEYBOARD_USAGES.length; i++) {
-            if (keyCode == KeyboardUsage.KEYBOARD_USAGES[i].key_code) {
-                key = KeyboardUsage.KEYBOARD_USAGES[i].usage;
-                meta_key = KeyboardUsage.KEYBOARD_USAGES[i].meta;
-                break;
-            }
-        }
+        KeyboardUsage usage = KeyboardUsage.findByKeyCode(keyCode);
+        if (usage != null) {
+            byte key = usage.usage;
+            byte meta_key = usage.meta;
 
-        if (key != 0) {
             if (event.isCtrlPressed()) meta_key |= KeyboardUsage.META_LEFT_CONTROL;
             if (event.isShiftPressed()) meta_key |= KeyboardUsage.META_LEFT_SHIFT;
             if (event.isAltPressed()) meta_key |= KeyboardUsage.META_LEFT_ALT;
@@ -493,11 +487,9 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         }
         
         // Reset keyboard state on release
-        for (int i = 0; i < KeyboardUsage.KEYBOARD_USAGES.length; i++) {
-            if (keyCode == KeyboardUsage.KEYBOARD_USAGES[i].key_code) {
-                sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
-                return true;
-            }
+        if (KeyboardUsage.findByKeyCode(keyCode) != null) {
+            sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
+            return true;
         }
 
         return super.onKeyUp(keyCode, event);

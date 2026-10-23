@@ -20,6 +20,7 @@ import androidx.core.content.ContextCompat;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import android.text.Editable;
@@ -36,51 +37,50 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.example.alek.ble_hid_example.databinding.KeyboardFragmentBinding;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class KeyboardFragment extends Fragment implements Button.OnTouchListener,
         AdapterView.OnItemSelectedListener, View.OnClickListener {
 
-    private MaterialButton numLockBtn, capsLockBtn, scrollLockBtn;
+    private KeyboardFragmentBinding binding;
 
     public static KeyboardFragment newInstance() {
         return new KeyboardFragment();
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.keyboard_fragment, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        binding = KeyboardFragmentBinding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        View btnSend = view.findViewById(R.id.keyboard_button_send);
-        if (btnSend != null) btnSend.setOnClickListener(this);
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
 
-        // Keyboard character spinner configuration
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        if (binding == null) return;
+
+        binding.keyboardButtonSend.setOnClickListener(this);
+
         List<String> kbList = new ArrayList<>();
         kbList.add("SELECT VALUE");
         kbList.addAll(KeyboardUsage.getUsageNames());
 
-        Spinner spinner_kb = view.findViewById(R.id.keyboard_spinner_character);
-        if (spinner_kb != null) {
-            spinner_kb.setOnItemSelectedListener(this);
-            ArrayAdapter<String> dataAdapter_kb = new ArrayAdapter<>(getContext(),
-                    R.layout.spinner_item, kbList);
-            dataAdapter_kb.setDropDownViewResource(R.layout.spinner_dropdown_item);
-            spinner_kb.setAdapter(dataAdapter_kb);
-            spinner_kb.setSelection(0);
-        }
+        binding.keyboardSpinnerCharacter.setOnItemSelectedListener(this);
+        ArrayAdapter<String> dataAdapter_kb = new ArrayAdapter<>(requireContext(),
+                R.layout.spinner_item, kbList);
+        dataAdapter_kb.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        binding.keyboardSpinnerCharacter.setAdapter(dataAdapter_kb);
+        binding.keyboardSpinnerCharacter.setSelection(0);
 
-        final TextInputEditText editText = view.findViewById(R.id.keyboard_edit_text);
-        final MaterialButton toggleBtn = view.findViewById(R.id.keyboard_toggle_kb);
-
-        // Dummy invisible input view for live typing so 'enter text' is NOT focused/highlighted
         final android.widget.EditText dummyEditText = new android.widget.EditText(getContext());
         dummyEditText.setLayoutParams(new ViewGroup.LayoutParams(1, 1));
         dummyEditText.setAlpha(0f);
@@ -92,55 +92,51 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
 
         final long[] keyboardOpenTime = new long[]{0};
 
-        toggleBtn.addOnCheckedChangeListener(
-                new MaterialButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(MaterialButton buttonView, boolean isChecked) {
-                        buttonView.setText(isChecked ? R.string.keyboard_on : R.string.keyboard_off);
-                        InputMethodManager imm = getActivity() != null ? (InputMethodManager) getActivity().getSystemService(
-                                Context.INPUT_METHOD_SERVICE) : null;
-                        
-                        if (isChecked) {
-                            keyboardOpenTime[0] = System.currentTimeMillis();
-                            dummyEditText.requestFocus();
-                            if (imm != null) {
-                                imm.showSoftInput(dummyEditText, InputMethodManager.SHOW_IMPLICIT);
-                            }
-                        } else {
-                            dummyEditText.clearFocus();
-                            if (imm != null) {
-                                imm.hideSoftInputFromWindow(dummyEditText.getWindowToken(), 0);
-                            }
-                        }
-                    }
-                });
+        binding.keyboardToggleKb.addOnCheckedChangeListener((buttonView, isChecked) -> {
+            buttonView.setText(isChecked ? R.string.keyboard_on : R.string.keyboard_off);
+            InputMethodManager imm = getActivity() != null ? (InputMethodManager) getActivity().getSystemService(
+                    Context.INPUT_METHOD_SERVICE) : null;
+
+            if (isChecked) {
+                keyboardOpenTime[0] = System.currentTimeMillis();
+                dummyEditText.requestFocus();
+                if (imm != null) {
+                    imm.showSoftInput(dummyEditText, InputMethodManager.SHOW_IMPLICIT);
+                }
+            } else {
+                dummyEditText.clearFocus();
+                if (imm != null) {
+                    imm.hideSoftInputFromWindow(dummyEditText.getWindowToken(), 0);
+                }
+            }
+        });
 
         final long[] editTextOpenTime = new long[]{0};
 
-        editText.setOnTouchListener((v, event) -> {
+        binding.keyboardEditText.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 editTextOpenTime[0] = System.currentTimeMillis();
             }
             return false;
         });
 
-        editText.setOnFocusChangeListener((v, hasFocus) -> {
+        binding.keyboardEditText.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus && getActivity() != null) {
                 InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                 if (imm != null) {
-                    imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+                    imm.hideSoftInputFromWindow(binding.keyboardEditText.getWindowToken(), 0);
                 }
             }
         });
 
         View.OnTouchListener touchOutsideListener = (v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                if (editText.hasFocus()) {
-                    editText.clearFocus();
+                if (binding != null && binding.keyboardEditText.hasFocus()) {
+                    binding.keyboardEditText.clearFocus();
                     if (getActivity() != null) {
                         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                         if (imm != null) {
-                            imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+                            imm.hideSoftInputFromWindow(binding.keyboardEditText.getWindowToken(), 0);
                         }
                     }
                 }
@@ -149,15 +145,11 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         };
 
         view.setOnTouchListener(touchOutsideListener);
-        View subMainLayout = view.findViewById(R.id.keyboard_sub_main_layout);
-        if (subMainLayout != null) {
-            subMainLayout.setOnTouchListener(touchOutsideListener);
-        }
+        binding.keyboardSubMainLayout.setOnTouchListener(touchOutsideListener);
 
         view.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            if (getActivity() == null) return;
+            if (getActivity() == null || binding == null) return;
             long now = System.currentTimeMillis();
-            // Grace period of 500ms after clicking Keyboard On or focusing editText to avoid closing while animating open
             if (now - keyboardOpenTime[0] < 500 || now - editTextOpenTime[0] < 500) {
                 return;
             }
@@ -168,31 +160,30 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
 
             boolean isKeyboardVisible = keypadHeight > screenHeight * 0.15;
             if (!isKeyboardVisible) {
-                if (toggleBtn.isChecked()) {
-                    toggleBtn.setChecked(false);
+                if (binding.keyboardToggleKb.isChecked()) {
+                    binding.keyboardToggleKb.setChecked(false);
                     dummyEditText.clearFocus();
                 }
-                if (editText.hasFocus()) {
-                    editText.clearFocus();
+                if (binding.keyboardEditText.hasFocus()) {
+                    binding.keyboardEditText.clearFocus();
                 }
             }
         });
 
-        // Live typing logic on dummyEditText
         dummyEditText.addTextChangedListener(new TextWatcher() {
             private boolean isInternalChange = false;
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (isInternalChange) return;
-                if (toggleBtn.isChecked() && count > before) {
+                if (isInternalChange || binding == null) return;
+                if (binding.keyboardToggleKb.isChecked() && count > before) {
                     String added = s.subSequence(start, start + count).toString();
                     MainActivity activity = (MainActivity) getActivity();
                     if (activity != null) {
                         activity.sendKeyboardText(added);
                         isInternalChange = true;
-                        dummyEditText.setText(""); // Clear for next character
+                        dummyEditText.setText("");
                         isInternalChange = false;
                     }
                 }
@@ -201,27 +192,19 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
             public void afterTextChanged(Editable s) {}
         });
 
-        // Handle backspace in live mode
-        dummyEditText.setOnKeyListener(new View.OnKeyListener() {
-            @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if (toggleBtn.isChecked() && event.getAction() == KeyEvent.ACTION_DOWN) {
-                    if (keyCode == KeyEvent.KEYCODE_DEL) {
-                        MainActivity activity = (MainActivity) getActivity();
-                        if (activity != null) {
-                            activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0x2a << 8);
-                            activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
-                            return true;
-                        }
+        dummyEditText.setOnKeyListener((v, keyCode, event) -> {
+            if (binding != null && binding.keyboardToggleKb.isChecked() && event.getAction() == KeyEvent.ACTION_DOWN) {
+                if (keyCode == KeyEvent.KEYCODE_DEL) {
+                    MainActivity activity = (MainActivity) getActivity();
+                    if (activity != null) {
+                        activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0x2a << 8);
+                        activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
+                        return true;
                     }
                 }
-                 return false;
             }
+            return false;
         });
-
-        numLockBtn = view.findViewById(R.id.keyboard_lock_num);
-        capsLockBtn = view.findViewById(R.id.keyboard_lock_caps);
-        scrollLockBtn = view.findViewById(R.id.keyboard_lock_scroll);
 
         View.OnClickListener lockClickListener = v -> {
             byte usage = 0;
@@ -243,22 +226,22 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
             }
         };
 
-        numLockBtn.setOnClickListener(lockClickListener);
-        capsLockBtn.setOnClickListener(lockClickListener);
-        scrollLockBtn.setOnClickListener(lockClickListener);
+        binding.keyboardLockNum.setOnClickListener(lockClickListener);
+        binding.keyboardLockCaps.setOnClickListener(lockClickListener);
+        binding.keyboardLockScroll.setOnClickListener(lockClickListener);
 
         View.OnClickListener shortcutClickListener = v -> {
             byte usage = 0;
             int id = v.getId();
-            if (id == R.id.kb_short_undo) usage = 0x1d; // Z
-            else if (id == R.id.kb_short_redo) usage = 0x1c; // Y
-            else if (id == R.id.kb_short_save) usage = 0x16; // S
-            else if (id == R.id.kb_short_all) usage = 0x04; // A
-            else if (id == R.id.kb_short_cut) usage = 0x1b; // X
-            else if (id == R.id.kb_short_copy) usage = 0x06; // C
-            else if (id == R.id.kb_short_paste) usage = 0x19; // V
-            else if (id == R.id.kb_short_find) usage = 0x09; // F
-            else if (id == R.id.kb_short_replace) usage = 0x0b; // H
+            if (id == R.id.kb_short_undo) usage = 0x1d;
+            else if (id == R.id.kb_short_redo) usage = 0x1c;
+            else if (id == R.id.kb_short_save) usage = 0x16;
+            else if (id == R.id.kb_short_all) usage = 0x04;
+            else if (id == R.id.kb_short_cut) usage = 0x1b;
+            else if (id == R.id.kb_short_copy) usage = 0x06;
+            else if (id == R.id.kb_short_paste) usage = 0x19;
+            else if (id == R.id.kb_short_find) usage = 0x09;
+            else if (id == R.id.kb_short_replace) usage = 0x0b;
 
             if (usage != 0) {
                 MainActivity activity = (MainActivity) getActivity();
@@ -287,40 +270,33 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
     }
 
     public void updateLedStatus(byte status) {
-        if (numLockBtn != null) {
-            boolean isChecked = (status & 0x01) != 0;
-            numLockBtn.setChecked(isChecked);
-            numLockBtn.setBackgroundTintList(ColorStateList.valueOf(isChecked ? 
-                    ContextCompat.getColor(getContext(), R.color.colorPrimary) : android.graphics.Color.TRANSPARENT));
-            numLockBtn.setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
-        }
-        if (capsLockBtn != null) {
-            boolean isChecked = (status & 0x02) != 0;
-            capsLockBtn.setChecked(isChecked);
-            capsLockBtn.setBackgroundTintList(ColorStateList.valueOf(isChecked ? 
-                    ContextCompat.getColor(getContext(), R.color.colorPrimary) : android.graphics.Color.TRANSPARENT));
-            capsLockBtn.setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
-        }
-        if (scrollLockBtn != null) {
-            boolean isChecked = (status & 0x04) != 0;
-            scrollLockBtn.setChecked(isChecked);
-            scrollLockBtn.setBackgroundTintList(ColorStateList.valueOf(isChecked ? 
-                    ContextCompat.getColor(getContext(), R.color.colorPrimary) : android.graphics.Color.TRANSPARENT));
-            scrollLockBtn.setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
-        }
+        if (binding == null || getContext() == null) return;
+
+        boolean numChecked = (status & 0x01) != 0;
+        binding.keyboardLockNum.setChecked(numChecked);
+        binding.keyboardLockNum.setBackgroundTintList(ColorStateList.valueOf(numChecked ?
+                ContextCompat.getColor(getContext(), R.color.colorPrimary) : Color.TRANSPARENT));
+        binding.keyboardLockNum.setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
+
+        boolean capsChecked = (status & 0x02) != 0;
+        binding.keyboardLockCaps.setChecked(capsChecked);
+        binding.keyboardLockCaps.setBackgroundTintList(ColorStateList.valueOf(capsChecked ?
+                ContextCompat.getColor(getContext(), R.color.colorPrimary) : Color.TRANSPARENT));
+        binding.keyboardLockCaps.setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
+
+        boolean scrollChecked = (status & 0x04) != 0;
+        binding.keyboardLockScroll.setChecked(scrollChecked);
+        binding.keyboardLockScroll.setBackgroundTintList(ColorStateList.valueOf(scrollChecked ?
+                ContextCompat.getColor(getContext(), R.color.colorPrimary) : Color.TRANSPARENT));
+        binding.keyboardLockScroll.setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
     }
 
     @Override
     public void onPause() {
         super.onPause();
-
-        if (getView() != null) {
-            MaterialButton toggleKb = getView().findViewById(R.id.keyboard_toggle_kb);
-            if (toggleKb != null) toggleKb.setChecked(false);
-            Spinner spinner_kb = getView().findViewById(R.id.keyboard_spinner_character);
-            if (spinner_kb != null) {
-                spinner_kb.setSelection(0);
-            }
+        if (binding != null) {
+            binding.keyboardToggleKb.setChecked(false);
+            binding.keyboardSpinnerCharacter.setSelection(0);
         }
     }
 
@@ -329,11 +305,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         short toSend = 0;
         int value = ConsumerControlUsage.getUsage(v.getId());
         MainActivity activity = (MainActivity) getActivity();
-        if (activity == null) return false;
-
-        if (value == 0) {
-            return false;
-        }
+        if (activity == null || value == 0) return false;
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             toSend |= value;
@@ -345,36 +317,24 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         }
 
         activity.sendConsumerNotification(ReportField.REPORT_FIELD_CONSUMER_CONTROL, toSend);
-
         return true;
     }
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         MainActivity activity = (MainActivity) getActivity();
-        short value = 0;
 
         if (parent.getChildAt(0) != null) {
-            ((TextView) parent.getChildAt(0)).setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
+            ((TextView) parent.getChildAt(0)).setTextColor(ContextCompat.getColor(requireContext(), R.color.colorWhite));
 
-            if (parent.getId() == R.id.keyboard_spinner_character) {
-                if (position == 0) {
-                    /* Dummy item */
-                    return;
-                }
+            if (parent.getId() == R.id.keyboard_spinner_character && position > 0) {
                 String selectedDescription = parent.getItemAtPosition(position).toString();
-                for (int i = 0; i < KeyboardUsage.KEYBOARD_USAGES.length; i++) {
-                    if (Objects.equals(selectedDescription,
-                            KeyboardUsage.KEYBOARD_USAGES[i].description)) {
-                        value = KeyboardUsage.KEYBOARD_USAGES[i].meta;
-                        value += (short) (KeyboardUsage.KEYBOARD_USAGES[i].usage << 8);
-                        break;
-                    }
+                KeyboardUsage kbUsage = KeyboardUsage.findByDescription(selectedDescription);
+                if (kbUsage != null && activity != null) {
+                    short value = (short) (kbUsage.meta + (kbUsage.usage << 8));
+                    activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, value);
+                    activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
                 }
-                activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, value);
-                activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
-
-                // Reset spinner selection to allow sending the same character again
                 parent.setSelection(0);
             }
         }
@@ -382,20 +342,19 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
-        ((TextView) parent.getChildAt(0)).setTextColor(Color.WHITE);
+        if (parent.getChildAt(0) != null) {
+            ((TextView) parent.getChildAt(0)).setTextColor(Color.WHITE);
+        }
     }
 
     @Override
     public void onClick(View v) {
         MainActivity activity = (MainActivity) getActivity();
-        if (activity == null) return;
+        if (activity == null || binding == null) return;
 
-        if (v.getId() == R.id.keyboard_button_send && getView() != null) {
-            TextInputEditText editText = getView().findViewById(R.id.keyboard_edit_text);
-            if (editText != null && editText.getText() != null) {
-                activity.sendKeyboardText(editText.getText().toString());
-                editText.setText(""); // Clear field after sending
-            }
+        if (v.getId() == R.id.keyboard_button_send && binding.keyboardEditText.getText() != null) {
+            activity.sendKeyboardText(binding.keyboardEditText.getText().toString());
+            binding.keyboardEditText.setText("");
         }
     }
 }

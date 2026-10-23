@@ -100,7 +100,14 @@ public class ApplicationLaunchButtonsUsage {
         name = n;
     }
 
-    static public List<String> getUsageNames() {
+    public static ApplicationLaunchButtonsUsage getUsageByPosition(int position) {
+        if (position > 0 && position <= AL_USAGES.length) {
+            return AL_USAGES[position - 1];
+        }
+        return null;
+    }
+
+    public static List<String> getUsageNames() {
         List<String> l = new ArrayList<>();
 
         for (ApplicationLaunchButtonsUsage AL_USAGE : AL_USAGES) {
