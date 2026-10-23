@@ -592,9 +592,15 @@ public class HidBleService extends Service {
     }
 
     private void createGattDatabase(BluetoothGattServer gattServer) {
-        // Set characteristics' permissions
-        final int PERM_READ = PERMISSION_READ_ENCRYPTED; // Use PERMISSION_READ_ENCRYPTED_MITM for Security Level 3
-        final int PERM_WRITE = PERMISSION_WRITE_ENCRYPTED; // Use PERMISSION_WRITE_ENCRYPTED_MITM for Security Level 3
+        // Note on GATT Attribute Permissions vs HOGP Spec & Windows Reconnection:
+        // HOGP Spec Section 4.1 requires PERMISSION_READ_ENCRYPTED / PERMISSION_WRITE_ENCRYPTED for Security Mode 1 Level 2.
+        // However, on Windows 10/11 hosts, if PERMISSION_READ_ENCRYPTED is used, Windows sends GATT reads upon reconnecting
+        // before the LE Link Layer re-encryption handshake completes. The GATT server then returns GATT_INSUFFICIENT_ENCRYPTION (0x0F),
+        // causing Windows 'bthserv' driver to fail with Code 10/43 and disconnect after 3.5s.
+        // If reconnection issues occur on Windows, changing these permissions to standard PERMISSION_READ / PERMISSION_WRITE
+        // allows instant reconnects while physical LE Link Layer encryption remains active via paired LTK keys.
+        final int PERM_READ = PERMISSION_READ;
+        final int PERM_WRITE = PERMISSION_WRITE;
         final int PERM_READ_WRITE = PERM_READ | PERM_WRITE;
 
         // Clear current attributes database - avoid adding the same services to database
