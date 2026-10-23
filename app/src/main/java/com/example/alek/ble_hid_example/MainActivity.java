@@ -211,26 +211,13 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         }
     }
 
-    private void updateDeviceInfoField(final String text, final int text_color) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                final int[] ids = {
-                        R.id.cons_text_device_info, R.id.mouse_text_device_info,
-                        R.id.keyboard_text_device_info, R.id.gamepad_text_device_info,
-                        R.id.abs_mouse_text_device_info, R.id.conf_text_device_info
-                };
+    private DeviceStatusBarHelper statusBarHelper;
 
-                for (int id : ids) {
-                    TextView textView = findViewById(id);
-                    if (textView == null) continue;
-                    textView.setVisibility(View.VISIBLE);
-                    // textView.setBackgroundColor(bg_color); // Removed to keep custom drawable
-                    textView.setTextColor(text_color);
-                    textView.setText(text);
-                }
-            }
-        });
+    private void updateDeviceInfoField(final String text, final int text_color) {
+        if (statusBarHelper == null) {
+            statusBarHelper = new DeviceStatusBarHelper(this);
+        }
+        statusBarHelper.updateStatusText(text, text_color);
     }
 
     public void onConnectionStateChange(List<BluetoothDevice> dev_array) {
