@@ -79,11 +79,10 @@ public class ConfigurationFragment extends Fragment implements
 
         SwitchCompat restoreNameSwitch = view.findViewById(R.id.conf_restore_name_switch);
         if (restoreNameSwitch != null && getActivity() != null) {
-            SharedPreferences prefs = getActivity().getSharedPreferences("ble_device_prefs", Context.MODE_PRIVATE);
-            boolean restoreEnabled = prefs.getBoolean("restore_original_name", false);
-            restoreNameSwitch.setChecked(restoreEnabled);
+            AppPreferencesManager prefsManager = AppPreferencesManager.getInstance(getActivity());
+            restoreNameSwitch.setChecked(prefsManager.isRestoreNameEnabled());
             restoreNameSwitch.setOnCheckedChangeListener((buttonView, isChecked) ->
-                prefs.edit().putBoolean("restore_original_name", isChecked).apply()
+                prefsManager.setRestoreNameEnabled(isChecked)
             );
         }
     }

@@ -1560,11 +1560,8 @@ public class HidBleService extends Service {
             unregisterReceiver(nameChangeReceiver);
         } catch (IllegalArgumentException ignored) {}
 
-        SharedPreferences prefs = getSharedPreferences("ble_device_prefs", Context.MODE_PRIVATE);
-        boolean restoreName = prefs.getBoolean("restore_original_name", false);
-
-        if (restoreName) {
-            String nameToRestore = mOriginalName != null ? mOriginalName : prefs.getString("original_device_name", null);
+        if (AppPreferencesManager.getInstance(this).isRestoreNameEnabled()) {
+            String nameToRestore = mOriginalName != null ? mOriginalName : getSharedPreferences("ble_device_prefs", Context.MODE_PRIVATE).getString("original_device_name", null);
             if (nameToRestore != null) {
                 BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
                 BluetoothAdapter bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
@@ -1573,7 +1570,7 @@ public class HidBleService extends Service {
                     if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
                         try {
                             bluetoothAdapter.setName(nameToRestore);
-                            prefs.edit().remove("original_device_name").apply();
+                            getSharedPreferences("ble_device_prefs", Context.MODE_PRIVATE).edit().remove("original_device_name").apply();
                         } catch (SecurityException ignored) {}
                     }
                 }

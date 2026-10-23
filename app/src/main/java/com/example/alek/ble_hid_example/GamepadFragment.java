@@ -57,44 +57,40 @@ public class GamepadFragment extends Fragment {
 
         // Restore States
         if (getContext() != null) {
-            boolean lStickChecked = getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getBoolean("gamepad_l_stick", true);
-            boolean touchChecked = getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getBoolean("gamepad_touch", true);
-            boolean lockChecked = getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getBoolean("gamepad_lock", false);
-            boolean rStickChecked = getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getBoolean("gamepad_r_stick", true);
+            AppPreferencesManager prefs = AppPreferencesManager.getInstance(getContext());
             
             if (lStickToggle != null) {
-                lStickToggle.setSelected(lStickChecked);
-                if (lAnalogBase != null) lAnalogBase.setBackgroundResource(lStickChecked ? R.drawable.gamepad_analog_octagon : 0);
-                if (lStickView != null) lStickView.setVisibility(lStickChecked ? View.VISIBLE : View.GONE);
-                if (dpadContainer != null) dpadContainer.setVisibility(lStickChecked ? View.GONE : View.VISIBLE);
+                lStickToggle.setSelected(prefs.isGamepadLStickEnabled());
+                if (lAnalogBase != null) lAnalogBase.setBackgroundResource(lStickToggle.isSelected() ? R.drawable.gamepad_analog_octagon : 0);
+                if (lStickView != null) lStickView.setVisibility(lStickToggle.isSelected() ? View.VISIBLE : View.GONE);
+                if (dpadContainer != null) dpadContainer.setVisibility(lStickToggle.isSelected() ? View.GONE : View.VISIBLE);
             }
             if (touchToggle != null) {
-                touchToggle.setSelected(touchChecked);
-                if (touchpadView != null) touchpadView.setVisibility(touchChecked ? View.VISIBLE : View.GONE);
+                touchToggle.setSelected(prefs.isGamepadTouchEnabled());
+                if (touchpadView != null) touchpadView.setVisibility(touchToggle.isSelected() ? View.VISIBLE : View.GONE);
             }
             if (lockToggle != null) {
-                lockToggle.setSelected(lockChecked);
-                if (activity != null) activity.swipePossible(!lockChecked);
+                lockToggle.setSelected(prefs.isGamepadLockEnabled());
+                if (activity != null) activity.swipePossible(!lockToggle.isSelected());
             }
             if (rStickToggle != null) {
-                rStickToggle.setSelected(rStickChecked);
-                if (rAnalogBase != null) rAnalogBase.setBackgroundResource(rStickChecked ? R.drawable.gamepad_analog_octagon : 0);
-                if (rStickView != null) rStickView.setVisibility(rStickChecked ? View.VISIBLE : View.GONE);
-                if (buttonsContainer != null) buttonsContainer.setVisibility(rStickChecked ? View.GONE : View.VISIBLE);
+                rStickToggle.setSelected(prefs.isGamepadRStickEnabled());
+                if (rAnalogBase != null) rAnalogBase.setBackgroundResource(rStickToggle.isSelected() ? R.drawable.gamepad_analog_octagon : 0);
+                if (rStickView != null) rStickView.setVisibility(rStickToggle.isSelected() ? View.VISIBLE : View.GONE);
+                if (buttonsContainer != null) buttonsContainer.setVisibility(rStickToggle.isSelected() ? View.GONE : View.VISIBLE);
             }
         }
 
         // L-STK Toggle Logic
         if (lStickToggle != null) {
             lStickToggle.setOnClickListener(v -> {
-                boolean newState = !v.isSelected();
-                v.setSelected(newState);
+                v.setSelected(!v.isSelected());
                 if (getContext() != null) {
-                    getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE).edit().putBoolean("gamepad_l_stick", newState).apply();
+                    AppPreferencesManager.getInstance(getContext()).setGamepadLStickEnabled(v.isSelected());
                 }
-                if (lAnalogBase != null) lAnalogBase.setBackgroundResource(newState ? R.drawable.gamepad_analog_octagon : 0);
-                if (lStickView != null) lStickView.setVisibility(newState ? View.VISIBLE : View.GONE);
-                if (dpadContainer != null) dpadContainer.setVisibility(newState ? View.GONE : View.VISIBLE);
+                if (lAnalogBase != null) lAnalogBase.setBackgroundResource(v.isSelected() ? R.drawable.gamepad_analog_octagon : 0);
+                if (lStickView != null) lStickView.setVisibility(v.isSelected() ? View.VISIBLE : View.GONE);
+                if (dpadContainer != null) dpadContainer.setVisibility(v.isSelected() ? View.GONE : View.VISIBLE);
                 analogLX = 0; analogLY = 0;
                 if (activity != null) activity.sendGamepadNotification(buttonsState, analogLX, analogLY, analogRX, analogRY);
             });
@@ -103,38 +99,35 @@ public class GamepadFragment extends Fragment {
         // TOUCH Toggle Logic
         if (touchToggle != null) {
             touchToggle.setOnClickListener(v -> {
-                boolean newState = !v.isSelected();
-                v.setSelected(newState);
+                v.setSelected(!v.isSelected());
                 if (getContext() != null) {
-                    getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE).edit().putBoolean("gamepad_touch", newState).apply();
+                    AppPreferencesManager.getInstance(getContext()).setGamepadTouchEnabled(v.isSelected());
                 }
-                if (touchpadView != null) touchpadView.setVisibility(newState ? View.VISIBLE : View.GONE);
+                if (touchpadView != null) touchpadView.setVisibility(v.isSelected() ? View.VISIBLE : View.GONE);
             });
         }
 
         // LOCK Toggle Logic
         if (lockToggle != null) {
             lockToggle.setOnClickListener(v -> {
-                boolean newState = !v.isSelected();
-                v.setSelected(newState);
+                v.setSelected(!v.isSelected());
                 if (getContext() != null) {
-                    getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE).edit().putBoolean("gamepad_lock", newState).apply();
+                    AppPreferencesManager.getInstance(getContext()).setGamepadLockEnabled(v.isSelected());
                 }
-                if (activity != null) activity.swipePossible(!newState);
+                if (activity != null) activity.swipePossible(!v.isSelected());
             });
         }
 
         // R-STK Toggle Logic
         if (rStickToggle != null) {
             rStickToggle.setOnClickListener(v -> {
-                boolean newState = !v.isSelected();
-                v.setSelected(newState);
+                v.setSelected(!v.isSelected());
                 if (getContext() != null) {
-                    getContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE).edit().putBoolean("gamepad_r_stick", newState).apply();
+                    AppPreferencesManager.getInstance(getContext()).setGamepadRStickEnabled(v.isSelected());
                 }
-                if (rAnalogBase != null) rAnalogBase.setBackgroundResource(newState ? R.drawable.gamepad_analog_octagon : 0);
-                if (rStickView != null) rStickView.setVisibility(newState ? View.VISIBLE : View.GONE);
-                if (buttonsContainer != null) buttonsContainer.setVisibility(newState ? View.GONE : View.VISIBLE);
+                if (rAnalogBase != null) rAnalogBase.setBackgroundResource(v.isSelected() ? R.drawable.gamepad_analog_octagon : 0);
+                if (rStickView != null) rStickView.setVisibility(v.isSelected() ? View.VISIBLE : View.GONE);
+                if (buttonsContainer != null) buttonsContainer.setVisibility(v.isSelected() ? View.GONE : View.VISIBLE);
                 analogRX = 0; analogRY = 0;
                 if (activity != null) activity.sendGamepadNotification(buttonsState, analogLX, analogLY, analogRX, analogRY);
             });

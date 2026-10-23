@@ -373,21 +373,19 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         pager.setAdapter(pagerAdapter);
         pager.setOffscreenPageLimit(6);
         
-        // Restore last used fragment
-        int lastTab = getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getInt("last_tab", 1);
+        AppPreferencesManager prefsManager = AppPreferencesManager.getInstance(this);
+        int lastTab = prefsManager.getLastTab();
         pager.setCurrentItem(lastTab, false);
         
         pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
-                // Save last used fragment
-                getSharedPreferences("app_prefs", Context.MODE_PRIVATE).edit().putInt("last_tab", position).apply();
+                prefsManager.setLastTab(position);
 
                 if (position == PagerAdapter.ABS_MOUSE) {
                     swipePossible(false);
                 } else if (position == PagerAdapter.GAMEPAD) {
-                    boolean lockChecked = getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getBoolean("gamepad_lock", false);
-                    swipePossible(!lockChecked);
+                    swipePossible(!prefsManager.isGamepadLockEnabled());
                 } else {
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                     swipePossible(true);
