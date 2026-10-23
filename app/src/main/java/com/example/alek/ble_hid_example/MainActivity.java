@@ -83,7 +83,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         private LinearLayout lastLayout = null;
 
         public void run() {
-            final long refreshLayoutPeriodMs = 300;
+            final long refreshLayoutPeriodMs = HidConstants.DEVICE_LAYOUT_REFRESH_MS;
             final List<BluetoothDevice> currentDevices = new ArrayList<>(devices);
             final LinearLayout ll = findViewById(R.id.conf_linear_layout_devices);
             
@@ -142,7 +142,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         private int i = 0;
 
         public void run() {
-            final long refreshTextViewPeriodMs = 1200;
+            final long refreshTextViewPeriodMs = HidConstants.DEVICE_FIELD_REFRESH_MS;
             final List<BluetoothDevice> currentDevices = getEnabledDevices();
             
             String text;

@@ -197,7 +197,7 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
                 if (keyCode == KeyEvent.KEYCODE_DEL) {
                     MainActivity activity = (MainActivity) getActivity();
                     if (activity != null) {
-                        activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0x2a << 8);
+                        activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, HidKeyCodes.USAGE_BACKSPACE << 8);
                         activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
                         return true;
                     }
@@ -210,11 +210,11 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
             byte usage = 0;
             int id = v.getId();
             if (id == R.id.keyboard_lock_num) {
-                usage = (byte) 0x53;
+                usage = HidKeyCodes.USAGE_NUM_LOCK;
             } else if (id == R.id.keyboard_lock_caps) {
-                usage = (byte) 0x39;
+                usage = HidKeyCodes.USAGE_CAPS_LOCK;
             } else if (id == R.id.keyboard_lock_scroll) {
-                usage = (byte) 0x47;
+                usage = HidKeyCodes.USAGE_SCROLL_LOCK;
             }
 
             if (usage != 0) {
@@ -233,15 +233,15 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
         View.OnClickListener shortcutClickListener = v -> {
             byte usage = 0;
             int id = v.getId();
-            if (id == R.id.kb_short_undo) usage = 0x1d;
-            else if (id == R.id.kb_short_redo) usage = 0x1c;
-            else if (id == R.id.kb_short_save) usage = 0x16;
-            else if (id == R.id.kb_short_all) usage = 0x04;
-            else if (id == R.id.kb_short_cut) usage = 0x1b;
-            else if (id == R.id.kb_short_copy) usage = 0x06;
-            else if (id == R.id.kb_short_paste) usage = 0x19;
-            else if (id == R.id.kb_short_find) usage = 0x09;
-            else if (id == R.id.kb_short_replace) usage = 0x0b;
+            if (id == R.id.kb_short_undo) usage = HidKeyCodes.USAGE_UNDO;
+            else if (id == R.id.kb_short_redo) usage = HidKeyCodes.USAGE_REDO;
+            else if (id == R.id.kb_short_save) usage = HidKeyCodes.USAGE_SAVE;
+            else if (id == R.id.kb_short_all) usage = HidKeyCodes.USAGE_SELECT_ALL;
+            else if (id == R.id.kb_short_cut) usage = HidKeyCodes.USAGE_CUT;
+            else if (id == R.id.kb_short_copy) usage = HidKeyCodes.USAGE_COPY;
+            else if (id == R.id.kb_short_paste) usage = HidKeyCodes.USAGE_PASTE;
+            else if (id == R.id.kb_short_find) usage = HidKeyCodes.USAGE_FIND;
+            else if (id == R.id.kb_short_replace) usage = HidKeyCodes.USAGE_REPLACE;
 
             if (usage != 0) {
                 MainActivity activity = (MainActivity) getActivity();
@@ -272,19 +272,19 @@ public class KeyboardFragment extends Fragment implements Button.OnTouchListener
     public void updateLedStatus(byte status) {
         if (binding == null || getContext() == null) return;
 
-        boolean numChecked = (status & 0x01) != 0;
+        boolean numChecked = (status & HidKeyCodes.LED_NUM_LOCK) != 0;
         binding.keyboardLockNum.setChecked(numChecked);
         binding.keyboardLockNum.setBackgroundTintList(ColorStateList.valueOf(numChecked ?
                 ContextCompat.getColor(getContext(), R.color.colorPrimary) : Color.TRANSPARENT));
         binding.keyboardLockNum.setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
 
-        boolean capsChecked = (status & 0x02) != 0;
+        boolean capsChecked = (status & HidKeyCodes.LED_CAPS_LOCK) != 0;
         binding.keyboardLockCaps.setChecked(capsChecked);
         binding.keyboardLockCaps.setBackgroundTintList(ColorStateList.valueOf(capsChecked ?
                 ContextCompat.getColor(getContext(), R.color.colorPrimary) : Color.TRANSPARENT));
         binding.keyboardLockCaps.setTextColor(ContextCompat.getColor(getContext(), R.color.colorWhite));
 
-        boolean scrollChecked = (status & 0x04) != 0;
+        boolean scrollChecked = (status & HidKeyCodes.LED_SCROLL_LOCK) != 0;
         binding.keyboardLockScroll.setChecked(scrollChecked);
         binding.keyboardLockScroll.setBackgroundTintList(ColorStateList.valueOf(scrollChecked ?
                 ContextCompat.getColor(getContext(), R.color.colorPrimary) : Color.TRANSPARENT));

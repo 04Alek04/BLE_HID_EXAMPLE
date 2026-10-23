@@ -51,7 +51,7 @@ public class BlocklyInterface {
     public void mouseClick(int buttons) {
         activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, buttons);
         // Auto-release after click for simplicity in blocks
-        try { Thread.sleep(50); } catch (InterruptedException e) {}
+        try { Thread.sleep(HidConstants.BLOCKLY_CLICK_HOLD_MS); } catch (InterruptedException e) {}
         activity.sendMouseNotification(ReportField.REPORT_FIELD_MOUSE_BUTTONS, 0);
     }
 
@@ -76,7 +76,7 @@ public class BlocklyInterface {
 
         Log.d("Blockly", "Consumer Notification: Usage=" + usage + " -> Field=" + rf + " Value=" + value);
         activity.sendConsumerNotification(rf, value);
-        try { Thread.sleep(50); } catch (InterruptedException e) {}
+        try { Thread.sleep(HidConstants.BLOCKLY_CLICK_HOLD_MS); } catch (InterruptedException e) {}
         activity.sendConsumerNotification(rf, 0);
     }
 
@@ -104,17 +104,17 @@ public class BlocklyInterface {
 
     @JavascriptInterface
     public boolean getCapsLockState() {
-        return (activity.getLastKeyboardLedStatus() & 0x02) != 0;
+        return (activity.getLastKeyboardLedStatus() & HidKeyCodes.LED_CAPS_LOCK) != 0;
     }
 
     @JavascriptInterface
     public boolean getNumLockState() {
-        return (activity.getLastKeyboardLedStatus() & 0x01) != 0;
+        return (activity.getLastKeyboardLedStatus() & HidKeyCodes.LED_NUM_LOCK) != 0;
     }
 
     @JavascriptInterface
     public boolean getScrollLockState() {
-        return (activity.getLastKeyboardLedStatus() & 0x04) != 0;
+        return (activity.getLastKeyboardLedStatus() & HidKeyCodes.LED_SCROLL_LOCK) != 0;
     }
 
     private int currentGamepadButtons = 0;

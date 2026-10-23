@@ -218,10 +218,10 @@ public class GamepadFragment extends Fragment {
                                 lStickView.setTranslationY(dy);
                             }
 
-                            analogLX = Math.round((dy / radius) * 127);
-                            analogLY = Math.round((1 - (dx / radius)) * 127) - 127;
-                            analogLX = Math.max(-127, Math.min(127, analogLX));
-                            analogLY = Math.max(-127, Math.min(127, analogLY));
+                            analogLX = Math.round((dy / radius) * HidGamepadCodes.STICK_AXIS_MAX);
+                            analogLY = Math.round((1 - (dx / radius)) * HidGamepadCodes.STICK_AXIS_MAX) - HidGamepadCodes.STICK_AXIS_MAX;
+                            analogLX = Math.max(HidGamepadCodes.STICK_AXIS_MIN, Math.min(HidGamepadCodes.STICK_AXIS_MAX, analogLX));
+                            analogLY = Math.max(HidGamepadCodes.STICK_AXIS_MIN, Math.min(HidGamepadCodes.STICK_AXIS_MAX, analogLY));
 
                             activity.sendGamepadNotification(buttonsState, analogLX, analogLY, analogRX, analogRY);
                         }
@@ -231,7 +231,7 @@ public class GamepadFragment extends Fragment {
                         }
                         isDragging = false;
                         isTouchValid = false;
-                        buttonsState &= ~0x400; // Release L3 on finger lift
+                        buttonsState &= ~HidGamepadCodes.BTN_L3; // Release L3 on finger lift
                         updateSticksVisuals();
                         if (lStickView != null) {
                             lStickView.setTranslationX(0);

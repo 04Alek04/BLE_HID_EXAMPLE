@@ -427,27 +427,27 @@ public class HidBleService extends Service {
 
                         int val = (m & 0xFF) | ((k & 0xFF) << 8);
 
-                        while (pendingNotifications.size() > 6) {
+                        while (pendingNotifications.size() > HidConstants.MAX_PENDING_QUEUE_SIZE) {
                             try {
-                                Thread.sleep(10);
+                                Thread.sleep(HidConstants.KEY_HOLD_TIME_STANDARD_MS);
                             } catch (InterruptedException ignored) {}
                         }
 
                         sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val);
                         try {
-                            int holdTime = (m != 0) ? 15 : 10;
+                            int holdTime = (m != 0) ? HidConstants.KEY_HOLD_TIME_SHIFTED_MS : HidConstants.KEY_HOLD_TIME_STANDARD_MS;
                             Thread.sleep(holdTime); // Key-down hold time
                         } catch (InterruptedException ignored) {}
 
                         sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
                         try {
-                            int releaseTime = (m != 0) ? 15 : 10;
+                            int releaseTime = (m != 0) ? HidConstants.KEY_RELEASE_DELAY_SHIFTED_MS : HidConstants.KEY_RELEASE_DELAY_STANDARD_MS;
                             Thread.sleep(releaseTime); // Key-release delay before next key
                         } catch (InterruptedException ignored) {}
 
-                        if (k == 0x28) { // Extra delay after Enter key for console processing
+                        if (k == HidKeyCodes.USAGE_ENTER) { // Extra delay after Enter key for console processing
                             try {
-                                Thread.sleep(20);
+                                Thread.sleep(HidConstants.ENTER_KEY_DELAY_MS);
                             } catch (InterruptedException ignored) {}
                         }
 
@@ -1195,7 +1195,7 @@ public class HidBleService extends Service {
 
         Runnable r = () -> markHidReady(device);
         mHidReadyRunnables.put(addr, r);
-        mHidReadyHandler.postDelayed(r, 300); // 300ms debounce timer after host activity
+        mHidReadyHandler.postDelayed(r, HidConstants.GATT_HANDSHAKE_DEBOUNCE_MS); // Debounce timer after host activity
     }
 
     private void markHidReady(BluetoothDevice device) {

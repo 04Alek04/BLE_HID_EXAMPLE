@@ -50,7 +50,7 @@ public class AbsoluteMouseFragment extends Fragment {
                         activity.swipePossible(false);
                         
                         long now = System.currentTimeMillis();
-                        if (now - lastTapTime < 500) tapCount++;
+                        if (now - lastTapTime < HidConstants.TRIPLE_TAP_WINDOW_MS) tapCount++;
                         else tapCount = 1;
                         lastTapTime = now;
                         if (tapCount == 3) {
@@ -78,13 +78,13 @@ public class AbsoluteMouseFragment extends Fragment {
                             activity.swipePossible(false);
                         }
 
-                        // Scaling to 0-32767
-                        int absX = Math.round((y / height) * 32767); 
-                        int absY = Math.round((1 - (x / width)) * 32767);
+                        // Scaling to 0-32767 (ABS_MOUSE_MAX_COORD)
+                        int absX = Math.round((y / height) * HidMouseCodes.ABS_MOUSE_MAX_COORD); 
+                        int absY = Math.round((1 - (x / width)) * HidMouseCodes.ABS_MOUSE_MAX_COORD);
 
                         // Clamp to be sure
-                        absX = Math.max(0, Math.min(32767, absX));
-                        absY = Math.max(0, Math.min(32767, absY));
+                        absX = Math.max(0, Math.min(HidMouseCodes.ABS_MOUSE_MAX_COORD, absX));
+                        absY = Math.max(0, Math.min(HidMouseCodes.ABS_MOUSE_MAX_COORD, absY));
 
                         if (binding != null && binding.absMouseDebug != null) {
                             binding.absMouseDebug.setText("X: " + absX + " Y: " + absY);

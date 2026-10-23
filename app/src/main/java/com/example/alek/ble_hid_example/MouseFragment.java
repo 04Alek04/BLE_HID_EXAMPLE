@@ -192,15 +192,15 @@ public class MouseFragment extends Fragment implements View.OnTouchListener {
 
         int id = v.getId();
         if (id == R.id.mouse_button_mouse_1) {
-            value = 0x01;
+            value = HidMouseCodes.BUTTON_LEFT;
         } else if (id == R.id.mouse_button_mouse_2) {
-            value = 0x02;
+            value = HidMouseCodes.BUTTON_RIGHT;
         } else if (id == R.id.mouse_button_mouse_3) {
-            value = 0x04;
+            value = HidMouseCodes.BUTTON_MIDDLE;
         } else if (id == R.id.mouse_button_mouse_4) {
-            value = 0x08;
+            value = HidMouseCodes.BUTTON_BACK;
         } else if (id == R.id.mouse_button_mouse_5) {
-            value = 0x10;
+            value = HidMouseCodes.BUTTON_FORWARD;
         } else {
             return false;
         }
