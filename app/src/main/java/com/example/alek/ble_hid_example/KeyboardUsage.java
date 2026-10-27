@@ -223,6 +223,16 @@ final class KeyboardUsage {
         return null;
     }
 
+    public static KeyboardUsage findByCharacter(char c) {
+        char lowerC = Character.toLowerCase(c);
+        for (KeyboardUsage usage : KEYBOARD_USAGES) {
+            if (usage.character == lowerC || usage.character == c) {
+                return usage;
+            }
+        }
+        return null;
+    }
+
     public static KeyboardUsage findByDescription(String description) {
         if (description == null) return null;
         for (KeyboardUsage usage : KEYBOARD_USAGES) {

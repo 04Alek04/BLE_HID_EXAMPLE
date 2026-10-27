@@ -1,0 +1,19 @@
+========================================================================
+BLE HID EXAMPLE - INSTRUMENTED UI & STORAGE TESTS REPORT
+========================================================================
+Date/Time: Current Execution
+Target Device: Samsung Galaxy A53 5 (RZCW10JJ8YE)
+Status: 9/9 PASSED (100% SUCCESS)
+
+TEST RESULTS:
+  [PASS] MainActivityTest > test01_ViewPagerAndTabsLaunch (2.456s)
+  [PASS] MainActivityTest > test02_MouseFragment_GesturesTouchpadAndScroll (4.360s)
+  [PASS] MainActivityTest > test03_KeyboardFragment_SpinnerAndShortcuts (7.151s)
+  [PASS] MainActivityTest > test04_ConsumerFragment_SpinnersAndMedia (7.109s)
+  [PASS] MainActivityTest > test05_GamepadFragment_SticksButtonsDpadAndToggles (1.749s)
+  [PASS] MainActivityTest > test06_AbsoluteMouseFragment_SurfaceGesturesAndVolume (2.246s)
+  [PASS] MainActivityTest > test07_BlocklyFragment_ScriptControls (1.418s)
+  [PASS] MainActivityTest > test08_ConfigurationFragment_Settings (1.687s)
+  [PASS] StorageFileTest > testBlocklyMacroSaveAndLoadFromFileStorage (0.011s)
+
+TOTAL: 9 Passed, 0 Failed, 0 Skipped

@@ -1,0 +1,30 @@
+========================================================================
+BLE HID EXAMPLE - UNIT TESTS EXECUTION REPORT
+========================================================================
+Date/Time: Current Execution
+Target: Local JVM & Robolectric
+Status: 20/20 PASSED (100% SUCCESS)
+
+TEST RESULTS:
+  [PASS] AppPreferencesManagerTest > testLastTabPersistence (1.803s)
+  [PASS] AppPreferencesManagerTest > testRestoreNamePersistence (0.051s)
+  [PASS] AppPreferencesManagerTest > testGamepadTogglesPersistence (0.058s)
+  [PASS] BlocklyInterfaceTest > testAllJavaScriptBridgeMethods_executeWithoutExceptions (0.383s)
+  [PASS] ConsumerAndApplicationUsageTest > testApplicationControlUsage_getUsageByPositionAndNames (0.001s)
+  [PASS] ConsumerAndApplicationUsageTest > testApplicationLaunchButtonsUsage_getUsageByPositionAndNames (0.001s)
+  [PASS] ConsumerAndApplicationUsageTest > testConsumerControlUsage_bindAndGetUsage (0.000s)
+  [PASS] KeyboardUsageTest > testFindByCharacter_letters (0.003s)
+  [PASS] KeyboardUsageTest > testGetUsageNames_returnsNonKeyboardDescriptions (0.000s)
+  [PASS] KeyboardUsageTest > testFindByCharacter_symbolsAndDigits (0.001s)
+  [PASS] KeyboardUsageTest > testFindByCharacter_polishLettersMapToAltGr (0.001s)
+  [PASS] KeyboardUsageTest > testFindByDescription_matchesStringName (0.001s)
+  [PASS] KeyboardUsageTest > testFindByCharacter_nonExistentCharReturnsNull (0.000s)
+  [PASS] KeyboardUsageTest > testFindByKeyCode_matchesAndroidKeyEvent (0.000s)
+  [PASS] TouchInputCalculatorTest > testCalculateRelativeDelta_accumulatesAndClamps (0.023s)
+  [PASS] TouchInputCalculatorTest > testCalculateJoystickAxis_clampsTo127 (0.022s)
+  [PASS] TouchInputCalculatorTest > testResetRemainder_clearsAccumulatedSubPixelDeltas (0.022s)
+  [PASS] TouchInputCalculatorTest > testCalculateAbsoluteCoordinates_scalesTo32767 (0.022s)
+  [PASS] TouchInputCalculatorTest > testCalculateRelativeDelta_handlesSubPixelRemainder (0.029s)
+  [PASS] TouchInputCalculatorTest > testCalculateScrollStep_accumulatesRemainder (0.017s)
+
+TOTAL: 20 Passed, 0 Failed, 0 Skipped
