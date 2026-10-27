@@ -290,12 +290,16 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
     }
 
     public void sendAbsMouseReport(int buttons, int x, int y) {
-        lastAbsX = x;
-        lastAbsY = y;
+        this.absMouseButtons = buttons;
+        this.lastAbsX = x;
+        this.lastAbsY = y;
         if (mService != null) {
             mService.sendAbsMouseNotification(buttons, x, y);
         }
     }
+
+    public int getLastAbsX() { return lastAbsX; }
+    public int getLastAbsY() { return lastAbsY; }
 
     public void exitAbsoluteMouseMode() {
         runOnUiThread(new Runnable() {
