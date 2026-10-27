@@ -560,7 +560,7 @@
         // Improved runCode with built-in completion
         async function runCode() {
             executionCancelled = false;
-            javascript.javascriptGenerator.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
+            javascript.javascriptGenerator.STATEMENT_PREFIX = 'if (executionCancelled) return;\nhighlightBlock(%1);\n';
 
             // Generate code and add finishing call at the end of the command stream
             var generatedCode = javascript.javascriptGenerator.workspaceToCode(workspace);
