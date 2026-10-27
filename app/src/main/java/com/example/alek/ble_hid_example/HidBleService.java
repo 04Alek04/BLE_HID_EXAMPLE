@@ -272,6 +272,13 @@ public class HidBleService extends Service {
         processNotificationQueue();
     }
 
+    public void clearPendingNotifications() {
+        synchronized (pendingNotifications) {
+            pendingNotifications.clear();
+        }
+        Log.d("BLE", "Cleared all pending notifications from queue");
+    }
+
     private void waitForQueueToEmpty() {
         long startTime = System.currentTimeMillis();
         // Wait for both pending queue to empty AND for onNotificationSent ACK (notificationPossible == true)

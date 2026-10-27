@@ -613,8 +613,13 @@
         }
 
         function loadBlocksFromBase64(base64) {
-            var xmlText = atob(base64);
-            loadBlocksFromXml(xmlText);
+            try {
+                var xmlText = decodeURIComponent(escape(atob(base64)));
+                loadBlocksFromXml(xmlText);
+            } catch (e) {
+                var xmlText = atob(base64);
+                loadBlocksFromXml(xmlText);
+            }
         }
 
         function clearWorkspace() {

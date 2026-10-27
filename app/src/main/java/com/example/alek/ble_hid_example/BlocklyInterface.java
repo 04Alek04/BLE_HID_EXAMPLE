@@ -13,10 +13,9 @@ public class BlocklyInterface {
 
     @JavascriptInterface
     public void sendKeyboardKey(int usage, int modifiers) {
-        // Shift usage to byte 2, keeping byte 1 (reserved) at 0
-        int val = (modifiers & 0xFF) | ((usage & 0xFF) << 16);
+        int val = (modifiers & 0xFF) | ((usage & 0xFF) << 8);
         activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val);
-        Log.d("Blockly", "Key Sent: Usage=" + usage + " (Byte 2), Modifiers=" + modifiers + " (Byte 0)");
+        Log.d("Blockly", "Key Sent: Usage=" + usage + ", Modifiers=" + modifiers);
     }
 
     @JavascriptInterface
@@ -179,7 +178,8 @@ public class BlocklyInterface {
 
     @JavascriptInterface
     public void releaseAll() {
-        Log.d("Blockly", "Safety Release: Clearing all HID states");
+        Log.d("Blockly", "Safety Release: Clearing all HID states and pending queue");
+        activity.clearPendingNotifications();
         // Release Keyboard
         activity.sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
         // Release Mouse Buttons

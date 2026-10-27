@@ -317,6 +317,10 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         if (mService != null) mService.sendKeyboardNotification(rf, value);
     }
 
+    public void clearPendingNotifications() {
+        if (mService != null) mService.clearPendingNotifications();
+    }
+
     public void sendMouseNotification(ReportField rf, int value) {
         if (mService != null) mService.sendMouseNotification(rf, value);
     }
