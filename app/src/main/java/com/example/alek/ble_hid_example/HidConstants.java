@@ -24,7 +24,7 @@ public final class HidConstants {
     public static final int KEY_HOLD_TIME_STANDARD_MS = 10;
     public static final int KEY_HOLD_TIME_SHIFTED_MS = 15;
     public static final int KEY_RELEASE_DELAY_STANDARD_MS = 10;
-    public static final int KEY_RELEASE_DELAY_SHIFTED_MS = 15;
+    public static final int KEY_RELEASE_DELAY_SHIFTED_MS = 25;
     public static final int ENTER_KEY_DELAY_MS = 20;
     public static final int MAX_PENDING_QUEUE_SIZE = 6;
 

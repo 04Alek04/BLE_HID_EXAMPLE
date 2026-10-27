@@ -272,6 +272,18 @@ public class HidBleService extends Service {
         processNotificationQueue();
     }
 
+    private void waitForQueueToEmpty() {
+        long startTime = System.currentTimeMillis();
+        // Wait for both pending queue to empty AND for onNotificationSent ACK (notificationPossible == true)
+        while ((!pendingNotifications.isEmpty() || !notificationPossible) && (System.currentTimeMillis() - startTime < 300)) {
+            try {
+                Thread.sleep(5);
+            } catch (InterruptedException ignored) {
+                break;
+            }
+        }
+    }
+
     public void sendKeyboardNotification(ReportField rf, int value) {
         byte[] array = new byte[8];
         if (rf == ReportField.REPORT_FIELD_KEYBOARD_ALL) {
@@ -414,7 +426,7 @@ public class HidBleService extends Service {
                         byte m = KeyboardUsage.KEYBOARD_USAGES[j].meta;
                         byte k = KeyboardUsage.KEYBOARD_USAGES[j].usage;
 
-                        // SMART SHIFT LOGIC (XOR) for Caps Lock
+                        // SMART SHIFT LOGIC (XOR) for Caps Lock & Special Characters
                         if (Character.isLetter(c)) {
                             boolean charIsUpper = Character.isUpperCase(c);
                             boolean needsShift = charIsUpper ^ hostCapsLock;
@@ -422,26 +434,26 @@ public class HidBleService extends Service {
                             if (needsShift) m |= KeyboardUsage.META_LEFT_SHIFT;
                             else m &= ~KeyboardUsage.META_LEFT_SHIFT;
                         } else {
-                            if (Character.isUpperCase(c) || "!@#$%^&*()_+{}|:\"<>?".indexOf(c) != -1) {
-                                m |= KeyboardUsage.META_LEFT_SHIFT;
-                            }
+                            boolean needsShift = "!@#$%^&*()_+{}|:\"<>?~".indexOf(c) != -1;
+                            if (needsShift) m |= KeyboardUsage.META_LEFT_SHIFT;
+                            else m &= ~KeyboardUsage.META_LEFT_SHIFT;
                         }
 
                         int val = (m & 0xFF) | ((k & 0xFF) << 8);
 
-                        while (pendingNotifications.size() > HidConstants.MAX_PENDING_QUEUE_SIZE) {
-                            try {
-                                Thread.sleep(HidConstants.KEY_HOLD_TIME_STANDARD_MS);
-                            } catch (InterruptedException ignored) {}
-                        }
+                        waitForQueueToEmpty();
 
                         sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val);
+                        waitForQueueToEmpty();
+
                         try {
                             int holdTime = (m != 0) ? HidConstants.KEY_HOLD_TIME_SHIFTED_MS : HidConstants.KEY_HOLD_TIME_STANDARD_MS;
                             Thread.sleep(holdTime); // Key-down hold time
                         } catch (InterruptedException ignored) {}
 
                         sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, 0);
+                        waitForQueueToEmpty();
+
                         try {
                             int releaseTime = (m != 0) ? HidConstants.KEY_RELEASE_DELAY_SHIFTED_MS : HidConstants.KEY_RELEASE_DELAY_STANDARD_MS;
                             Thread.sleep(releaseTime); // Key-release delay before next key
@@ -1078,7 +1090,12 @@ public class HidBleService extends Service {
                 if (value == null) value = new byte[0];
 
                 int charLength = value.length;
-                int partLength = Math.max(0, Math.min(charLength - offset, currentMtu));
+                if (offset >= charLength) {
+                    gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_INVALID_OFFSET, offset, null);
+                    return;
+                }
+
+                int partLength = Math.max(0, Math.min(charLength - offset, Math.max(22, currentMtu - 1)));
                 byte[] bytes = new byte[partLength];
 
                 if (partLength > 0) {
