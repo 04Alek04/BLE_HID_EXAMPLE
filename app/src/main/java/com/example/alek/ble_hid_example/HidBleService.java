@@ -1452,11 +1452,6 @@ public class HidBleService extends Service {
 
     /* Service handling-related methods */
     public void initializeLE() {
-        if (gattServer != null && isGattDatabaseReady && !devices.isEmpty()) {
-            Log.d("BLE", "GATT Server is already initialized and connected, skipping re-initialization.");
-            return;
-        }
-
         BluetoothManager mManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
 
         BluetoothAdapter bluetoothAdapter = mManager != null ? mManager.getAdapter() : null;
@@ -1465,15 +1460,20 @@ public class HidBleService extends Service {
             return;
         }
 
+        stopAdvertising();
+        devices.clear();
+        mNotificationMasks.clear();
+        pendingNotifications.clear();
+
         ReportField.updateValues();
         boolean nameChanged = ensureHidDeviceName();
         gattServerCbInit();
-        mManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         if (gattServer != null) {
-            gattServer.close();
+            try {
+                gattServer.close();
+            } catch (SecurityException ignored) {}
         }
         gattServer = mManager.openGattServer(this, mGattServerCallback);
-        pendingNotifications.clear();
 
         if (nameChanged) {
             // Wait 300ms for Bluetooth hardware stack to update local name before creating GATT database and advertising
