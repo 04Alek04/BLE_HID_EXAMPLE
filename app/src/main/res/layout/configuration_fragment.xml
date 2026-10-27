@@ -67,15 +67,6 @@
                         android:text="@string/clear_saved_configs"
                         android:textSize="12sp" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/conf_type_script_button"
-                        style="@style/ModernButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:layout_margin="4dp"
-                        android:text="@string/send_windows_reconnect_script"
-                        android:textSize="12sp" />
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
