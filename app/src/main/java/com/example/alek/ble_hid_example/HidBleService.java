@@ -178,6 +178,8 @@ public class HidBleService extends Service {
     private MainActivity mainActivity;
     private BluetoothGattServerCallback mGattServerCallback;
     private volatile boolean notificationPossible;
+    private volatile boolean isInternalNameChange = false;
+    private int nameRetryCount = 0;
     private volatile long lastNotificationTimestamp = 0;
     private BluetoothGattServer gattServer;
     private BluetoothGattCharacteristic charReportKeyboard;
@@ -487,39 +489,30 @@ public class HidBleService extends Service {
             Log.e("BLE", "Missing BLUETOOTH_CONNECT permission to get adapter name", e);
         }
 
-        if (currentName != null) {
-            if (!currentName.startsWith("(HID) ")) {
-                // User changed name in system settings or app started fresh with clean name
-                savedOriginalName = currentName;
-                prefs.edit().putString("original_device_name", savedOriginalName).apply();
-            } else if (savedOriginalName == null) {
-                // Name has (HID) from a previous unclosed instance; strip prefix to recover clean name
-                savedOriginalName = currentName.substring(6).trim();
-                prefs.edit().putString("original_device_name", savedOriginalName).apply();
-            }
+        if (currentName != null && !currentName.startsWith("(HID) ")) {
+            savedOriginalName = currentName;
+            prefs.edit().putString("original_device_name", savedOriginalName).apply();
         }
 
         mOriginalName = savedOriginalName;
-
-        String baseName = mOriginalName != null ? mOriginalName : "Device";
-
-        String prefix = "(HID) ";
-        String newName;
-        if (baseName.startsWith(prefix)) {
-            newName = baseName;
-        } else {
-            String shortName = baseName.length() > 10 ? baseName.substring(0, 10) : baseName;
-            newName = prefix + shortName;
+        String baseName = mOriginalName != null ? mOriginalName : (currentName != null ? currentName : "Device");
+        if (baseName.startsWith("(HID) ")) {
+            baseName = baseName.substring(6).trim();
         }
 
-        if (currentName == null || !currentName.equals(newName)) {
-            Log.i("BLE", "Setting device name to: " + newName);
-            try {
-                bluetoothAdapter.setName(newName);
-                return true;
-            } catch (SecurityException e) {
-                Log.e("BLE", "Missing BLUETOOTH_CONNECT permission to set adapter name", e);
-            }
+        String newName = "(HID) " + baseName;
+        // Clamp total name length to max MAX_ADV_NAME_LENGTH chars to guarantee primary ADV payload stays under 31 bytes
+        if (newName.length() > HidConstants.MAX_ADV_NAME_LENGTH) {
+            newName = newName.substring(0, HidConstants.MAX_ADV_NAME_LENGTH);
+        }
+
+        Log.i("BLE", "Ensuring HID device name: " + newName);
+        try {
+            isInternalNameChange = true;
+            bluetoothAdapter.setName(newName);
+            return true;
+        } catch (SecurityException e) {
+            Log.e("BLE", "Missing BLUETOOTH_CONNECT permission to set adapter name", e);
         }
         return false;
     }
@@ -566,6 +559,25 @@ public class HidBleService extends Service {
             Log.e("BLE", "BluetoothLeAdvertiser is null");
             return;
         }
+
+        // Verify that local Bluetooth adapter name is updated to (HID) ... before building BLE ADV payload
+        String currentAdapterName = null;
+        try {
+            currentAdapterName = bluetoothAdapter.getName();
+        } catch (SecurityException ignored) {}
+
+        if (currentAdapterName == null || !currentAdapterName.startsWith("(HID) ")) {
+            if (nameRetryCount < HidConstants.MAX_NAME_RETRY_COUNT) {
+                nameRetryCount++;
+                Log.w("BLE", "Adapter name in Bluetooth NVRAM is not (HID) yet ('" + currentAdapterName + "'). Retry " + nameRetryCount + "/" + HidConstants.MAX_NAME_RETRY_COUNT + " in " + HidConstants.ADV_NAME_RETRY_DELAY_MS + "ms...");
+                ensureHidDeviceName();
+                new Handler(Looper.getMainLooper()).postDelayed(this::startAdvertising, HidConstants.ADV_NAME_RETRY_DELAY_MS);
+                return;
+            } else {
+                Log.e("BLE", "Max retries reached waiting for adapter name update. Proceeding with current name: " + currentAdapterName);
+            }
+        }
+        nameRetryCount = 0;
         AdvertiseSettings settings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
                 .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
@@ -1518,6 +1530,10 @@ public class HidBleService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED.equals(intent.getAction())) {
+                if (isInternalNameChange) {
+                    isInternalNameChange = false;
+                    return;
+                }
                 String newName = intent.getStringExtra(BluetoothAdapter.EXTRA_LOCAL_NAME);
                 if (newName != null && !newName.startsWith("(HID) ")) {
                     Log.i("BLE", "System device name changed by user to: " + newName);

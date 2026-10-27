@@ -28,6 +28,11 @@ public final class HidConstants {
     public static final int ENTER_KEY_DELAY_MS = 20;
     public static final int MAX_PENDING_QUEUE_SIZE = 6;
 
+    // BLE Advertising Constants
+    public static final int MAX_ADV_NAME_LENGTH = 18;
+    public static final int MAX_NAME_RETRY_COUNT = 5;
+    public static final long ADV_NAME_RETRY_DELAY_MS = 300L;
+
     // UI Refresh & Gesture Timers (ms)
     public static final long DEVICE_FIELD_REFRESH_MS = 1200L;
     public static final long DEVICE_LAYOUT_REFRESH_MS = 300L;
