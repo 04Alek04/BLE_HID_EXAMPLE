@@ -15,6 +15,15 @@ The application consists of 7 full-screen fragments. When more than one device i
   <img src="screenshots/demo.webp" alt="BLE HID Example Demo" width="640" />
 </p>
 
+**Tools used in demo:**
+- 💻 Windows System
+- 🎨 MS Paint
+- 📊 LibreOffice Calc
+- 📝 Notepad
+- 🌐 Brave Browser
+  - 🎮 [HardwareTester Gamepad](https://hardwaretester.com/gamepad)
+  - 🖱️ [Mouse Testers](https://mousetesters.com/)
+
 ---
 
 ## 📥 Download & Installation
