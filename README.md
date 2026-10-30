@@ -111,6 +111,10 @@ The application consists of 7 full-screen fragments. When more than one device i
 The repository includes a PowerShell recovery script (`win_reconnect.ps1`) designed for Windows 10/11 hosts:
 
 ```powershell
+# Run from CMD / Command Prompt:
+powershell -ExecutionPolicy Bypass -File win_reconnect.ps1
+
+# Or run directly inside PowerShell:
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass; .\win_reconnect.ps1
 ```
 
