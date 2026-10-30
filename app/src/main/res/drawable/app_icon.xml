@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="192dp"
+    android:height="192dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- Dark rounded background -->
+    <path
+        android:fillColor="#061727"
+        android:pathData="M160,24 L352,24 A136,136 0,0 1,488 160 L488,352 A136,136 0,0 1,352 488 L160,488 A136,136 0,0 1,24 352 L24,160 A136,136 0,0 1,160 24 Z"/>
+
+    <!-- Shifted 4 Octagons & Icons Group (-24px to the left for perfect center alignment) -->
+    <group android:translateX="-24">
+
+        <!-- Keyboard button octagon -->
+        <path
+            android:fillColor="#087FF5"
+            android:pathData="M104,104 L140,68 Q148,60 160,60 L208,60 Q220,60 228,68 L264,104 Q272,112 272,124 L272,172 Q272,184 264,192 L228,228 Q220,236 208,236 L160,236 Q148,236 140,228 L104,192 Q96,184 96,172 L96,124 Q96,112 104,104 Z"/>
+
+        <!-- Keyboard icon (Centered vertically inside octagon with +9.5px translateY) -->
+        <group android:translateY="9.5">
+            <!-- Keyboard body -->
+            <path
+                android:fillColor="#061727"
+                android:pathData="M125,108 Q125,100 133,100 L235,100 Q243,100 243,108 L243,169 Q243,177 235,177 L133,177 Q125,177 125,169 Z"/>
+
+            <!-- Keyboard keys -->
+            <path
+                android:fillColor="#087FF5"
+                android:pathData="M136,111 L145,111 L145,120 L136,120 Z
+                    M152,111 L161,111 L161,120 L152,120 Z
+                    M168,111 L177,111 L177,120 L168,120 Z
+                    M184,111 L193,111 L193,120 L184,120 Z
+                    M200,111 L209,111 L209,120 L200,120 Z
+                    M216,111 L225,111 L225,120 L216,120 Z
+                    M136,127 L145,127 L145,136 L136,136 Z
+                    M152,127 L161,127 L161,136 L152,136 Z
+                    M168,127 L177,127 L177,136 L168,136 Z
+                    M184,127 L193,127 L193,136 L184,136 Z
+                    M200,127 L209,127 L209,136 L200,136 Z
+                    M216,127 L225,127 L225,136 L216,136 Z
+                    M136,143 L145,143 L145,152 L136,152 Z
+                    M152,143 L161,143 L161,152 L152,152 Z
+                    M168,143 L177,143 L177,152 L168,152 Z
+                    M184,143 L193,143 L193,152 L184,152 Z
+                    M200,143 L209,143 L209,152 L200,152 Z
+                    M216,143 L225,143 L225,152 L216,152 Z
+                    M152,159 L209,159 L209,168 L152,168 Z"/>
+        </group>
+
+        <!-- Next media button octagon -->
+        <path
+            android:fillColor="#087FF5"
+            android:pathData="M352,60 L400,60 Q412,60 420,68 L456,104 Q464,112 464,124 L464,172 Q464,184 456,192 L420,228 Q412,236 400,236 L352,236 Q340,236 332,228 L296,192 Q288,184 288,172 L288,124 Q288,112 296,104 L332,68 Q340,60 352,60 Z"/>
+
+        <!-- Consumer / Media icon (Centered vertically inside octagon with +16.5px translateY) -->
+        <group android:translateY="16.5">
+            <!-- Play triangle -->
+            <path
+                android:fillColor="#061727"
+                android:pathData="M335,105 Q335,98 342,102 L384,126 Q391,130 384,134 L342,158 Q335,162 335,155 Z"/>
+
+            <!-- Next track bar -->
+            <path
+                android:fillColor="#061727"
+                android:pathData="M398,101 Q398,96 403,96 L414,96 Q419,96 419,101 L419,159 Q419,164 414,164 L403,164 Q398,164 398,159 Z"/>
+        </group>
+
+        <!-- Mouse button octagon -->
+        <path
+            android:fillColor="#087FF5"
+            android:pathData="M104,316 L140,280 Q148,272 160,272 L208,272 Q220,272 228,280 L264,316 Q272,324 272,336 L272,384 Q272,396 264,404 L228,440 Q220,448 208,448 L160,448 Q148,448 140,440 L104,404 Q96,396 96,384 L96,336 Q96,324 104,316 Z"/>
+
+        <!-- Mouse icon (Centered horizontally inside octagon with -8px translateX) -->
+        <group android:translateX="-8">
+            <!-- Mouse body -->
+            <path
+                android:fillColor="#061727"
+                android:pathData="M160,332 C160,310 176,296 192,296 C208,296 224,310 224,332 L224,382 C224,406 210,424 192,424 C174,424 160,406 160,382 Z"/>
+
+            <!-- Mouse scroll wheel -->
+            <path
+                android:fillColor="#087FF5"
+                android:pathData="M189,293 L195,293 L195,316 L189,316 Z"/>
+
+            <path
+                android:fillColor="#087FF5"
+                android:pathData="M185,318 C185,313 189,309 192,309 C195,309 199,313 199,318 L199,331 C199,336 195,340 192,340 C189,340 185,336 185,331 Z"/>
+        </group>
+
+        <!-- Gamepad button octagon -->
+        <path
+            android:fillColor="#087FF5"
+            android:pathData="M352,272 L400,272 Q412,272 420,280 L456,316 Q464,324 464,336 L464,384 Q464,396 456,404 L420,440 Q412,448 400,448 L352,448 Q340,448 332,440 L296,404 Q288,396 288,384 L288,336 Q288,324 296,316 L332,280 Q340,272 352,272 Z"/>
+
+        <!-- Gamepad icon (Centered horizontally inside octagon with -6px translateX) -->
+        <group android:translateX="-6">
+            <!-- Gamepad body -->
+            <path
+                android:fillColor="#061727"
+                android:pathData="M337,321
+                    C347,315 359,314 370,319
+                    C378,322 386,322 394,319
+                    C405,314 417,315 427,321
+                    C438,328 445,344 449,362
+                    L454,385
+                    C456,397 445,406 434,400
+                    L411,382
+                    C404,377 397,375 389,375
+                    L375,375
+                    C367,375 360,377 353,382
+                    L330,400
+                    C319,406 308,397 310,385
+                    L315,362
+                    C319,344 326,328 337,321 Z"/>
+
+            <!-- D-pad horizontal -->
+            <path
+                android:fillColor="#087FF5"
+                android:pathData="M328,351 L355,351 L355,362 L328,362 Z"/>
+
+            <!-- D-pad vertical -->
+            <path
+                android:fillColor="#087FF5"
+                android:pathData="M337,343 L346,343 L346,370 L337,370 Z"/>
+
+            <!-- Action buttons ABXY diamond (Shifted 7px right for perfect right-wing layout) -->
+            <path
+                android:fillColor="#087FF5"
+                android:pathData="M405,339 A5,5 0,1 0,415 339 A5,5 0,1 0,405 339
+                    M417,351 A5,5 0,1 0,427 351 A5,5 0,1 0,417 351
+                    M405,363 A5,5 0,1 0,415 363 A5,5 0,1 0,405 363
+                    M394,351 A5,5 0,1 0,404 351 A5,5 0,1 0,394 351"/>
+        </group>
+
+    </group>
+
+</vector>
