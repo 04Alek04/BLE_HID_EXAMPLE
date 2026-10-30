@@ -10,6 +10,7 @@
     <string name="keyboard_on">Keyboard On</string>
     <string name="keyboard_off">Keyboard Off</string>
     <string name="reboot_application">Reboot application</string>
+    <string name="start_ble_advertising">Start BLE advertising for multi-host</string>
     <string name="clear_saved_configs">Clear saved devices config</string>
     <string name="restore_bt_name">Restore original Bluetooth name on exit</string>
     <string name="device_not_connected">Device not connected/enabled</string>

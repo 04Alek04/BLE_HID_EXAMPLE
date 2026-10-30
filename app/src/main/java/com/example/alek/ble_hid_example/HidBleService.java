@@ -145,6 +145,8 @@ enum ReportField {
         REPORT_FIELD_GAMEPAD_BUTTONS.byte_offset = 0;
         REPORT_FIELD_GAMEPAD_X.byte_offset = 2;
         REPORT_FIELD_GAMEPAD_Y.byte_offset = 3;
+        REPORT_FIELD_GAMEPAD_Z.byte_offset = 4;
+        REPORT_FIELD_GAMEPAD_RX.byte_offset = 5;
     }
 }
 
@@ -211,6 +213,14 @@ public class HidBleService extends Service {
         }
     };
 
+    private final Map<BluetoothDevice, Boolean> mInFlightNotifications = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<BluetoothDevice, Long> mInFlightTimestamps = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<BluetoothDevice, Integer> mDeviceMtu = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private boolean isDeviceInFlight(BluetoothDevice device) {
+        return device != null && Boolean.TRUE.equals(mInFlightNotifications.get(device));
+    }
+
     private byte lastBatteryLevel = -1;
 
     private byte readBatteryLevel() {
@@ -248,14 +258,19 @@ public class HidBleService extends Service {
                 }
 
                 boolean merged = false;
-                if (canMerge && characteristic == charReportMouse) {
-                    // Try to merge with an existing pending mouse move for this device
+                if (canMerge) {
                     for (int i = pendingNotifications.size() - 1; i >= 0; i--) {
                         NotificationData data = pendingNotifications.get(i);
                         if (data.device.equals(device) && data.characteristic == characteristic) {
-                            if (data.value[0] == value[0]) {
+                            if (characteristic == charReportMouse && data.value[0] == value[0]) {
                                 data.value[1] = (byte) Math.max(-128, Math.min(127, data.value[1] + value[1]));
                                 data.value[2] = (byte) Math.max(-128, Math.min(127, data.value[2] + value[2]));
+                                merged = true;
+                            } else if (characteristic == charReportAbsMouse && data.value[0] == value[0]) {
+                                System.arraycopy(value, 1, data.value, 1, 4);
+                                merged = true;
+                            } else if (characteristic == charReportGamepad && data.value.length >= 6 && value.length >= 6 && data.value[0] == value[0] && data.value[1] == value[1]) {
+                                System.arraycopy(value, 2, data.value, 2, 4);
                                 merged = true;
                             }
                             break;
@@ -264,6 +279,10 @@ public class HidBleService extends Service {
                 }
 
                 if (!merged) {
+                    int maxAllowed = HidConstants.MAX_PENDING_QUEUE_SIZE * Math.max(1, targetDevices.size());
+                    if (pendingNotifications.size() >= maxAllowed) {
+                        pendingNotifications.remove(0);
+                    }
                     pendingNotifications.add(new NotificationData(device, characteristic, value.clone()));
                 }
             }
@@ -281,8 +300,8 @@ public class HidBleService extends Service {
 
     private void waitForQueueToEmpty() {
         long startTime = System.currentTimeMillis();
-        // Wait for both pending queue to empty AND for onNotificationSent ACK (notificationPossible == true)
-        while ((!pendingNotifications.isEmpty() || !notificationPossible) && (System.currentTimeMillis() - startTime < 300)) {
+        while ((!pendingNotifications.isEmpty() || !notificationPossible || mInFlightNotifications.containsValue(Boolean.TRUE))
+                && (System.currentTimeMillis() - startTime < 300)) {
             try {
                 Thread.sleep(5);
             } catch (InterruptedException ignored) {
@@ -350,7 +369,7 @@ public class HidBleService extends Service {
         array[2] = (byte) ((x >> 8) & 0xFF);
         array[3] = (byte) (y & 0xFF);
         array[4] = (byte) ((y >> 8) & 0xFF);
-        sendReport(charReportAbsMouse, array, ReportField.REP_ABS_MOUSE, false);
+        sendReport(charReportAbsMouse, array, ReportField.REP_ABS_MOUSE, true);
     }
 
     public void sendGamepadNotification(int buttons, int lx, int ly, int rx, int ry) {
@@ -361,58 +380,66 @@ public class HidBleService extends Service {
         array[3] = (byte) (ly & 0xFF);
         array[4] = (byte) (rx & 0xFF);
         array[5] = (byte) (ry & 0xFF);
-        sendReport(charReportGamepad, array, ReportField.REP_GAMEPAD, false);
+        sendReport(charReportGamepad, array, ReportField.REP_GAMEPAD, true);
     }
 
     private synchronized void processNotificationQueue() {
-        if (gattServer == null) {
+        if (gattServer == null || pendingNotifications.isEmpty()) {
             return;
         }
 
-        // Queue Watchdog: recover if notificationPossible has been stuck false for > 100ms
-        if (!notificationPossible) {
-            if (System.currentTimeMillis() - lastNotificationTimestamp > 100) {
-                Log.w("BLE", "Notification watchdog recovered stalled queue");
-                notificationPossible = true;
-            } else {
+        long now = System.currentTimeMillis();
+        java.util.Set<BluetoothDevice> failedDevices = new java.util.HashSet<>();
+
+        for (int i = 0; i < pendingNotifications.size(); i++) {
+            NotificationData toSend = pendingNotifications.get(i);
+
+            if (!devices.contains(toSend.device) || !isDeviceEnabled(toSend.device)) {
+                pendingNotifications.remove(i);
+                mInFlightNotifications.remove(toSend.device);
+                mInFlightTimestamps.remove(toSend.device);
+                i--;
+                continue;
+            }
+
+            if (!isHidReady(toSend.device) || failedDevices.contains(toSend.device)) {
+                continue;
+            }
+
+            // Per-Device In-Flight Check with Watchdog Recovery
+            Long lastSent = mInFlightTimestamps.get(toSend.device);
+            if (isDeviceInFlight(toSend.device)) {
+                if (lastSent != null && (now - lastSent > 100)) {
+                    Log.w("BLE", "Per-device watchdog cleared stuck in-flight for " + toSend.device.getAddress());
+                    mInFlightNotifications.put(toSend.device, false);
+                } else {
+                    continue;
+                }
+            }
+
+            pendingNotifications.remove(i);
+
+            if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                Log.e("BLE", "Missing BLUETOOTH_CONNECT permission for notification");
                 return;
             }
-        }
 
-        while (!pendingNotifications.isEmpty()) {
-            NotificationData toSend = pendingNotifications.get(0);
+            toSend.characteristic.setValue(toSend.value);
+            boolean success = gattServer.notifyCharacteristicChanged(toSend.device, toSend.characteristic, toSend.responseNeeded);
 
-            if (devices.contains(toSend.device)) {
-                if (!isHidReady(toSend.device)) {
-                    // Hold notifications in queue while host completes GATT HID handshake
-                    break;
-                }
-
-                pendingNotifications.remove(0);
-
-                if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                    Log.e("BLE", "Missing BLUETOOTH_CONNECT permission for notification");
-                    return;
-                }
-
-                toSend.characteristic.setValue(toSend.value);
-                boolean success = gattServer.notifyCharacteristicChanged(toSend.device, toSend.characteristic,
-                        toSend.responseNeeded);
-
-                if (success) {
-                    notificationPossible = false;
-                    lastNotificationTimestamp = System.currentTimeMillis();
-                    // Exit loop, wait for onNotificationSent to set notificationPossible = true
-                    break;
-                } else {
-                    Log.e("BLE", "Failed to queue notification, re-enqueuing for retry");
-                    pendingNotifications.add(0, toSend);
-                    notificationPossible = false;
-                    lastNotificationTimestamp = System.currentTimeMillis() - 80; // Allow watchdog retry in 20ms
-                    break;
-                }
+            if (success) {
+                i--;
+                mInFlightNotifications.put(toSend.device, true);
+                mInFlightTimestamps.put(toSend.device, now);
+                notificationPossible = false;
+                lastNotificationTimestamp = now;
             } else {
-                pendingNotifications.remove(0);
+                Log.e("BLE", "Failed to queue notification for " + toSend.device.getAddress() + ", re-enqueuing with 15ms retry");
+                pendingNotifications.add(i, toSend);
+                mInFlightNotifications.put(toSend.device, false);
+                mInFlightTimestamps.put(toSend.device, now - 80);
+                failedDevices.add(toSend.device);
+                mHidReadyHandler.postDelayed(this::processNotificationQueue, 15);
             }
         }
     }
@@ -554,7 +581,13 @@ public class HidBleService extends Service {
         isAdvertising = false;
     }
 
-    private void startAdvertising() {
+    public synchronized void forceStartAdvertising() {
+        Log.i("BLE", "User manually triggered BLE advertising");
+        stopAdvertising();
+        startAdvertising();
+    }
+
+    private synchronized void startAdvertising() {
         if (!isGattDatabaseReady) {
             Log.d("BLE", "GATT Database not fully registered yet, postponing startAdvertising()");
             return;
@@ -616,8 +649,10 @@ public class HidBleService extends Service {
                 .build();
 
         try {
+            isAdvertising = true;
             advertiser.startAdvertising(settings, advData, scanResponse, advertisingCallback);
         } catch (SecurityException e) {
+            isAdvertising = false;
             Log.e("BLE", "Missing BLUETOOTH_ADVERTISE permission to start advertising", e);
         }
     }
@@ -966,7 +1001,7 @@ public class HidBleService extends Service {
         charReportGamepad = new BluetoothGattCharacteristic(
                 UUID.fromString(CHAR_REPORT),
                 BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY, PERM_READ_WRITE);
-        charReportGamepad.setValue(new byte[4]); // 2 bytes buttons, 2 bytes axes
+        charReportGamepad.setValue(new byte[6]); // 2 bytes buttons, 4 bytes axes (X, Y, Z, Rz)
         BluetoothGattDescriptor descReportRefGamepad = new BluetoothGattDescriptor(UUID.fromString(DESC_REPORT_REFERENCE), PERM_READ);
         descReportRefGamepad.setValue(new byte[]{0x05, 0x01}); // ID=5, Type=Input
         charReportGamepad.addDescriptor(descReportRefGamepad);
@@ -1028,14 +1063,13 @@ public class HidBleService extends Service {
     private void gattServerCbInit() {
         mGattServerCallback = new BluetoothGattServerCallback() {
             private final int DEFAULT_MTU = 23;
-            private int currentMtu = DEFAULT_MTU;
 
             @Override
             public void onConnectionStateChange(final BluetoothDevice device, int status, int newState) {
                 Log.e("BLE", "onConnectionStateChange " + device.toString() + " " + status + " " + newState);
 
                 if (newState == STATE_CONNECTED) {
-                    currentMtu = DEFAULT_MTU;
+                    mDeviceMtu.put(device, DEFAULT_MTU);
 
                     if (!devices.contains(device)) {
                         devices.add(device);
@@ -1062,17 +1096,32 @@ public class HidBleService extends Service {
                     mHidReadyDeviceAddresses.remove(addr);
 
                     if (devices.contains(device)) {
-                        // If some notification waiting for this device then they will be removed in
-                        // proper task
                         devices.remove(device);
                     }
                     mNotificationMasks.remove(device);
+                    mInFlightNotifications.remove(device);
+                    mInFlightTimestamps.remove(device);
+                    mDeviceMtu.remove(device);
+
+                    // Remove all pending notifications targeted at the disconnected device
+                    synchronized (pendingNotifications) {
+                        for (int i = pendingNotifications.size() - 1; i >= 0; i--) {
+                            if (pendingNotifications.get(i).device.equals(device)) {
+                                pendingNotifications.remove(i);
+                            }
+                        }
+                    }
+
+                    // Reset notificationPossible = true so queue unblocks if in-flight packet was lost on disconnect
+                    notificationPossible = true;
 
                     if (devices.isEmpty()) {
                         pendingNotifications.clear();
-                        notificationPossible = true;
                         // Resume advertising when all devices disconnect
                         startAdvertising();
+                    } else {
+                        // Unblock queue for remaining connected devices!
+                        processNotificationQueue();
                     }
                 }
 
@@ -1102,7 +1151,9 @@ public class HidBleService extends Service {
                     return;
                 }
 
-                int partLength = Math.max(0, Math.min(charLength - offset, Math.max(22, currentMtu - 1)));
+                Integer mtuObj = mDeviceMtu.get(device);
+                int deviceMtu = (mtuObj != null) ? mtuObj : DEFAULT_MTU;
+                int partLength = Math.max(0, Math.min(charLength - offset, Math.max(22, deviceMtu - 1)));
                 byte[] bytes = new byte[partLength];
 
                 if (partLength > 0) {
@@ -1117,7 +1168,9 @@ public class HidBleService extends Service {
 
             @Override
             public void onMtuChanged(BluetoothDevice device, int mtu) {
-                currentMtu = mtu;
+                if (device != null) {
+                    mDeviceMtu.put(device, mtu);
+                }
             }
 
             @Override
@@ -1132,6 +1185,7 @@ public class HidBleService extends Service {
                 
                 if (descriptor.getUuid().toString().equalsIgnoreCase(DESC_CCC)) {
                     updateNotificationMask(device);
+                    markHidReady(device); // Immediate handshake completion when host writes CCCD!
                 }
                 
                 if (responseNeeded) {
@@ -1181,19 +1235,28 @@ public class HidBleService extends Service {
                 if (value == null) value = new byte[0];
 
                 int length = value.length;
-                if (offset > length) {
+                if (offset >= length) {
                     gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_INVALID_OFFSET, offset, null);
                     return;
                 }
 
-                byte[] responsePart = new byte[length - offset];
-                System.arraycopy(value, offset, responsePart, 0, length - offset);
+                Integer mtuObj = mDeviceMtu.get(device);
+                int deviceMtu = (mtuObj != null) ? mtuObj : DEFAULT_MTU;
+                int partLength = Math.max(0, Math.min(length - offset, Math.max(22, deviceMtu - 1)));
+                byte[] responsePart = new byte[partLength];
+                if (partLength > 0) {
+                    System.arraycopy(value, offset, responsePart, 0, partLength);
+                }
 
                 gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, responsePart);
             }
 
             @Override
             public void onNotificationSent(BluetoothDevice device, int status) {
+                if (device != null) {
+                    mInFlightNotifications.put(device, false);
+                    mInFlightTimestamps.remove(device);
+                }
                 notificationPossible = true;
                 lastNotificationTimestamp = System.currentTimeMillis();
                 processNotificationQueue();
@@ -1215,12 +1278,26 @@ public class HidBleService extends Service {
         };
     }
 
+    private final Map<String, Long> mHandshakeFirstTouchTimestamps = new java.util.concurrent.ConcurrentHashMap<>();
+
     private void touchHostActivity(BluetoothDevice device) {
         if (device == null || !devices.contains(device)) return;
         String addr = getResolvedAddress(device);
 
         if (mHidReadyDeviceAddresses.contains(addr)) {
             // Already ready
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        Long firstTouch = mHandshakeFirstTouchTimestamps.putIfAbsent(addr, now);
+        if (firstTouch == null) {
+            firstTouch = now;
+        }
+
+        // If host GATT exchange activity exceeds max cap of 1000ms, mark ready immediately
+        if (now - firstTouch > 1000) {
+            markHidReady(device);
             return;
         }
 
@@ -1231,17 +1308,18 @@ public class HidBleService extends Service {
 
         Runnable r = () -> markHidReady(device);
         mHidReadyRunnables.put(addr, r);
-        mHidReadyHandler.postDelayed(r, HidConstants.GATT_HANDSHAKE_DEBOUNCE_MS); // Debounce timer after host activity
+        mHidReadyHandler.postDelayed(r, HidConstants.GATT_HANDSHAKE_DEBOUNCE_MS);
     }
 
     private void markHidReady(BluetoothDevice device) {
         if (device == null || !devices.contains(device)) return;
         String addr = getResolvedAddress(device);
         mHidReadyRunnables.remove(addr);
+        mHandshakeFirstTouchTimestamps.remove(addr);
 
         if (!mHidReadyDeviceAddresses.contains(addr)) {
             mHidReadyDeviceAddresses.add(addr);
-            Log.i("BLE", "GATT HID Handshake complete (300ms idle after host activity), device READY: " + addr);
+            Log.i("BLE", "GATT HID Handshake complete, device READY: " + addr);
             notificationPossible = true;
             processNotificationQueue();
             if (mainActivity != null) {
@@ -1291,10 +1369,25 @@ public class HidBleService extends Service {
         return address;
     }
 
+    private String getCharacteristicKey(BluetoothGattCharacteristic characteristic) {
+        if (characteristic == null) return "";
+        String charUuid = characteristic.getUuid().toString();
+        if (charUuid.equalsIgnoreCase(CHAR_REPORT)) {
+            BluetoothGattDescriptor refDesc = characteristic.getDescriptor(UUID.fromString(DESC_REPORT_REFERENCE));
+            if (refDesc != null && refDesc.getValue() != null && refDesc.getValue().length >= 2) {
+                int reportId = refDesc.getValue()[0] & 0xFF;
+                int reportType = refDesc.getValue()[1] & 0xFF;
+                return charUuid + "_" + reportId + "_" + reportType;
+            }
+            return charUuid + "_" + characteristic.getInstanceId();
+        }
+        return charUuid;
+    }
+
     private void saveDescriptorValue(BluetoothDevice device, BluetoothGattDescriptor descriptor, byte[] value) {
         descriptor.setValue(value);
         String deviceAddress = getResolvedAddress(device);
-        String charUuid = descriptor.getCharacteristic().getUuid().toString();
+        String charKey = getCharacteristicKey(descriptor.getCharacteristic());
         String descUuid = descriptor.getUuid().toString();
 
         if (descUuid.equalsIgnoreCase(DESC_CCC)) {
@@ -1303,12 +1396,12 @@ public class HidBleService extends Service {
                 deviceMap = new HashMap<>();
                 mDeviceDescriptorValues.put(deviceAddress, deviceMap);
             }
-            deviceMap.put(charUuid, value);
+            deviceMap.put(charKey, value);
 
             // Persist to SharedPreferences
             getSharedPreferences("ble_ccc_prefs", Context.MODE_PRIVATE)
                     .edit()
-                    .putString(deviceAddress + "_" + charUuid, bytesToHex(value))
+                    .putString(deviceAddress + "_" + charKey, bytesToHex(value))
                     .apply();
         }
     }
@@ -1316,18 +1409,18 @@ public class HidBleService extends Service {
     private byte[] getDescriptorValue(BluetoothDevice device, BluetoothGattDescriptor descriptor) {
         if (descriptor == null) return null;
         String deviceAddress = getResolvedAddress(device);
-        String charUuid = descriptor.getCharacteristic().getUuid().toString();
+        String charKey = getCharacteristicKey(descriptor.getCharacteristic());
         String descUuid = descriptor.getUuid().toString();
 
         if (descUuid.equalsIgnoreCase(DESC_CCC)) {
             Map<String, byte[]> deviceMap = mDeviceDescriptorValues.get(deviceAddress);
-            if (deviceMap != null && deviceMap.containsKey(charUuid)) {
-                return deviceMap.get(charUuid);
+            if (deviceMap != null && deviceMap.containsKey(charKey)) {
+                return deviceMap.get(charKey);
             }
 
             // Try loading from SharedPreferences
             String saved = getSharedPreferences("ble_ccc_prefs", Context.MODE_PRIVATE)
-                    .getString(deviceAddress + "_" + charUuid, null);
+                    .getString(deviceAddress + "_" + charKey, null);
             if (saved != null) {
                 byte[] value = hexToBytes(saved);
                 Map<String, byte[]> map = mDeviceDescriptorValues.get(deviceAddress);
@@ -1335,7 +1428,7 @@ public class HidBleService extends Service {
                     map = new HashMap<>();
                     mDeviceDescriptorValues.put(deviceAddress, map);
                 }
-                map.put(charUuid, value);
+                map.put(charKey, value);
                 return value;
             }
             // For bonded HID devices, default to notifications ENABLED (0x01, 0x00) if no value stored
@@ -1409,7 +1502,9 @@ public class HidBleService extends Service {
     }
 
     public List<BluetoothDevice> getDevices() {
-        return devices;
+        synchronized (devices) {
+            return new ArrayList<>(devices);
+        }
     }
 
     public boolean isDeviceEnabled(BluetoothDevice device) {
@@ -1470,6 +1565,9 @@ public class HidBleService extends Service {
         stopAdvertising();
         devices.clear();
         mNotificationMasks.clear();
+        mDeviceMtu.clear();
+        mInFlightNotifications.clear();
+        mInFlightTimestamps.clear();
         pendingNotifications.clear();
 
         ReportField.updateValues();
@@ -1517,36 +1615,27 @@ public class HidBleService extends Service {
     private void notifyBatteryLevelChanged(byte level) {
         if (gattServer == null || devices.isEmpty()) return;
 
-        // Update standard BAS
+        byte[] payload = new byte[]{level};
+
+        // Update standard BAS (0x180F) via notification queue
         if (charBatteryLevel != null) {
-            charBatteryLevel.setValue(new byte[]{level});
-            synchronized (devices) {
-                for (BluetoothDevice device : devices) {
-                    if (isNotificationEnabled(device, charBatteryLevel)) {
-                        if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                            try {
-                                gattServer.notifyCharacteristicChanged(device, charBatteryLevel, false);
-                            } catch (SecurityException ignored) {}
+            charBatteryLevel.setValue(payload);
+            synchronized (pendingNotifications) {
+                synchronized (devices) {
+                    for (BluetoothDevice device : devices) {
+                        if (isDeviceEnabled(device) && isNotificationEnabled(device, charBatteryLevel)) {
+                            pendingNotifications.add(new NotificationData(device, charBatteryLevel, payload.clone()));
                         }
                     }
                 }
             }
+            processNotificationQueue();
         }
 
-        // Update HID Battery Report (ID 4)
+        // Update HID Battery Report (ID 4) via sendReport queue
         if (charReportBattery != null) {
-            charReportBattery.setValue(new byte[]{level});
-            synchronized (devices) {
-                for (BluetoothDevice device : devices) {
-                    if (isNotificationEnabled(device, charReportBattery)) {
-                        if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                            try {
-                                gattServer.notifyCharacteristicChanged(device, charReportBattery, false);
-                            } catch (SecurityException ignored) {}
-                        }
-                    }
-                }
-            }
+            charReportBattery.setValue(payload);
+            sendReport(charReportBattery, payload, ReportField.REP_BATTERY, false);
         }
     }
 

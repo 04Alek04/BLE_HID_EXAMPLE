@@ -349,6 +349,13 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
         if (mService != null) mService.initializeLE();
     }
 
+    public void startAdvertising() {
+        if (mService != null) {
+            mService.forceStartAdvertising();
+            Toast.makeText(this, R.string.start_ble_advertising, Toast.LENGTH_SHORT).show();
+        }
+    }
+
     public void clearDeviceConfigs() {
         if (mService != null) mService.clearDeviceConfigs();
     }
@@ -444,7 +451,7 @@ public class MainActivity extends FragmentActivity implements KeyEvent.Callback 
             if (event.isAltPressed()) meta_key |= KeyboardUsage.META_LEFT_ALT;
             if (event.isMetaPressed()) meta_key |= KeyboardUsage.META_LEFT_META;
             
-            short val = (short) (meta_key + (key << 8));
+            int val = (meta_key & 0xFF) | ((key & 0xFF) << 8);
             sendKeyboardNotification(ReportField.REPORT_FIELD_KEYBOARD_ALL, val);
             return true;
         }

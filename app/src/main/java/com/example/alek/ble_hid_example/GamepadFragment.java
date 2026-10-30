@@ -515,6 +515,8 @@ public class GamepadFragment extends Fragment {
                     if (lockToggle == null || !lockToggle.isSelected()) {
                         activity.swipePossible(true);
                     }
+                } else {
+                    return true; // Ignore ACTION_MOVE to avoid spamming duplicated notifications
                 }
                 activity.sendGamepadNotification(buttonsState, analogLX, analogLY, analogRX, analogRY);
                 return true;
@@ -569,6 +571,8 @@ public class GamepadFragment extends Fragment {
                         if (yVal != 0) analogLY = 0;
                     }
                     btn.setPressed(false);
+                } else {
+                    return true; // Ignore ACTION_MOVE to avoid spamming duplicated notifications
                 }
                 activity.sendGamepadNotification(buttonsState, analogLX, analogLY, analogRX, analogRY);
                 return true;

@@ -59,6 +59,15 @@
                         android:textSize="12sp" />
 
                     <com.google.android.material.button.MaterialButton
+                        android:id="@+id/conf_start_adv_button"
+                        style="@style/ModernButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_margin="4dp"
+                        android:text="@string/start_ble_advertising"
+                        android:textSize="12sp" />
+
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/conf_clear_configs_button"
                         style="@style/ModernButton"
                         android:layout_width="match_parent"

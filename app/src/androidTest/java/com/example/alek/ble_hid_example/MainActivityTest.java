@@ -208,6 +208,7 @@ public class MainActivityTest {
         activityRule.getScenario().onActivity(activity -> activity.pager.setCurrentItem(MainActivity.PagerAdapter.CONFIGURATION, false));
 
         onView(withId(R.id.conf_reboot_button)).check(matches(isDisplayed()));
+        onView(withId(R.id.conf_start_adv_button)).check(matches(isDisplayed())).perform(click());
         onView(withId(R.id.conf_clear_configs_button)).check(matches(isDisplayed()));
         onView(withId(R.id.conf_restore_name_switch)).check(matches(isDisplayed())).perform(click()).perform(click());
         onView(withId(R.id.conf_linear_layout_devices)).check(matches(notNullValue()));
