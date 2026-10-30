@@ -132,6 +132,13 @@ The project features a full automated testing strategy with **29 passing tests**
 
 ---
 
+## What's new in version 2.7
+- **Manual BLE Advertising Trigger:** Added dedicated "Start BLE Advertising for Multi-Host" button in the Configuration fragment, allowing seamless onboarding of secondary hosts without dropping existing connections.
+- **Custom Vector Launcher Icon**
+- **Multi-Host Parallel Queue Architecture:** Upgraded `HidBleService` with per-device in-flight notification tracking (`mInFlightNotifications`), per-device MTU maps (`mDeviceMtu`), and non-blocking queue scheduling for zero cross-host latency.
+
+---
+
 ## What's new in version 2.6
 - **Full compatibility with Android 12+** and updated app navigation using ViewPager2.
 - **Added a Variables tab in Blockly** for creating more advanced scripts.
